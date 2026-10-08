@@ -9,10 +9,7 @@ consulted:
   {
     list everyone whose opinions are sought (typically subject-matter experts); and with whom there is a two-way communication,
   }
-informed:
-  {
-    list everyone who is kept up-to-date on progress; and with whom there is a one-way communication,
-  }
+informed: { list everyone who is kept up-to-date on progress; and with whom there is a one-way communication }
 ---
 
 # {short title, representative of solved problem and found solution}
@@ -66,7 +63,9 @@ Chosen option: "{title of option 1}", because {justification. e.g., only option,
 
 - Good, because {argument a}
 - Good, because {argument b}
+
 <!-- use "neutral" if the given argument weights neither for good nor bad -->
+
 - Neutral, because {argument c}
 - Bad, because {argument d}
 - … <!-- numbers of pros and cons can vary -->
