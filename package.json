@@ -6,7 +6,8 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"check": "pnpm run -r check",
-		"test": "pnpm run -r test"
+		"test": "pnpm run -r test",
+		"dev": "pnpm run -r --parallel dev"
 	},
 	"workspaces": [
 		"packages/*"
