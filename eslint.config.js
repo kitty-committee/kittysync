@@ -128,4 +128,17 @@ export default defineConfig(
 		files: ["**/*.config.{js,ts}"],
 		rules: { "no-restricted-exports": "off" },
 	},
+	// Force lang="ts" in Svelte scripts (commonly forgotten)
+	{
+		files: ["packages/frontend/**/*.svelte"],
+		rules: {
+			"svelte/block-lang": [
+				"error",
+				{
+					script: "ts",
+					style: null, // leave <style> alone (plain CSS)
+				},
+			],
+		},
+	},
 );
