@@ -22,7 +22,8 @@
 		"typescript": "^6.0.3",
 		"vite": "^8.3.0",
 		"vitest": "^4.1.8",
-		"vitest-browser-svelte": "^2.1.1"
+		"vitest-browser-svelte": "^2.1.1",
+		"@kittysync/common": "workspace:*"
 	},
 	"imports": {
 		"#lib": "./src/lib/index.js",

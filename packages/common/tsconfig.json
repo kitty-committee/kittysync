@@ -1,0 +1,21 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./build",
+		"module": "nodenext",
+		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true,
+		"lib": [
+			"esnext"
+		],
+		"types": [
+			"node"
+		],
+		"sourceMap": true,
+		"moduleDetection": "force"
+	},
+	"include": [
+		"src/**/*"
+	]
+}
