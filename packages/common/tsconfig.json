@@ -7,7 +7,7 @@
         "allowImportingTsExtensions": true,
         "rewriteRelativeImportExtensions": true,
         "lib": ["esnext"],
-        "types": ["node"],
+        "types": [],
         "sourceMap": true,
         "moduleDetection": "force"
     },
