@@ -1,5 +1,5 @@
 {
-	"extends": "$app/tsconfig",
+	"extends": ["$app/tsconfig", "../../tsconfig.json"],
 	"compilerOptions": {
 		"strict": true,
 		"types": ["$app/types"]
