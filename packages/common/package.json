@@ -1,14 +1,14 @@
 {
-	"name": "@kittysync/common",
-	"main": "src/index.ts",
-	"type": "module",
-	"scripts": {
-		"check": "tsc --noEmit",
-		"test": "vitest run"
-	},
-	"devDependencies": {
-		"@types/node": "^24.19.1",
-		"typescript": "^7.0.2",
-		"vitest": "^5.0.3"
-	}
+    "name": "@kittysync/common",
+    "main": "src/index.ts",
+    "type": "module",
+    "scripts": {
+        "check": "tsc --noEmit",
+        "test": "vitest run"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.1",
+        "typescript": "^7.0.2",
+        "vitest": "^5.0.3"
+    }
 }

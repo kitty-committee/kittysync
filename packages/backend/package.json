@@ -1,25 +1,25 @@
 {
-	"name": "@kittysync/backend",
-	"main": "src/index.ts",
-	"type": "module",
-	"scripts": {
-		"check": "tsc --noEmit",
-		"dev": "tsx watch src",
-		"test": "vitest run",
-		"build": "tsc"
-	},
-	"devDependencies": {
-		"@types/node": "^24.19.1",
-		"@types/supertest": "^7.2.1",
-		"supertest": "^7.3.1",
-		"tsx": "^4.23.15",
-		"typescript": "^7.0.2",
-		"vitest": "^5.0.3"
-	},
-	"dependencies": {
-		"@fastify/static": "^10.1.5",
-		"@fastify/websocket": "^11.3.3",
-		"fastify": "^5.12.5",
-		"@kittysync/common": "workspace:*"
-	}
+    "name": "@kittysync/backend",
+    "main": "src/index.ts",
+    "type": "module",
+    "scripts": {
+        "check": "tsc --noEmit",
+        "dev": "tsx watch src",
+        "test": "vitest run",
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.1",
+        "@types/supertest": "^7.2.1",
+        "supertest": "^7.3.1",
+        "tsx": "^4.23.15",
+        "typescript": "^7.0.2",
+        "vitest": "^5.0.3"
+    },
+    "dependencies": {
+        "@fastify/static": "^10.1.5",
+        "@fastify/websocket": "^11.3.3",
+        "fastify": "^5.12.5",
+        "@kittysync/common": "workspace:*"
+    }
 }
