@@ -8,6 +8,8 @@
         "check": "pnpm run -r check",
         "test": "pnpm run -r test",
         "dev": "pnpm run -r --parallel dev",
+        "dev:frontend": "pnpm --filter frontend dev",
+        "dev:backend": "pnpm --filter backend dev",
         "stack:start": "docker compose -f compose.dev.yml up -d",
         "stack:stop": "docker compose -f compose.dev.yml down"
     },
