@@ -1,8 +1,20 @@
+## Project Overview
+
+KittySync is a monorepo with three packages in the `packages` directory:
+
+- **`packages/frontend`** - SvelteKit frontend app using static site generation (SSG). Routes are in `routes/` with authentication plumbing in `routes/app/` and `routes/app/(authenticated)/`. All API requests go through `/api/*` proxy.
+- **`packages/backend`** - Fastify-based backend API. All endpoints must begin with `/api/*` prefix due to Vite proxy configuration.
+- **`packages/common`** - Shared package for functionality shared between frontend and backend. Cannot access browser or NodeJS APIs.
+
 ## Project Configuration
 
 - **Language**: TypeScript
-- **Package Manager**: pnpm
-- **Add-ons**: prettier, eslint, vitest, sveltekit-adapter, ai-tools
+- **Package Manager**: pnpm (scope commands with `pnpm frontend <command>`, `pnpm backend <command>`, `pnpm common <command>`)
+- **Testing**: vitest (`pnpm test`), Playwright for frontend E2E (`pnpm frontend playwright install`)
+- **Linting/Formatting**: ESLint, Prettier (`pnpm lint`, `pnpm format`)
+- **Type checking**: TypeScript (`pnpm check`)
+- **Dev server**: `pnpm dev` (runs full app at http://127.0.0.1:5173/), or `pnpm frontend dev` / `pnpm backend dev` for individual packages
+- **Infrastructure**: PostgreSQL and Redis via Docker (`pnpm stack:start`, `pnpm stack:stop`)
 
 ---
 
