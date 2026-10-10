@@ -14,7 +14,8 @@ This repository uses the [pnpm](https://pnpm.io/) package manager. You can scope
 
 If you are using [Visual Studio Code](https://code.visualstudio.com/), we suggest install the workspace's recommended extensions. You will be given the option to do this by a popup when you first open the folder. Installing these extensions will greately improve your developer experience.
 
-There is no strict rules for commit messages, however we encourage using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). However, commit messages must always be meaningful and avoid offensive language.
+> [!NOTE]
+> There is no strict rules for commit messages, however we encourage using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). However, commit messages must always be meaningful and avoid offensive language.
 
 ### Running the development server
 
