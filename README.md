@@ -12,14 +12,14 @@ This repository consists of three packages located in the `packages` directory. 
 
 This repository uses the [pnpm](https://pnpm.io/) package manager. You can scope [pnpm](https://pnpm.io/) commands to an individual package using `pnpm frontend <command>`, `pnpm common <command>` or `pnpm backend <command>`. This will be useful for installing new dependencies, which will **otherwise be installed to the workspace** and not work.
 
-If you are using [Visual Studio Code](https://code.visualstudio.com/), we suggest install the workspace's recommended extensions. You will be given the option to do this by a popup when you first open the folder. Installing these extensions will greately improve your developer experience.
+If you are using [Visual Studio Code](https://code.visualstudio.com/), we suggest installing the workspace's recommended extensions. You will be given the option to do this by a popup when you first open the folder. Installing these extensions will greatly improve your developer experience.
 
 > [!NOTE]
-> There is no strict rules for commit messages, however we encourage using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). However, commit messages must always be meaningful and avoid offensive language.
+> There are no strict rules for commit messages, however we encourage using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). However, commit messages must always be meaningful and avoid offensive language.
 
 ### Running the development server
 
-To see your code changes in action, you can use the `pnpm dev` command, which will the app accessible at http://127.0.0.1:5173/. While the development server is running, any code changes you make will trigger an automatic reload. You can also start a single package's dev server using `pnpm frontend dev` or `pnpm backend dev`.
+To see your code changes in action, you can use the `pnpm dev` command, which will make the app accessible at http://127.0.0.1:5173/. While the development server is running, any code changes you make will trigger an automatic reload. You can also start a single package's dev server using `pnpm frontend dev` or `pnpm backend dev`.
 
 ### Testing and linting
 
@@ -32,7 +32,7 @@ There are three different types of tests you can run against the repository. `pn
 
 There are three ways to set up a development environment for KittySync, two of which require Docker to be installed on your machine. Pick one of the options below to start coding!
 
-## Option 1 - manual setup (most versitile)
+## Option 1 - manual setup (most versatile)
 
 1. Install Docker on your local machine. The easiest way to do this for most users is to install [Docker Desktop](https://docs.docker.com/desktop/).
 
