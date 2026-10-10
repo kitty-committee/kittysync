@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "noImplicitReturns": true,
+        "noImplicitOverride": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "verbatimModuleSyntax": true,
+        "isolatedModules": true,
+        "forceConsistentCasingInFileNames": true,
+        "noUncheckedSideEffectImports": true,
+        "strict": true
+    }
+}

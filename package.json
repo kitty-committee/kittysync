@@ -1,0 +1,35 @@
+{
+    "name": "kittysync",
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "lint": "prettier --check . && eslint .",
+        "format": "prettier --write .",
+        "check": "pnpm run -r check",
+        "test": "pnpm run -r test",
+        "dev": "pnpm run -r --parallel dev",
+        "frontend": "pnpm --filter frontend",
+        "backend": "pnpm --filter backend",
+        "common": "pnpm --filter common",
+        "stack:start": "docker compose -f compose.dev.yml up -d",
+        "stack:stop": "docker compose -f compose.dev.yml down"
+    },
+    "workspaces": [
+        "packages/*"
+    ],
+    "packageManager": "pnpm@12.10.1",
+    "volta": {
+        "node": "24.21.0"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "eslint": "^10.12.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-svelte": "^3.23.0",
+        "eslint-plugin-unicorn": "^77.0.0",
+        "globals": "^17.13.0",
+        "prettier": "^3.9.9",
+        "prettier-plugin-svelte": "^4.1.1",
+        "typescript-eslint": "^8.71.1"
+    }
+}

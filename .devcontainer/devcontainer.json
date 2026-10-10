@@ -1,0 +1,10 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
+{
+    "name": "kittysync_default",
+    "dockerComposeFile": "compose.yml",
+    "service": "app",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "forwardPorts": [5173, 3000],
+    "postAttachCommand": "([ -f .env ] || (cp .env.example .env && sed -i -e '/^KITTYSYNC_DATABASE_URL=/s/127.0.0.1/postgres/' -e '/^KITTYSYNC_REDIS_HOST=/s/127.0.0.1/redis/' .env)) && pnpm install"
+}
