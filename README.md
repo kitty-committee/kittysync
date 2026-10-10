@@ -24,7 +24,8 @@ To see your code changes in action, you can use the `pnpm dev` command, which wi
 
 There are three different types of tests you can run against the repository. `pnpm test` will run all unit tests defined in the repository using [vitest](https://vitest.dev/). `pnpm lint` will check the project for common logic, style and formatting errors using [ESLint](https://vitest.dev/) and [Prettier](https://prettier.io/). `pnpm check` will run static type checking using the [TypeScript](https://www.typescriptlang.org/) compiler.
 
-All three of these tests must pass before you can merge a pull request. It is a good idea to run `pnpm format` before pushing changes, which will update your code to conform to our code style conventions.
+> [!TIP]
+> All three of these tests must pass before you can merge a pull request. It is a good idea to run `pnpm format` before pushing changes, which will update your code to conform to our code style conventions.
 
 ### Installation
 
