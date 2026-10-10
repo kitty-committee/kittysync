@@ -5,6 +5,7 @@
         "dbaeumer.vscode-eslint",
         "joshbolduc.commitlint",
         "YoavBls.pretty-ts-errors",
-        "ms-vscode-remote.remote-containers"
+        "ms-vscode-remote.remote-containers",
+        "vitest.explorer"
     ]
 }

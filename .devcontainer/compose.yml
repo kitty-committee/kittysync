@@ -3,7 +3,7 @@ volumes:
 
 services:
     app:
-        image: mcr.microsoft.com/devcontainers/javascript-node:5-24-trixie
+        build: .
         volumes:
             - ../..:/workspaces:cached
         command: sleep infinity # Overrides default command so things don't shut down after the process ends.
@@ -18,6 +18,8 @@ services:
     postgres:
         image: postgres:latest
         restart: unless-stopped
+        ports:
+            - 8080:8080
         networks:
             - app-network
         healthcheck:
@@ -36,6 +38,8 @@ services:
     redis:
         image: redis:latest
         restart: unless-stopped
+        ports:
+            - 6379:6379
         networks:
             - app-network
         healthcheck:

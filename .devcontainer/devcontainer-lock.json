@@ -1,0 +1,9 @@
+{
+  "features": {
+    "ghcr.io/postfinance/devcontainer-features/playwright-deps:2": {
+      "version": "2.0.0",
+      "resolved": "ghcr.io/postfinance/devcontainer-features/playwright-deps@sha256:ca88957e2b63f5ff477a267897e7a557ed842b4f9af1aa32b45a207110e6977c",
+      "integrity": "sha256:ca88957e2b63f5ff477a267897e7a557ed842b4f9af1aa32b45a207110e6977c"
+    }
+  }
+}

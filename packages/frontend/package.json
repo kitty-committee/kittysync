@@ -12,18 +12,18 @@
         "test": "vitest run"
     },
     "devDependencies": {
+        "@kittysync/common": "workspace:*",
         "@sveltejs/adapter-static": "^4.0.0",
         "@sveltejs/kit": "^3.0.0",
         "@sveltejs/vite-plugin-svelte": "^7.2.0",
         "@vitest/browser-playwright": "^4.1.8",
-        "playwright": "^1.60.0",
+        "playwright": "^1.64.0",
         "svelte": "^5.57.1",
         "svelte-check": "^4.6.0",
         "typescript": "^6.0.3",
         "vite": "^8.3.0",
         "vitest": "^4.1.8",
-        "vitest-browser-svelte": "^2.1.1",
-        "@kittysync/common": "workspace:*"
+        "vitest-browser-svelte": "^2.1.1"
     },
     "imports": {
         "#lib": "./src/lib/index.js",
