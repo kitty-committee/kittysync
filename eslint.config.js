@@ -1,11 +1,12 @@
+import { defineConfig, globalIgnores, includeIgnoreFile } from "eslint/config";
+import actionlint from "eslint-plugin-actionlint";
 import prettier from "eslint-config-prettier";
+import unicorn from "eslint-plugin-unicorn";
+import svelte from "eslint-plugin-svelte";
+import ts from "typescript-eslint";
+import globals from "globals";
 import path from "node:path";
 import js from "@eslint/js";
-import svelte from "eslint-plugin-svelte";
-import { defineConfig, globalIgnores, includeIgnoreFile } from "eslint/config";
-import globals from "globals";
-import ts from "typescript-eslint";
-import unicorn from "eslint-plugin-unicorn";
 
 const gitignorePath = path.resolve(import.meta.dirname, ".gitignore");
 
@@ -141,4 +142,5 @@ export default defineConfig(
             ],
         },
     },
+    ...actionlint.configs.recommended,
 );
