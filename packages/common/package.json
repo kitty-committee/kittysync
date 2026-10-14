@@ -3,8 +3,8 @@
     "main": "src/index.ts",
     "type": "module",
     "scripts": {
-        "check": "tsc --noEmit",
-        "test": "vitest run"
+        "check:type": "tsc --noEmit",
+        "check:test": "vitest run"
     },
     "devDependencies": {
         "@types/node": "^24.19.1",

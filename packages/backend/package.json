@@ -3,9 +3,9 @@
     "main": "src/index.ts",
     "type": "module",
     "scripts": {
-        "check": "tsc --noEmit",
+        "check:type": "tsc --noEmit",
+        "check:test": "vitest run",
         "dev": "tsx watch src",
-        "test": "vitest run",
         "build": "tsc"
     },
     "devDependencies": {
