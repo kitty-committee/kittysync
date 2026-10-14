@@ -20,8 +20,8 @@
         "packages/*"
     ],
     "packageManager": "pnpm@12.10.1",
-    "volta": {
-        "node": "24.21.0"
+    "engines": {
+        "node": ">=24.21.0 <24.22.0"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
