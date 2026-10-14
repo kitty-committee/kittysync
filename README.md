@@ -44,7 +44,7 @@ There are three ways to set up a development environment for KittySync, two of w
 
 5. Run `pnpm frontend playwright install` to download headless browsers for Playwright testing.
 
-6. Use `pnpm stack:start` to start local instances of PostgreSQL and Redis (you can use `pnpm stack:stop` to stop them when you have finished developing).
+6. Use `pnpm stack up -d` to start local instances of PostgreSQL and Redis (you can use `pnpm stack down` to stop them when you have finished developing).
 
 7. Copy `.env.example` to `.env` for local secrets and configuration values (default values designed for manual setup).
 
