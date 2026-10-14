@@ -24,5 +24,9 @@ jobs:
                   install: true
                   cache: true
 
+            - name: Install Playwright dependencies
+              if: matrix.script == 'check:test'
+              run: pnpm frontend playwright install --with-deps
+
             - name: Run check
               run: pnpm ${{ matrix.script }}
