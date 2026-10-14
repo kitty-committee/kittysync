@@ -23,10 +23,10 @@ To see your code changes in action, you can use the `pnpm dev` command, which wi
 
 ### Testing and linting
 
-There are three different types of tests you can run against the repository. `pnpm test` will run all unit tests defined in the repository using [vitest](https://vitest.dev/). `pnpm lint` will check the project for common logic, style and formatting errors using [ESLint](https://vitest.dev/) and [Prettier](https://prettier.io/). `pnpm check` will run static type checking using the [TypeScript](https://www.typescriptlang.org/) compiler.
+There are four types of checks that must pass before you can merge a pull request. Type checking, unit tests, formatting checks and general linting. You can run these locally with `pnpm check` to catch issues before you make your pull request.
 
 > [!TIP]
-> All three of these tests must pass before you can merge a pull request. It is a good idea to run `pnpm format` before pushing changes, which will update your code to conform to our code style conventions.
+> Prettier can automatically update your code to conform to our code style conventions by running `pnpm format`.
 
 ### Installation
 
@@ -44,7 +44,7 @@ There are three ways to set up a development environment for KittySync, two of w
 
 5. Run `pnpm frontend playwright install` to download headless browsers for Playwright testing.
 
-6. Use `pnpm stack:start` to start local instances of PostgreSQL and Redis (you can use `pnpm stack:stop` to stop them when you have finished developing).
+6. Use `pnpm stack up -d` to start local instances of PostgreSQL and Redis (you can use `pnpm stack down` to stop them when you have finished developing).
 
 7. Copy `.env.example` to `.env` for local secrets and configuration values (default values designed for manual setup).
 

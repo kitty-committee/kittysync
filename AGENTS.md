@@ -11,10 +11,10 @@ KittySync is a monorepo with three packages in the `packages` directory:
 - **Language**: TypeScript
 - **Package Manager**: pnpm (scope commands with `pnpm frontend <command>`, `pnpm backend <command>`, `pnpm common <command>`)
 - **Testing**: vitest (`pnpm test`), Playwright for frontend E2E (`pnpm frontend playwright install`)
-- **Linting/Formatting**: ESLint, Prettier (`pnpm lint`, `pnpm format`)
+- **Linting/Formatting**: ESLint, Prettier (`pnpm check`, `pnpm format`)
 - **Type checking**: TypeScript (`pnpm check`)
 - **Dev server**: `pnpm dev` (runs full app at http://127.0.0.1:5173/), or `pnpm frontend dev` / `pnpm backend dev` for individual packages
-- **Infrastructure**: PostgreSQL and Redis via Docker (`pnpm stack:start`, `pnpm stack:stop`)
+- **Infrastructure**: PostgreSQL and Redis via Docker (`pnpm stack up -d`, `pnpm stack stop`)
 
 ---
 
