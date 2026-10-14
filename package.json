@@ -11,8 +11,7 @@
         "frontend": "pnpm --filter frontend",
         "backend": "pnpm --filter backend",
         "common": "pnpm --filter common",
-        "stack:start": "docker compose -f compose.dev.yml up -d",
-        "stack:stop": "docker compose -f compose.dev.yml down"
+        "stack": "docker compose -f compose.dev.yml"
     },
     "workspaces": [
         "packages/*"
