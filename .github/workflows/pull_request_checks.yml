@@ -13,7 +13,7 @@ jobs:
         name: ${{ matrix.script }}
         runs-on: ubuntu-latest
         concurrency:
-            group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+            group: ${{ github.workflow }}-${{ matrix.script }}-${{ github.event.pull_request.number }}
             cancel-in-progress: true
         strategy:
             fail-fast: false
