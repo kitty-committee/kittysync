@@ -17,9 +17,10 @@
         "vitest": "^5.0.3"
     },
     "dependencies": {
+        "@fastify/jwt": "^10.2.4",
         "@fastify/static": "^10.1.5",
         "@fastify/websocket": "^11.3.3",
-        "fastify": "^5.12.5",
-        "@kittysync/common": "workspace:*"
+        "@kittysync/common": "workspace:*",
+        "fastify": "^5.12.5"
     }
 }
