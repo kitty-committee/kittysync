@@ -1,0 +1,28 @@
+name: Pull request checks"
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened]
+
+jobs:
+    checks:
+        name: ${{ matrix.script }}
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                script: [check:lint, check:format, check:type, check:test]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v7
+
+            - name: Set up pnpm and NodeJS
+              uses: pnpm/setup@3
+              with:
+                  node-version-file: .nvmrc
+                  install: true
+                  cache: true
+
+            - name: Run check
+              run: pnpm ${{ matrix.script }}
