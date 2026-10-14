@@ -11,5 +11,5 @@
         "sourceMap": true,
         "moduleDetection": "force"
     },
-    "include": ["src/**/*", "drizzle.config.ts"]
+    "include": ["src/**/*"]
 }
