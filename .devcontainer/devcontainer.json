@@ -5,6 +5,5 @@
     "forwardPorts": [5173, 3000, 5432, 6379],
     "build": { "dockerfile": "Dockerfile" },
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-    "postStartCommand": "sudo service postgresql start && sudo service redis-server start",
-    "postAttachCommand": "([ -f .env ] || cp .env.example .env) && pnpm install"
+    "postStartCommand": "sudo service postgresql start && sudo service redis-server start && ([ -f .env ] || cp .env.example .env) && pnpm install"
 }
