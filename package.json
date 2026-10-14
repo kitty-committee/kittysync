@@ -3,28 +3,30 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "lint": "prettier --check . && eslint .",
+        "check": "pnpm run check:lint && pnpm run check:format && pnpm run check:type && pnpm run check:test",
+        "check:format": "prettier --check .",
+        "check:type": "pnpm run -r check:type",
+        "check:test": "pnpm run -r check:test",
+        "check:lint": "eslint .",
         "format": "prettier --write .",
-        "check": "pnpm run -r check",
-        "test": "pnpm run -r test",
         "dev": "pnpm run -r --parallel dev",
         "frontend": "pnpm --filter frontend",
         "backend": "pnpm --filter backend",
         "common": "pnpm --filter common",
-        "stack:start": "docker compose -f compose.dev.yml up -d",
-        "stack:stop": "docker compose -f compose.dev.yml down"
+        "stack": "docker compose -f compose.dev.yml"
     },
     "workspaces": [
         "packages/*"
     ],
     "packageManager": "pnpm@12.10.1",
-    "volta": {
-        "node": "24.21.0"
+    "engines": {
+        "node": ">=24.21.0 <24.22.0"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "eslint": "^10.12.0",
         "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-actionlint": "^1.0.6",
         "eslint-plugin-svelte": "^3.23.0",
         "eslint-plugin-unicorn": "^77.0.0",
         "globals": "^17.13.0",
