@@ -5,6 +5,8 @@ import * as z from "zod";
 import { usersTable } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { v4 } from "uuid";
+import * as fastifyCookie from "@fastify/cookie";
 
 export async function postSessionHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
@@ -34,6 +36,16 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
         reply.statusCode = 401;
     } else {
         reply.statusCode = 200;
-        reply.send(target_user);
+
+        const session_token = v4();
+        reply.setCookie("session", session_token, {
+            domain: process.env["KITTYSYNC_APP_DOMAIN"]!,
+            path: "/",
+        });
+
+        reply.send({
+            id: target_user.id,
+            username: target_user.username,
+        });
     }
 }

@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
+import { regex } from "zod";
 
 test("Create user", async () => {
     await app.listen();
@@ -52,20 +53,10 @@ test("Create new session", async () => {
         }),
     });
 
+    const set_cookies = response.headers.getSetCookie();
+    expect(set_cookies.length).toBe(1);
+    expect(set_cookies[0]).toMatch(/session=(.*)/);
     expect(response.status).toBe(200);
-
-    response = await fetch(`http://localhost:${port}/api/auth/session`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            username: "t",
-            password: "hello-world",
-        }),
-    });
-
-    expect(response.status).toBe(400);
 });
 
 test("Create new session - Bad request", async () => {
