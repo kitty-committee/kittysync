@@ -14,6 +14,8 @@ app.register(require("@fastify/cookie"), {
     parseOptions: {},
 });
 
+app.register(require("@fastify/formbody"));
+
 // Declare a route
 app.get("/", function (_, reply) {
     reply.send({ hello: "world" });
