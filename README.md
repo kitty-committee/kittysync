@@ -62,6 +62,8 @@ There are three ways to set up a development environment for KittySync, two of w
     <img src="docs/assets/devcontainer-popup.webp" alt="A popup asking the user if they would like to reopen in a devcontainer">
 </p>
 
+5. Wait for the workspace to open and run `pnpm install` to to download and install dependencies.
+
 ## Option 3 - remote devcontainer (minimal installation)
 
 This option involves connecting to a devcontainer running on a remote machine. As a result it requires zero local setup, making it ideal for running on the lab machines.
