@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import { register } from "./auth/auth.routes.ts";
+import { registerWebsocketRoutes } from "./ws/websocket.handler.ts";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -15,3 +16,4 @@ app.get("/", function (_, reply) {
 
 // Register auth routes
 register(app);
+registerWebsocketRoutes(app);
