@@ -6,3 +6,10 @@ export const UserCredentialsSchema = z.object({
 });
 
 export type UserCredentials = z.infer<typeof UserCredentialsSchema>;
+
+export const UserDbSchema = z.object({
+    id: z.uuidv4(),
+    username: z.string().trim().min(5).max(255),
+});
+
+export type UserDb = z.infer<typeof UserDbSchema>;

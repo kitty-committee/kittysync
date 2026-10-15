@@ -50,7 +50,7 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
         });
 
         const redis = new Redis.Redis(6379, process.env["KITTYSYNC_REDIS_HOST"]!);
-        redis.hset(`user_${session_token}`, {
+        await redis.hset(`user_${session_token}`, {
             id: target_user.id,
             username: target_user.username,
         });

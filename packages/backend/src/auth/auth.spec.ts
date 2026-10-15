@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
 import { regex } from "zod";
+import { type UserDb } from "@kittysync/common";
 
 test("Create user", async () => {
     await app.listen();
@@ -97,4 +98,38 @@ test("Create new session - Invalid credentials", async () => {
     });
 
     expect(response.status).toBe(401);
+});
+
+test("Get / Validate session data", async () => {
+    await app.ready();
+
+    const address = app.server.address();
+    const port = typeof address === "string" ? address : address?.port;
+
+    let response = await fetch(`http://localhost:${port}/api/auth/session`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            username: "test-user",
+            password: "hello-world",
+        }),
+    });
+
+    expect(response.status).toBe(200);
+    const cookie = response.headers.getSetCookie()[0];
+    const regex = /session=([^;]*)/;
+    const session = cookie.match(regex)![1];
+
+    response = await fetch(`http://localhost:${port}/api/auth/session`, {
+        method: "GET",
+        headers: {
+            Cookie: `session=${session}`,
+        },
+    });
+
+    expect(response.status).toBe(200);
+    const body: UserDb = (await response.json()) as UserDb;
+    expect(body.username).toBe("test-user");
 });
