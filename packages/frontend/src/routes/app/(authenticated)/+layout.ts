@@ -1,23 +1,20 @@
-import { fetchApi } from '#lib';
-import { redirect } from '@sveltejs/kit';
+import { fetchApi } from "#lib";
+import { redirect } from "@sveltejs/kit";
 
 // replace with code for redirecting to the login page if the user is not authenticated
-export async function load({cookies}) {
-    // Session cookie defined
-    const sessionID = cookies.get("session")
-
+export async function load() {
     // If statement to redirect loggedout users
-    if (!sessionID){
-        redirect(307, '../login?login');
+    if (window.cookieStore?.get && (await window.cookieStore.get("session")) === null) {
+        redirect(307, "../login?login");
     }
-    
+
     // userData defined
-    const api = (fetchApi("api/auth/sessions?session"))
+    const api = await fetchApi("auth/sessions?session");
 
     // If statement to redirect loggedout users
-    if (!api.ok){
-        redirect(307, '../login?login');
+    if (!api.ok) {
+        redirect(307, "../login?login");
     }
 
-    return {api};
+    return { api };
 }
