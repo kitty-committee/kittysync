@@ -3,6 +3,7 @@ import { UserRegistrationSchema, type UserRegistration } from "@kittysync/common
 import * as z from "zod";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { usersTable } from "../../db/schema.ts";
+import bcrypt from "bcrypt";
 
 export async function postUserHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserRegistration;
@@ -18,6 +19,9 @@ export async function postUserHandler(request: FastifyRequest, reply: FastifyRep
 
         return;
     }
+
+    const salt_rounds = 10;
+    body.password = await bcrypt.hash(body.password, salt_rounds);
 
     const db = drizzle(process.env["KITTYSYNC_DATABASE_URL"]!);
     await db.insert(usersTable).values(body);
