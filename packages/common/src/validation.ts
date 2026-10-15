@@ -13,3 +13,9 @@ export const UserDbSchema = z.object({
 });
 
 export type UserDb = z.infer<typeof UserDbSchema>;
+
+export const UserSearchSchema = z.object({
+    username: z.string().trim(),
+});
+
+export type UserSearch = z.infer<typeof UserSearchSchema>;

@@ -116,3 +116,20 @@ test("Get / Validate session data", async () => {
     const body: UserDb = (await response.json()) as UserDb;
     expect(body.username).toBe("test-user");
 });
+
+test("Search user data", async () => {
+    await app.ready();
+
+    const address = app.server.address();
+    const port = typeof address === "string" ? address : address?.port;
+
+    let response = await fetch(`http://localhost:${port}/api/auth/user?username=%`, {
+        method: "GET",
+    });
+
+    expect(response.status).toBe(200);
+
+    const body: UserDb[] = (await response.json()) as UserDb[];
+
+    expect(body[0].username).toBe("test-user");
+});
