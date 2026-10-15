@@ -2,6 +2,21 @@
     import { page } from "$app/state";
     import { enhance } from "$app/forms";
     import { fetchApi } from "#lib";
+    import * as zod from "zod";
+    import ZodIssues from "#lib/ZodIssues.svelte";
+    let issues = $state();
+
+    export const userSchema = zod
+        .object({
+            email: zod.email(),
+            password: zod.string(), //Space to make schema more strict for passwords
+            repeatPassword: zod.string(),
+        })
+        .refine((data) => data.password === data.repeatPassword, {
+            message: "Passwords do not match",
+            path: ["password-repeat"],
+        });
+
     let error = $state();
     const isSignUp = $derived(page.url.searchParams.has("sign-up"));
 </script>
@@ -11,6 +26,19 @@
         <form
             method="POST"
             use:enhance={async ({ formData, cancel }) => {
+                var user = {
+                    email: formData.get("email"),
+                    password: formData.get("password"),
+                    repeatPassword: formData.get("password-repeat"),
+                };
+
+                const safeParse = userSchema.safeParse(user);
+
+                if (!safeParse.success) {
+                    issues = safeParse.error.issues;
+                    return;
+                }
+
                 const response = await fetchApi("/app/sign-up", {
                     method: "POST",
                     headers: {
@@ -32,7 +60,7 @@
                 <p>Did you mean to login instead? Click <a href="../login?login">here!</a></p>
 
                 <label for="email">Email</label>
-                <input type="email" placeholder="Enter Email" name="email" required /><br />
+                <input type="text" placeholder="Enter Email" name="email" required /><br />
 
                 <label for="password">Password</label>
                 <input type="password" placeholder="Enter Password" name="password" required /><br />
@@ -40,7 +68,8 @@
                 <label for="password-repeat">Repeat password</label>
                 <input type="password" placeholder="Enter Password" name="password-repeat" required /><br />
 
-                <p>{error}</p>
+                <ZodIssues {issues} />
+                {error}
                 <div class="button-container">
                     <button type="button" class="cancelbtn">Cancel</button>
                     <button type="submit" class="signupbtn">Sign Up</button>
@@ -51,7 +80,19 @@
         <form
             method="POST"
             use:enhance={async ({ formData, cancel }) => {
-                const response = await fetchApi("/app/sign-up", {
+                var user = {
+                    email: formData.get("email"),
+                    password: formData.get("password"),
+                };
+
+                const safeParse = userSchema.safeParse(user);
+
+                if (!safeParse.success) {
+                    issues = safeParse.error.issues;
+                    return;
+                }
+
+                const response = await fetchApi("/app/login", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -78,11 +119,10 @@
                 <label for="password">Password</label>
                 <input type="password" placeholder="Enter Password" name="password" required /><br />
 
-                <p>{error}</p>
-                <button type="button" class="submit-button">Submit</button><br />
-
+                <ZodIssues {issues} />
+                {error}
                 <div class="button-container">
-                    <button type="button" class="cancel-button">Cancel</button>
+                    <button type="button" class="submit-button">Submit</button>
                 </div>
             </div>
         </form>
