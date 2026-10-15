@@ -14,7 +14,8 @@
         "backend": "pnpm --filter backend",
         "common": "pnpm --filter common",
         "stack": "docker compose -f compose.dev.yml",
-        "stack:up": "docker compose -f compose.dev.yml up --wait && pnpm backend drizzle-kit push"
+        "stack:up": "docker compose -f compose.dev.yml up --wait && pnpm backend drizzle-kit push",
+        "stack:restart": "pnpm stack down -v && pnpm stack:up"
     },
     "workspaces": [
         "packages/*"
