@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { v4 } from "uuid";
 import * as fastifyCookie from "@fastify/cookie";
+import Redis from "ioredis";
 
 export async function postSessionHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
@@ -44,6 +45,12 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
         });
 
         reply.send({
+            id: target_user.id,
+            username: target_user.username,
+        });
+
+        const redis = new Redis.Redis(6379, process.env["KITTYSYNC_REDIS_HOST"]!);
+        redis.hset(`user_${session_token}`, {
             id: target_user.id,
             username: target_user.username,
         });
