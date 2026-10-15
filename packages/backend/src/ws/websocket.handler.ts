@@ -1,7 +1,6 @@
 import Fastify from "fastify";
 import { type WebSocket } from "@fastify/websocket";
 import { packetSchema, type WsPacket } from "@kittysync/common";
-import * as z from "zod";
 
 const fileUsersMap = new Map<string, string[]>();
 
@@ -11,7 +10,7 @@ export function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
         // update file user map
         const { fileId } = req.query;
 
-        fileUsersMap.getOrInsert(fileId, []).push(req.ip)
+        fileUsersMap.getOrInsert(fileId, []).push(req.ip);
 
         //send the file on connection
         let packet: WsPacket;
@@ -22,5 +21,22 @@ export function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
         packet = { type: "updateUsers", data: { userList: fileUsersMap.get(fileId) ?? [] } }
         socket.send(JSON.stringify(packet));
 
+        // recived message handling
+
+        socket.on('message', message => {
+            const packet = packetSchema.parse(message);
+
+            switch (packet.type) {
+                case "saveFile":
+                    console.log(packet.data);
+                    break;
+                case "error":
+                    console.log(packet.data);
+                    break;
+                default:
+                    console.log("unknown packet type");
+                    break;
+            }
+        })
     })
 }
