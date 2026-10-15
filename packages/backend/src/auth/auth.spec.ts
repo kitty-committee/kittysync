@@ -9,29 +9,24 @@ test("Create user", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
+    let form = new FormData();
+    form.append("username", "test-user");
+    form.append("password", "hello-world");
 
     let response = await fetch(`http://localhost:${port}/api/auth/user`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            username: "test-user",
-            password: "hello-world",
-        }),
+        body: form,
     });
 
     expect(response.status).toBe(200);
 
+    form = new FormData();
+    form.append("username", "t");
+    form.append("password", "hello-world");
+
     response = await fetch(`http://localhost:${port}/api/auth/user`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            username: "t",
-            password: "hello-world",
-        }),
+        body: form,
     });
 
     expect(response.status).toBe(400);
@@ -42,16 +37,13 @@ test("Create new session", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
+    let form = new FormData();
+    form.append("username", "test-user");
+    form.append("password", "hello-world");
 
     let response = await fetch(`http://localhost:${port}/api/auth/session`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            username: "test-user",
-            password: "hello-world",
-        }),
+        body: form,
     });
 
     const set_cookies = response.headers.getSetCookie();
@@ -65,16 +57,13 @@ test("Create new session - Bad request", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
+    let form = new FormData();
+    form.append("username", "t");
+    form.append("password", "hello-world");
 
     const response = await fetch(`http://localhost:${port}/api/auth/session`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            username: "t",
-            password: "hello-world",
-        }),
+        body: form,
     });
 
     expect(response.status).toBe(400);
@@ -85,16 +74,13 @@ test("Create new session - Invalid credentials", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
+    let form = new FormData();
+    form.append("username", "test-user");
+    form.append("password", "hello");
 
     const response = await fetch(`http://localhost:${port}/api/auth/session`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            username: "test-user",
-            password: "oogabooga",
-        }),
+        body: form,
     });
 
     expect(response.status).toBe(401);
@@ -105,16 +91,13 @@ test("Get / Validate session data", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
+    let form = new FormData();
+    form.append("username", "test-user");
+    form.append("password", "hello-world");
 
     let response = await fetch(`http://localhost:${port}/api/auth/session`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            username: "test-user",
-            password: "hello-world",
-        }),
+        body: form,
     });
 
     expect(response.status).toBe(200);

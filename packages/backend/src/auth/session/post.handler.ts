@@ -8,12 +8,15 @@ import bcrypt from "bcrypt";
 import { v4 } from "uuid";
 import * as fastifyCookie from "@fastify/cookie";
 import Redis from "ioredis";
+import { userCredentialsFromMultipart } from "../../util.ts";
+import type { MultipartFields } from "@fastify/multipart";
 
 export async function postSessionHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
+    const request_body: MultipartFields = request.body as MultipartFields;
 
     try {
-        body = UserCredentialsSchema.parse(request.body);
+        body = userCredentialsFromMultipart(request_body);
     } catch (error) {
         // Validation failed, return BadRequest error
         if (error instanceof z.ZodError) {

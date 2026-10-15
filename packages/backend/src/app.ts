@@ -14,7 +14,7 @@ app.register(require("@fastify/cookie"), {
     parseOptions: {},
 });
 
-app.register(require("@fastify/formbody"));
+app.register(require("@fastify/multipart"), { attachFieldsToBody: true });
 
 // Declare a route
 app.get("/", function (_, reply) {
