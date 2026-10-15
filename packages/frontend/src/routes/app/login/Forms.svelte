@@ -1,49 +1,90 @@
 <script lang="ts">
     import { page } from "$app/state";
+    import { enhance } from "$app/forms";
+    import { fetchApi } from "#lib";
+    let error = $state();
     const isSignUp = $derived(page.url.searchParams.has("sign-up"));
 </script>
 
 <div class="form-container">
     {#if isSignUp}
-        <div class="signup-div">
-            <h1>Sign-up</h1>
-            <p>Please enter your details below to sign-up</p>
+        <form
+            method="POST"
+            use:enhance={async ({ formData, cancel }) => {
+                const response = await fetchApi("/app/sign-up", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email: formData.get("email"), password: formData.get("password") }),
+                });
 
-            <p>Did you mean to login instead? Click <a href="../form?login">here!</a></p>
+                if (!response.ok) {
+                    error = (await response.json()).body;
+                }
 
-            <label for="email">Email</label>
-            <input type="text" placeholder="Enter Email" name="email" required /><br />
+                cancel();
+            }}>
+            <div class="signup-div">
+                <h1>Sign-up</h1>
+                <p>Please enter your details below to sign-up</p>
 
-            <label for="password">Password</label>
-            <input type="password" placeholder="Enter Password" name="password" required /><br />
+                <p>Did you mean to login instead? Click <a href="../login?login">here!</a></p>
 
-            <label for="password-repeat">Password</label>
-            <input type="password" placeholder="Enter Password" name="password-repeat" required /><br />
+                <label for="email">Email</label>
+                <input type="email" placeholder="Enter Email" name="email" required /><br />
 
-            <div class="button-container">
-                <button type="button" class="cancelbtn">Cancel</button>
-                <button type="submit" class="signupbtn">Sign Up</button>
+                <label for="password">Password</label>
+                <input type="password" placeholder="Enter Password" name="password" required /><br />
+
+                <label for="password-repeat">Repeat password</label>
+                <input type="password" placeholder="Enter Password" name="password-repeat" required /><br />
+
+                <p>{error}</p>
+                <div class="button-container">
+                    <button type="button" class="cancelbtn">Cancel</button>
+                    <button type="submit" class="signupbtn">Sign Up</button>
+                </div>
             </div>
-        </div>
+        </form>
     {:else}
-        <div class="login-div">
-            <h1>Login</h1>
-            <p>Please enter your details below to login</p>
+        <form
+            method="POST"
+            use:enhance={async ({ formData, cancel }) => {
+                const response = await fetchApi("/app/sign-up", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email: formData.get("email"), password: formData.get("password") }),
+                });
 
-            <p>Did you mean to sign-up instead? Click <a href="../form?sign-up">here!</a></p>
-            <br />
+                if (!response.ok) {
+                    error = (await response.json()).body;
+                }
 
-            <label for="email">Email</label>
-            <input type="text" placeholder="Enter Email" name="email" required /><br />
+                cancel();
+            }}>
+            <div class="login-div">
+                <h1>Login</h1>
+                <p>Please enter your details below to login</p>
 
-            <label for="password">Password</label>
-            <input type="password" placeholder="Enter Password" name="password" required /><br />
+                <p>Did you mean to sign-up instead? Click <a href="../login?sign-up">here!</a></p>
+                <br />
 
-            <button type="button" class="submit-button">Submit</button><br />
+                <label for="email">Email</label>
+                <input type="text" placeholder="Enter Email" name="email" required /><br />
 
-            <div class="button-container">
-                <button type="button" class="cancel-button">Cancel</button>
+                <label for="password">Password</label>
+                <input type="password" placeholder="Enter Password" name="password" required /><br />
+
+                <p>{error}</p>
+                <button type="button" class="submit-button">Submit</button><br />
+
+                <div class="button-container">
+                    <button type="button" class="cancel-button">Cancel</button>
+                </div>
             </div>
-        </div>
+        </form>
     {/if}
 </div>
