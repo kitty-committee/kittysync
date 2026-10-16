@@ -1,19 +1,16 @@
 import { type FastifyReply, type FastifyRequest } from "fastify";
-import { type UserCredentials } from "@kittysync/common";
+import { UserCredentialsSchema, type UserCredentials } from "@kittysync/common";
 import * as z from "zod";
 import { usersTable } from "../../db/schema.ts";
 import bcrypt from "bcrypt";
-import type { MultipartFields } from "@fastify/multipart";
-import { userCredentialsFromMultipart } from "../../util.ts";
 import { db } from "../../app.ts";
 import { DrizzleQueryError } from "drizzle-orm";
 
 export async function postUserHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
-    const requestBody: MultipartFields = request.body as MultipartFields;
 
     try {
-        body = userCredentialsFromMultipart(requestBody);
+        body = UserCredentialsSchema.parse(request.body);
     } catch (error) {
         // Validation failed, return BadRequest error
         if (error instanceof z.ZodError || error instanceof TypeError) {
@@ -40,5 +37,5 @@ export async function postUserHandler(request: FastifyRequest, reply: FastifyRep
 
         throw error;
     }
-    reply.statusCode = 200;
+    reply.code(201).send();
 }
