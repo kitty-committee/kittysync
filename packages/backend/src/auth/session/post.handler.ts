@@ -53,7 +53,6 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
         });
         // Set TTL for user session to 1 day
         await redis.expire(`user_${sessionToken}`, 86400);
-        await redis.quit();
 
         reply.send({
             id: targetUser.id,

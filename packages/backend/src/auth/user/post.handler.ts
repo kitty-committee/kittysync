@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 import type { MultipartFields } from "@fastify/multipart";
 import { userCredentialsFromMultipart } from "../../util.ts";
 import { db } from "../../app.ts";
-import { DrizzleError } from "drizzle-orm";
+import { DrizzleQueryError } from "drizzle-orm";
 
 export async function postUserHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
@@ -31,7 +31,7 @@ export async function postUserHandler(request: FastifyRequest, reply: FastifyRep
     try {
         await db.insert(usersTable).values(body);
     } catch (error) {
-        if (error instanceof DrizzleError) {
+        if (error instanceof DrizzleQueryError) {
             if ((error as { cause?: { code?: string } }).cause?.code === "23505") {
                 reply.code(409).send();
                 return;

@@ -16,8 +16,6 @@ export async function getSessionHandler(request: FastifyRequest, reply: FastifyR
             username: record["username"],
         };
 
-        await redis.quit();
-
         reply.statusCode = 200;
         reply.send(user);
     } else {
