@@ -1,7 +1,6 @@
 import Fastify from "fastify";
 import { register } from "./auth/auth.routes.ts";
 import fastifyCookie from "@fastify/cookie";
-import fastifyMultipart from "@fastify/multipart";
 import { Redis } from "ioredis";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -19,10 +18,6 @@ export const app = Fastify({
 });
 
 app.register(fastifyCookie);
-
-app.register(fastifyMultipart, {
-    attachFieldsToBody: true,
-} as fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions);
 
 app.addHook("onClose", async (_instance) => {
     await Promise.all([redis.quit(), pool.end()]);
