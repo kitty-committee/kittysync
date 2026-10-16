@@ -21,6 +21,10 @@ app.register(fastifyMultipart, {
     attachFieldsToBody: true,
 } as fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions);
 
+app.addHook("onClose", (_instance, _done) => {
+    redis.quit();
+});
+
 // Declare a route
 app.get("/", function (_, reply) {
     reply.send({ hello: "world" });
