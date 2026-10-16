@@ -1,10 +1,10 @@
-import { type FastifyReply, type FastifyRequest } from "fastify";
 import { UserCredentialsSchema, type UserCredentials } from "@kittysync/common";
-import * as z from "zod";
+import { type FastifyReply, type FastifyRequest } from "fastify";
 import { usersTable } from "../../db/schema.ts";
-import bcrypt from "bcrypt";
-import { db } from "../../app.ts";
 import { DrizzleQueryError } from "drizzle-orm";
+import { db } from "../../app.ts";
+import bcrypt from "bcrypt";
+import * as z from "zod";
 
 export async function postUserHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;

@@ -1,11 +1,11 @@
-import Fastify from "fastify";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { configuration } from "./configuration.ts";
 import { register } from "./auth/auth.routes.ts";
 import fastifyCookie from "@fastify/cookie";
 import { Redis } from "ioredis";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
+import Fastify from "fastify";
 import { Pool } from "pg";
-import { configuration } from "./configuration.ts";
 
 export const redis = new Redis(6379, configuration.KITTYSYNC_REDIS_HOST);
 

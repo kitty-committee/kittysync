@@ -1,5 +1,5 @@
-import type { UserDb } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
+import type { UserDb } from "@kittysync/common";
 import { redis } from "../../app.ts";
 
 export async function getSessionHandler(request: FastifyRequest, reply: FastifyReply) {

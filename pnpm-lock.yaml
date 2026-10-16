@@ -190,6 +190,9 @@ importers:
       prettier:
         specifier: ^3.9.9
         version: 3.9.10
+      prettier-plugin-sort-imports:
+        specifier: ^1.8.11
+        version: 1.8.11(typescript@6.0.3)
       prettier-plugin-svelte:
         specifier: ^4.1.1
         version: 4.1.1(prettier@3.9.10)(svelte@5.57.2(@typescript-eslint/types@8.71.2))
@@ -2246,6 +2249,11 @@ packages:
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
+
+  prettier-plugin-sort-imports@1.8.11:
+    resolution: {integrity: sha512-ApmZkEmNh2Fi6TAcYNgUR15rsP1+omX43+8neY+MXfNZ7JQwrqSdjzKhLUYTtaLo52aaC9gCs+lJaYSU8oSJJA==}
+    peerDependencies:
+      typescript: '>4.0.0'
 
   prettier-plugin-svelte@4.1.1:
     resolution: {integrity: sha512-wXvbXMjSvb4C9ENWTHXyd+ihakKCsJ6rJhLP6/8HFNj4GkZr48jqL9PoKsl2sk7SyCZRTnJ7O2TTowUpOxP/KA==}
@@ -4407,6 +4415,11 @@ snapshots:
       xtend: 4.0.2
 
   prelude-ls@1.2.1: {}
+
+  prettier-plugin-sort-imports@1.8.11(typescript@6.0.3):
+    dependencies:
+      prettier: 3.9.10
+      typescript: 6.0.3
 
   prettier-plugin-svelte@4.1.1(prettier@3.9.10)(svelte@5.57.2(@typescript-eslint/types@8.71.2)):
     dependencies:

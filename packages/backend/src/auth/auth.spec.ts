@@ -1,6 +1,6 @@
+import { type UserDb } from "@kittysync/common";
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
-import { type UserDb } from "@kittysync/common";
 
 test("Create user", async () => {
     await app.listen();

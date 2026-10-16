@@ -1,9 +1,9 @@
 import { UserDbSchema, UserSearchSchema, type UserDb, type UserSearch } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
-import * as z from "zod";
 import { usersTable } from "../../db/schema.ts";
 import { like } from "drizzle-orm";
 import { db } from "../../app.ts";
+import * as z from "zod";
 
 export async function getUserHandler(request: FastifyRequest, reply: FastifyReply) {
     let query: UserSearch;

@@ -1,12 +1,12 @@
 import { UserCredentialsSchema, type UserCredentials } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
-import * as z from "zod";
+import { configuration } from "../../configuration.ts";
 import { usersTable } from "../../db/schema.ts";
+import { redis, db } from "../../app.ts";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { v4 } from "uuid";
-import { redis, db } from "../../app.ts";
-import { configuration } from "../../configuration.ts";
+import * as z from "zod";
 
 export async function postSessionHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
