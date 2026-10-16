@@ -57,5 +57,6 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
             id: target_user.id,
             username: target_user.username,
         });
+        await redis.expire(`user_${session_token}`, 20);
     }
 }
