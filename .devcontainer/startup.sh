@@ -33,13 +33,7 @@ sync_start() {
     ln -sT "$SRC" "$DST"
   else
     unison "${UNISON_ARGS[@]}" >>"$LOG" 2>&1
-    pgrep -x unison >/dev/null && return 0
-    setsid nohup bash -c '
-      while true; do
-        unison "$@" -repeat 2
-        echo "unison exited; restarting in 5s" >&2
-        sleep 5
-      done' _ "${UNISON_ARGS[@]}" >>"$LOG" 2>&1 &
+    setsid -f bash "$SRC/.devcontainer/daemon.sh" "${UNISON_ARGS[@]}" >>"$LOG" 2>&1 </dev/null
   fi
 }
 
