@@ -4,7 +4,8 @@
     import { fetchApi } from "#lib";
     import * as zod from "zod";
     import ZodIssues from "#lib/ZodIssues.svelte";
-    let issues = $state();
+
+    let issues: zod.z.core.$ZodIssue[] = $state([]);
 
     export const userSchema = zod
         .object({
@@ -26,6 +27,8 @@
         <form
             method="POST"
             use:enhance={async ({ formData, cancel }) => {
+                cancel();
+
                 var user = {
                     email: formData.get("email"),
                     password: formData.get("password"),
@@ -50,8 +53,6 @@
                 if (!response.ok) {
                     error = (await response.json()).body;
                 }
-
-                cancel();
             }}>
             <div class="signup-div">
                 <h1>Sign-up</h1>
@@ -80,6 +81,8 @@
         <form
             method="POST"
             use:enhance={async ({ formData, cancel }) => {
+                cancel();
+
                 var user = {
                     email: formData.get("email"),
                     password: formData.get("password"),
@@ -103,8 +106,6 @@
                 if (!response.ok) {
                     error = (await response.json()).body;
                 }
-
-                cancel();
             }}>
             <div class="login-div">
                 <h1>Login</h1>

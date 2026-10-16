@@ -1,7 +1,7 @@
 <script lang="ts">
-    import type { ZodIssue } from "zod";
+    import * as z from "zod";
 
-    let { issues }: { issues: ZodIssue[] } = $props();
+    let { issues }: { issues: z.core.$ZodIssue[] } = $props();
 </script>
 
 <ul>
