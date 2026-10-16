@@ -38,14 +38,16 @@ Create a new user.
 
 ##### Request body
 
-Multipart form data containing two named fields:
-
-- `username`: String,
-- `password`: String
+```json
+{
+  "username": <username>,
+  "password": <password>
+}
+```
 
 ##### Response
 
-Empty `HTTP 200` on success, HTTP error code otherwise.
+Empty `HTTP 201` on success, HTTP error code otherwise.
 
 ### `/api/auth/session`
 
@@ -80,10 +82,12 @@ Create a new session. Effectively a login endpoint.
 
 ##### Request body
 
-Multipart form data containing two fields:
-
-- `username`: String,
-- `password`: String
+```json
+{
+  "username": <username>,
+  "password": <password>
+}
+```
 
 ##### Response
 
