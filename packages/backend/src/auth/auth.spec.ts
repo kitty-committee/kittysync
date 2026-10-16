@@ -20,7 +20,7 @@ test("Create user", async () => {
         }),
     });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
 
     response = await fetch(`http://localhost:${port}/api/auth/user`, {
         method: "POST",
