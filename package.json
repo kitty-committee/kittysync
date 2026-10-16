@@ -6,7 +6,7 @@
         "check": "pnpm run check:lint && pnpm run check:format && pnpm run check:type && pnpm run check:test",
         "check:format": "prettier --check .",
         "check:type": "pnpm run -r check:type",
-        "check:test": "pnpm stack:up && pnpm run -r check:test",
+        "check:test": "pnpm run -r check:test",
         "check:lint": "eslint .",
         "format": "prettier --write .",
         "dev": "pnpm run -r --parallel dev",
@@ -15,7 +15,7 @@
         "common": "pnpm --filter common",
         "stack": "docker compose -f compose.dev.yml",
         "stack:up": "docker compose -f compose.dev.yml up --wait && pnpm backend drizzle-kit push",
-        "stack:restart": "pnpm stack down -v && pnpm stack:up"
+        "stack:restart": "pnpm stack up --force-recreate --wait"
     },
     "workspaces": [
         "packages/*"

@@ -88,4 +88,4 @@ Multipart form data containing two fields:
 ##### Response
 
 `HTTP 200` on success, with a `Set-Cookie` header which will set the session cookie on the user agent,
-, `HTTP 401` if the supplied credentials do not match a user, HTTP error code otherwise.
+`HTTP 401` if the supplied credentials do not match a user, HTTP error code otherwise.

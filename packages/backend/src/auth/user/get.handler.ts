@@ -1,9 +1,9 @@
 import { UserDbSchema, UserSearchSchema, type UserDb, type UserSearch } from "@kittysync/common";
-import { drizzle } from "drizzle-orm/node-postgres";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import * as z from "zod";
 import { usersTable } from "../../db/schema.ts";
 import { like } from "drizzle-orm";
+import { db } from "../../app.ts";
 
 export async function getUserHandler(request: FastifyRequest, reply: FastifyReply) {
     let query: UserSearch;
@@ -21,7 +21,6 @@ export async function getUserHandler(request: FastifyRequest, reply: FastifyRepl
         }
     }
 
-    const db = drizzle(process.env["KITTYSYNC_DATABASE_URL"]!);
     const result = await db
         .select({ id: usersTable.id, username: usersTable.username })
         .from(usersTable)
