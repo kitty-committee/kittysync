@@ -40,4 +40,4 @@ jobs:
               run: pnpm stack up -d
 
             - name: Run check
-              run: source .env.example; pnpm ${{ matrix.script }}
+              run: set -a; source .env.example; set +a; pnpm ${{ matrix.script }}
