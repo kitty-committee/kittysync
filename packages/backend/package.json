@@ -4,7 +4,7 @@
     "type": "module",
     "scripts": {
         "check:type": "tsc --noEmit",
-        "check:test": "pnpm stack:up && vitest run",
+        "check:test": "vitest run",
         "dev": "tsx watch src",
         "build": "tsc"
     },

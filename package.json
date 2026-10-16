@@ -6,7 +6,7 @@
         "check": "pnpm run check:lint && pnpm run check:format && pnpm run check:type && pnpm run check:test",
         "check:format": "prettier --check .",
         "check:type": "pnpm run -r check:type",
-        "check:test": "pnpm run -r check:test",
+        "check:test": "pnpm stack:up && pnpm run -r check:test",
         "check:lint": "eslint .",
         "format": "prettier --write .",
         "dev": "pnpm run -r --parallel dev",
