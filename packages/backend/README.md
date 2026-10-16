@@ -47,7 +47,7 @@ Create a new user.
 
 ##### Response
 
-Empty `HTTP 200` on success, HTTP error code otherwise.
+Empty `HTTP 201` on success, HTTP error code otherwise.
 
 ### `/api/auth/session`
 
