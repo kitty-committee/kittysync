@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { v4 } from "uuid";
 import { redis, db } from "../../app.ts";
+import { configuration } from "../../configuration.ts";
 
 export async function postSessionHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
@@ -38,7 +39,7 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
 
         const sessionToken = v4();
         reply.setCookie("session", sessionToken, {
-            domain: process.env["KITTYSYNC_APP_DOMAIN"]!,
+            domain: configuration.KITTYSYNC_APP_DOMAIN,
             path: "/",
             sameSite: "strict",
             maxAge: 86400,

@@ -1,15 +1,18 @@
 import Fastify from "fastify";
 import { register } from "./auth/auth.routes.ts";
-import * as dotenv from "dotenv";
 import fastifyCookie from "@fastify/cookie";
 import fastifyMultipart from "@fastify/multipart";
 import { Redis } from "ioredis";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Pool } from "pg";
+import { configuration } from "./configuration.ts";
 
-dotenv.config();
+export const redis = new Redis(6379, configuration.KITTYSYNC_REDIS_HOST);
 
-export const redis = new Redis(6379, process.env["KITTYSYNC_REDIS_HOST"]!);
-export const db = drizzle(process.env["KITTYSYNC_DATABASE_URL"]!);
+const pool = new Pool(configuration.database);
+export const db = drizzle({ client: pool });
+await migrate(db, { migrationsFolder: "./drizzle" });
 
 export const app = Fastify({
     logger: true,
@@ -22,7 +25,7 @@ app.register(fastifyMultipart, {
 } as fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions);
 
 app.addHook("onClose", async (_instance) => {
-    await redis.quit();
+    await Promise.all([redis.quit(), pool.end()]);
 });
 
 // Declare a route
