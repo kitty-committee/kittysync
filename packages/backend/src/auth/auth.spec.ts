@@ -1,6 +1,5 @@
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
-import { regex } from "zod";
 import { type UserDb } from "@kittysync/common";
 
 test("Create user", async () => {
@@ -37,18 +36,18 @@ test("Create new session", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
-    let form = new FormData();
+    const form = new FormData();
     form.append("username", "test-user");
     form.append("password", "hello-world");
 
-    let response = await fetch(`http://localhost:${port}/api/auth/session`, {
+    const response = await fetch(`http://localhost:${port}/api/auth/session`, {
         method: "POST",
         body: form,
     });
 
-    const set_cookies = response.headers.getSetCookie();
-    expect(set_cookies.length).toBe(1);
-    expect(set_cookies[0]).toMatch(/session=(.*)/);
+    const setCookies = response.headers.getSetCookie();
+    expect(setCookies.length).toBe(1);
+    expect(setCookies[0]).toMatch(/session=(.*)/);
     expect(response.status).toBe(200);
 });
 
@@ -57,7 +56,7 @@ test("Create new session - Bad request", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
-    let form = new FormData();
+    const form = new FormData();
     form.append("username", "t");
     form.append("password", "hello-world");
 
@@ -74,7 +73,7 @@ test("Create new session - Invalid credentials", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
-    let form = new FormData();
+    const form = new FormData();
     form.append("username", "test-user");
     form.append("password", "hello");
 
@@ -91,7 +90,7 @@ test("Get / Validate session data", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
-    let form = new FormData();
+    const form = new FormData();
     form.append("username", "test-user");
     form.append("password", "hello-world");
 
@@ -123,7 +122,7 @@ test("Search user data", async () => {
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
 
-    let response = await fetch(`http://localhost:${port}/api/auth/user?username=%`, {
+    const response = await fetch(`http://localhost:${port}/api/auth/user?username=%`, {
         method: "GET",
     });
 

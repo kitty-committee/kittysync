@@ -1,6 +1,6 @@
 import { UserDbSchema, UserSearchSchema, type UserDb, type UserSearch } from "@kittysync/common";
 import { drizzle } from "drizzle-orm/node-postgres";
-import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
+import { type FastifyReply, type FastifyRequest } from "fastify";
 import * as z from "zod";
 import { usersTable } from "../../db/schema.ts";
 import { like } from "drizzle-orm";
@@ -27,12 +27,12 @@ export async function getUserHandler(request: FastifyRequest, reply: FastifyRepl
         .from(usersTable)
         .where(like(usersTable.username, query.username));
 
-    let parsed_results: UserDb[] = [];
+    const parsedResults: UserDb[] = [];
 
     for (let i = 0; i < result.length; i++) {
-        parsed_results.push(UserDbSchema.parse(result[i]));
+        parsedResults.push(UserDbSchema.parse(result[i]));
     }
 
     reply.statusCode = 200;
-    reply.send(parsed_results);
+    reply.send(parsedResults);
 }
