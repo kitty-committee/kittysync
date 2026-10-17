@@ -47,7 +47,7 @@
             });
 
             if (!response.ok) {
-                error = (await response.json()).body;
+                error = (await response.json()).message;
             } else {
                 if (returnPage != null) {
                     throw redirect(303, returnPage);
