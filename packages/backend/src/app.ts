@@ -8,3 +8,4 @@ export const app = Fastify({
 app.get("/", function (_, reply) {
     reply.send({ hello: "world" });
 });
+
