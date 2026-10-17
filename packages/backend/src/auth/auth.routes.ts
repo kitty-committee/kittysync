@@ -1,8 +1,8 @@
-import Fastify from "fastify";
-import { getUserHandler } from "./user/get.handler.ts";
-import { postUserHandler } from "./user/post.handler.ts";
-import { getSessionHandler } from "./session/get.handler.ts";
 import { postSessionHandler } from "./session/post.handler.ts";
+import { getSessionHandler } from "./session/get.handler.ts";
+import { postUserHandler } from "./user/post.handler.ts";
+import { getUserHandler } from "./user/get.handler.ts";
+import Fastify from "fastify";
 
 function routes(app: Fastify.FastifyInstance) {
     app.get("user", getUserHandler);
