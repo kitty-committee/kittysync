@@ -4,6 +4,7 @@
     "name": "kittysync",
     "forwardPorts": [5173, 3000, 5432, 6379],
     "build": { "dockerfile": "Dockerfile" },
-    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-    "postStartCommand": "sudo service postgresql start && sudo service redis-server start && ([ -f .env ] || cp .env.example .env) && pnpm install"
+    "workspaceFolder": "/home/node/kittysync",
+    "onCreateCommand": "bash /workspaces/kittysync/.devcontainer/startup.sh",
+    "postStartCommand": "bash /workspaces/kittysync/.devcontainer/startup.sh"
 }
