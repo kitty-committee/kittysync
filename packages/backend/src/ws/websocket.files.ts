@@ -27,6 +27,21 @@ function updateAllUserListsOnFile(fileID: string) {
     });
 }
 
-// export function updateFile(fileID: string, fileData: string) {
+export function updateFileForAllUsers(fileID: string, fileData: string) {
+    // this will change once database implemented
+    const packet: WsPacket = { type: "updateFile", data: { file: fileData } };
+    const jsonPacket = JSON.stringify(packet);
+    fileSocketsMap.getOrInsert(fileID, []).forEach((e) => {
+        e.send(jsonPacket);
+    })
+}
 
-// }
+export function removeUserFromFile(fileID: string, socket: WebSocket, userID: string) {
+    const userlist = fileUsersMap.getOrInsert(fileID, []);
+    userlist.splice(userlist.indexOf(userID), 1);
+
+    const socketList = fileSocketsMap.getOrInsert(fileID, []);
+    socketList.splice(socketList.indexOf(socket), 1);
+
+    updateAllUserListsOnFile(fileID);
+}
