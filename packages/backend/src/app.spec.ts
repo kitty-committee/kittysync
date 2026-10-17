@@ -27,7 +27,7 @@ test("with fetch", async () => {
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
 
-    const response = await fetch(`http://localhost:${port}/`).then((r) => r.json() as unknown);
+    const response = await fetch(`http://localhost:${port}/`).then((r) => r.json());
 
     expect(response).toStrictEqual({ hello: "world" });
 });

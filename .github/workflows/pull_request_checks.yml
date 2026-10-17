@@ -1,4 +1,4 @@
-name: Pull request checks
+name: Pull request checks"
 
 on:
     pull_request:
@@ -35,9 +35,5 @@ jobs:
               if: matrix.script == 'check:test'
               run: pnpm frontend playwright install --with-deps
 
-            - name: Start compose stack
-              if: matrix.script == 'check:test'
-              run: pnpm stack up -d
-
             - name: Run check
-              run: set -a; source .env.example; set +a; pnpm ${{ matrix.script }}
+              run: pnpm ${{ matrix.script }}

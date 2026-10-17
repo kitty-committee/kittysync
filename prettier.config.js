@@ -1,17 +1,17 @@
 /** @type {import("prettier").Config} */
 const config = {
-    plugins: ["prettier-plugin-svelte", "prettier-plugin-sort-imports"],
-    overrides: [{ files: "*.svelte", options: { parser: "svelte" } }],
-    arrowParens: "always",
-    bracketSameLine: true,
+    useTabs: false,
+    singleQuote: false,
     trailingComma: "all",
     bracketSpacing: true,
-    singleQuote: false,
+    tabWidth: 4,
+    arrowParens: "always",
+    semi: true,
+    bracketSameLine: true,
     endOfLine: "lf",
     printWidth: 120,
-    useTabs: false,
-    tabWidth: 4,
-    semi: true,
+    plugins: ["prettier-plugin-svelte"],
+    overrides: [{ files: "*.svelte", options: { parser: "svelte" } }],
 };
 
 export default config;

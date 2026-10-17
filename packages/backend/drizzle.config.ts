@@ -1,9 +1,10 @@
-import { configuration } from "./src/configuration";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-    dbCredentials: configuration.database,
+    out: "./drizzle",
     schema: "./src/db/schema.ts",
     dialect: "postgresql",
-    out: "./drizzle",
+    dbCredentials: {
+        url: process.env["KITTYSYNC_DATABASE_URL"]!,
+    },
 });
