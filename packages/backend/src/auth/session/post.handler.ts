@@ -39,7 +39,7 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
 
         const sessionToken = v4();
         reply.setCookie("session", sessionToken, {
-            domain: configuration.KITTYSYNC_APP_DOMAIN,
+            domain: configuration.appDomain,
             path: "/",
             sameSite: "strict",
             maxAge: 86400,

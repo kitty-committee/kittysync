@@ -7,7 +7,7 @@ import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
 
-export const redis = new Redis(6379, configuration.KITTYSYNC_REDIS_HOST);
+export const redis = new Redis(6379, configuration.redisHost);
 
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
