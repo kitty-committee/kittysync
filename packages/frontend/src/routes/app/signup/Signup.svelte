@@ -2,7 +2,12 @@
     import ZodIssues from "#lib/ZodIssues.svelte";
     import { resolve } from "$app/paths";
     import { enhance } from "$app/forms";
+    import { page } from "$app/state";
     import { fetchApi } from "#lib";
+
+    const returnPage = page.url.searchParams.get("returnPage");
+
+    import { redirect } from "@sveltejs/kit";
     import * as zod from "zod";
 
     let issues: zod.z.core.$ZodIssue[] = $state([]);
@@ -40,16 +45,21 @@
                 return;
             }
 
-            const response = await fetchApi("/app/auth/signup", {
+            const response = await fetchApi("auth/user", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ email: formData.get("email"), password: formData.get("password") }),
+                body: JSON.stringify({ username: formData.get("email"), password: formData.get("password") }),
             });
 
             if (!response.ok) {
                 error = (await response.json()).body;
+            } else {
+                if (returnPage != null) {
+                    throw redirect(303, returnPage);
+                }
+                throw redirect(303, "/app/landing");
             }
         }}>
         <div class="signup-div">

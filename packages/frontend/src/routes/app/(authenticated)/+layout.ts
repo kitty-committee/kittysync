@@ -1,5 +1,5 @@
-import { fetchApi } from "#lib";
 import { redirect } from "@sveltejs/kit";
+import { fetchApi } from "#lib";
 
 // replace with code for redirecting to the login page if the user is not authenticated
 export async function load() {
@@ -9,7 +9,7 @@ export async function load() {
     }
 
     // userData defined
-    const api = await fetchApi("auth/sessions?session");
+    const api = await fetchApi("auth/session?session");
 
     // If statement to redirect loggedout users
     if (!api.ok) {
