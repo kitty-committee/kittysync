@@ -6,7 +6,7 @@
         "module": "nodenext",
         "allowImportingTsExtensions": true,
         "rewriteRelativeImportExtensions": true,
-        "lib": ["esnext"],
+        "lib": ["esnext", "dom"],
         "types": ["node"],
         "sourceMap": true,
         "moduleDetection": "force"
