@@ -12,6 +12,8 @@ RUN service postgresql start \
  && su postgres -c "createdb -O kittysync kittysync" \
  && service postgresql stop
 
+COPY . /.devcontainer
+
 USER node
 RUN mkdir -p /home/node/kittysync
 RUN pnpx playwright@1.64.0 install --with-deps
