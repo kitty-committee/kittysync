@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 import { register } from "./auth/auth.routes.ts";
 import fastifyCookie from "@fastify/cookie";
+import websocket from "@fastify/websocket";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
@@ -19,6 +20,7 @@ export const app = Fastify({
 });
 
 app.register(fastifyCookie);
+app.register(websocket);
 
 app.addHook("onClose", async (_instance) => {
     await Promise.all([redis.quit(), pool.end()]);
