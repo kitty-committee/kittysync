@@ -1,21 +1,21 @@
 import * as z from "zod";
 
-export const UserCredentialsSchema = z.object({
+export const userCredentialsSchema = z.object({
     username: z.string().trim().min(5).max(255),
     password: z.string().trim().min(5).max(255),
 });
 
-export type UserCredentials = z.infer<typeof UserCredentialsSchema>;
+export type UserCredentials = z.infer<typeof userCredentialsSchema>;
 
-export const UserDbSchema = z.object({
+export const userDbSchema = z.object({
     id: z.uuidv4(),
     username: z.string().trim().min(5).max(255),
 });
 
-export type UserDb = z.infer<typeof UserDbSchema>;
+export type UserDb = z.infer<typeof userDbSchema>;
 
-export const UserSearchSchema = z.object({
+export const userSearchSchema = z.object({
     username: z.string().trim(),
 });
 
-export type UserSearch = z.infer<typeof UserSearchSchema>;
+export type UserSearch = z.infer<typeof userSearchSchema>;

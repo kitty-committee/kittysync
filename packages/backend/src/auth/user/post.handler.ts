@@ -1,33 +1,41 @@
-import { type FastifyReply, type FastifyRequest } from "fastify";
 import { UserCredentialsSchema, type UserCredentials } from "@kittysync/common";
-import * as z from "zod";
-import { drizzle } from "drizzle-orm/node-postgres";
+import { type FastifyReply, type FastifyRequest } from "fastify";
 import { usersTable } from "../../db/schema.ts";
+import { DrizzleQueryError } from "drizzle-orm";
+import { db } from "../../app.ts";
 import bcrypt from "bcrypt";
-import type { MultipartFields, MultipartValue } from "@fastify/multipart";
-import { userCredentialsFromMultipart } from "../../util.ts";
+import * as z from "zod";
 
 export async function postUserHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
-    const request_body: MultipartFields = request.body as MultipartFields;
 
     try {
-        body = userCredentialsFromMultipart(request_body);
+        body = UserCredentialsSchema.parse(request.body);
     } catch (error) {
         // Validation failed, return BadRequest error
-        if (error instanceof z.ZodError) {
+        if (error instanceof z.ZodError || error instanceof TypeError) {
             reply.statusCode = 400;
             reply.send(error);
+            return;
         }
 
-        return;
+        throw error;
     }
 
-    const salt_rounds = 10;
-    body.password = await bcrypt.hash(body.password, salt_rounds);
+    const saltRounds = 10;
+    body.password = await bcrypt.hash(body.password, saltRounds);
 
-    const db = drizzle(process.env["KITTYSYNC_DATABASE_URL"]!);
-    await db.insert(usersTable).values(body);
+    try {
+        await db.insert(usersTable).values(body);
+    } catch (error) {
+        if (error instanceof DrizzleQueryError) {
+            if ((error as { cause?: { code?: string } }).cause?.code === "23505") {
+                reply.code(409).send();
+                return;
+            }
+        }
 
-    reply.statusCode = 200;
+        throw error;
+    }
+    reply.code(201).send();
 }

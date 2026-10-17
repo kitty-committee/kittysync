@@ -1,12 +1,19 @@
 import {
-    UserCredentialsSchema,
+    userCredentialsSchema,
     type UserCredentials,
-    UserDbSchema,
+    userDbSchema,
     type UserDb,
-    UserSearchSchema,
+    userSearchSchema,
     type UserSearch,
 } from "./validation.ts";
 
 export const SHARED = "This is a shared constant from the common package.";
 
-export { UserCredentialsSchema, type UserCredentials, UserDbSchema, type UserDb, UserSearchSchema, type UserSearch };
+export {
+    userCredentialsSchema as UserCredentialsSchema,
+    type UserCredentials,
+    userDbSchema as UserDbSchema,
+    type UserDb,
+    userSearchSchema as UserSearchSchema,
+    type UserSearch,
+};
