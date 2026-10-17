@@ -1,8 +1,9 @@
 <script lang="ts">
+    import ZodIssues from "#lib/ZodIssues.svelte";
+    import { resolve } from "$app/paths";
     import { enhance } from "$app/forms";
     import { fetchApi } from "#lib";
     import * as zod from "zod";
-    import ZodIssues from "#lib/ZodIssues.svelte";
 
     let issues: zod.z.core.$ZodIssue[] = $state([]);
 
@@ -39,7 +40,7 @@
                 return;
             }
 
-            const response = await fetchApi("/app/sign-up", {
+            const response = await fetchApi("/app/auth/signup", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -55,7 +56,7 @@
             <h1>Sign-up</h1>
             <p>Please enter your details below to sign-up</p>
 
-            <p>Did you mean to login instead? Click <a href="../login">here!</a></p>
+            <p>Did you mean to login instead? Click <a href={resolve("/app/login")}>here!</a></p>
 
             <label for="email">Email</label>
             <input type="text" placeholder="Enter Email" name="email" required /><br />

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { resolve } from "$app/paths";
     import Login from "./Login.svelte";
 </script>
 
@@ -7,4 +8,4 @@
 
 <Login />
 
-<a href="../">Home</a>
+<a href={resolve("/app")}>Home</a>
