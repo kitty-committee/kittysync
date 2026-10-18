@@ -1,11 +1,11 @@
 import { UserCredentialsSchema, type UserCredentials } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import { configuration } from "../../configuration.ts";
+import { UUIDSessionToken } from "./session-tokens.ts";
 import { usersTable } from "../../db/schema.ts";
-import { redis, db } from "../../app.ts";
+import { db } from "../../app.ts";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
-import { v4 } from "uuid";
 import * as z from "zod";
 
 export async function postSessionHandler(request: FastifyRequest, reply: FastifyReply) {
@@ -37,20 +37,13 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
     } else {
         reply.statusCode = 200;
 
-        const sessionToken = v4();
-        reply.setCookie("session", sessionToken, {
+        const sessionToken = await UUIDSessionToken.new(targetUser);
+        reply.setCookie("session", sessionToken.getToken().toString(), {
             domain: configuration.appDomain,
             path: "/",
             sameSite: "strict",
             maxAge: 86400,
         });
-
-        await redis.hset(`user_${sessionToken}`, {
-            id: targetUser.id,
-            username: targetUser.username,
-        });
-        // Set TTL for user session to 1 day
-        await redis.expire(`user_${sessionToken}`, 86400);
 
         reply.send({
             id: targetUser.id,
