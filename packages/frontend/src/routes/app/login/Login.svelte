@@ -1,13 +1,12 @@
 <script lang="ts">
     import ZodIssues from "#lib/ZodIssues.svelte";
-    import { resolve } from "$app/paths";
+    import { match, resolve } from "$app/paths";
     import { enhance } from "$app/forms";
-    import { page } from "$app/state";
     import { fetchApi } from "#lib";
 
-    const returnPage = page.url.searchParams.get("returnPage");
+    const returnPage = sessionStorage.getItem("return-page");
 
-    import { redirect } from "@sveltejs/kit";
+    import { goto } from "$app/navigation";
     import * as zod from "zod";
 
     let issues: zod.z.core.$ZodIssue[] = $state([]);
@@ -46,13 +45,21 @@
                 body: JSON.stringify({ username: formData.get("email"), password: formData.get("password") }),
             });
 
-            if (!response.ok) {
+            if (response.status == 401) {
+                error = "Invalid password, please try again.";
+            } else if (!response.ok) {
                 error = (await response.json()).message;
             } else {
                 if (returnPage != null) {
-                    throw redirect(303, returnPage);
+                    const matched = await match(returnPage);
+                    console.log(returnPage);
+                    console.log(matched?.id);
+                    if (matched) {
+                        await goto(resolve(matched.id));
+                    } else {
+                        await goto(resolve("/app/(authenticated)/landing"));
+                    }
                 }
-                throw redirect(303, "/app/landing");
             }
         }}>
         <div class="login-div">

@@ -2,12 +2,9 @@
     import ZodIssues from "#lib/ZodIssues.svelte";
     import { resolve } from "$app/paths";
     import { enhance } from "$app/forms";
-    import { page } from "$app/state";
     import { fetchApi } from "#lib";
 
-    const returnPage = page.url.searchParams.get("returnPage");
-
-    import { redirect } from "@sveltejs/kit";
+    import { goto } from "$app/navigation";
     import * as zod from "zod";
 
     let issues: zod.z.core.$ZodIssue[] = $state([]);
@@ -53,13 +50,12 @@
                 body: JSON.stringify({ username: formData.get("email"), password: formData.get("password") }),
             });
 
-            if (!response.ok) {
+            if (response.status == 409) {
+                error = "Account with that email already created, please use another email.";
+            } else if (!response.ok) {
                 error = (await response.json()).message;
             } else {
-                if (returnPage != null) {
-                    throw redirect(303, returnPage);
-                }
-                throw redirect(303, "/app/landing");
+                await goto(resolve("/app/(authenticated)/landing"));
             }
         }}>
         <div class="signup-div">
