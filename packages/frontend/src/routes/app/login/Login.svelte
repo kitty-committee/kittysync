@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { userCredentialsSchema } from "@kittysync/common";
     import ZodIssues from "#lib/ZodIssues.svelte";
     import { match, resolve } from "$app/paths";
     import { enhance } from "$app/forms";
@@ -11,11 +12,6 @@
 
     let issues: zod.z.core.$ZodIssue[] = $state([]);
 
-    export const userSchema = zod.object({
-        email: zod.email(),
-        password: zod.string(), //Space to make schema more strict for passwords
-    });
-
     let error = $state();
 </script>
 
@@ -24,13 +20,14 @@
         method="POST"
         use:enhance={async ({ formData, cancel }) => {
             cancel();
-
+            error = [];
+            issues = [];
             var user = {
-                email: formData.get("email"),
+                username: formData.get("username"),
                 password: formData.get("password"),
             };
 
-            const safeParse = userSchema.safeParse(user);
+            const safeParse = userCredentialsSchema.safeParse(user);
 
             if (!safeParse.success) {
                 issues = safeParse.error.issues;
@@ -42,7 +39,7 @@
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ username: formData.get("email"), password: formData.get("password") }),
+                body: JSON.stringify({ username: formData.get("username"), password: formData.get("password") }),
             });
 
             if (response.status == 401) {
@@ -68,8 +65,8 @@
 
             <p>Did you mean to sign-up instead? Click <a href={resolve("/app/signup")}>here!</a></p>
 
-            <label for="email">Email</label>
-            <input type="text" placeholder="Enter Email" name="email" required /><br />
+            <label for="username">Username</label>
+            <input type="text" placeholder="Enter Username" name="username" required /><br />
 
             <label for="password">Password</label>
             <input type="password" placeholder="Enter Password" name="password" required /><br />

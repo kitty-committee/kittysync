@@ -5,7 +5,7 @@
 </script>
 
 <ul>
-    {#each issues as { message, path } (message)}
+    {#each issues as { message, path } (path)}
         <li>{path[0]} - {message}</li>
     {/each}
 </ul>

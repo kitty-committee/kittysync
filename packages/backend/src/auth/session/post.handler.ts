@@ -1,4 +1,4 @@
-import { UserCredentialsSchema, type UserCredentials } from "@kittysync/common";
+import { userCredentialsSchema, type UserCredentials } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import { configuration } from "../../configuration.ts";
 import { usersTable } from "../../db/schema.ts";
@@ -12,7 +12,7 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
     let body: UserCredentials;
 
     try {
-        body = UserCredentialsSchema.parse(request.body);
+        body = userCredentialsSchema.parse(request.body);
     } catch (error) {
         // Validation failed, return BadRequest error
         if (error instanceof z.ZodError || error instanceof TypeError) {
