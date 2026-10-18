@@ -39,8 +39,8 @@ export class UUIDSessionToken implements SessionToken {
 
     static async new(user: UserDb): Promise<UUIDSessionToken> {
         const token = new UUIDSessionToken(v4());
-        await redis.hset(`user_${token.token}`, user);
-        await redis.expire(`user_${token.token}`, 86400);
+        await redis.hset(`user_${token.token.toString()}`, user);
+        await redis.expire(`user_${token.token.toString()}`, 86400);
 
         return token;
     }
@@ -50,13 +50,13 @@ export class UUIDSessionToken implements SessionToken {
     }
 
     async verify(): Promise<boolean> {
-        return (await redis.exists(`user_${this.token}`)) == 1;
+        return (await redis.exists(`user_${this.token.toString()}`)) == 1;
     }
 
     async extractUser(): Promise<UserDb | undefined> {
         if (!(await this.verify())) return undefined;
         else {
-            const r = await redis.hgetall(`user_${this.token}`);
+            const r = await redis.hgetall(`user_${this.token.toString()}`);
             if (r["username"] === undefined || r["id"] === undefined) return undefined;
             else {
                 return { id: r["id"], username: r["username"] };
