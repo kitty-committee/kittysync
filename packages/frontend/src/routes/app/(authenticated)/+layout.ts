@@ -7,7 +7,7 @@ import { fetchApi } from "#lib";
 export const load: LayoutLoad = async ({ url }) => {
     // If statement to redirect loggedout users
     if (window.cookieStore?.get && (await window.cookieStore.get("session")) === null) {
-        loginRedirect(url.pathname);
+        await loginRedirect(url.pathname);
         return;
     }
 
@@ -16,7 +16,7 @@ export const load: LayoutLoad = async ({ url }) => {
 
     // If statement to redirect loggedout users
     if (!api.ok) {
-        loginRedirect(url.pathname);
+        await loginRedirect(url.pathname);
         return;
     }
 
