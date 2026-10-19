@@ -10,7 +10,7 @@
 
     let issues: zod.z.core.$ZodIssue[] = $state([]);
 
-    export const userSchema = zod
+    const userSchema = zod
         .object({
             repeatPassword: zod.string().trim().min(5).max(255),
         })
@@ -68,18 +68,23 @@
             <p>Did you mean to login instead? Click <a href={resolve("/app/login")}>here!</a></p>
 
             <label for="username">Username</label>
-            <input type="text" placeholder="Enter Username" name="username" required /><br />
+            <input type="text" placeholder="Enter Username" name="username" id="username" required /><br />
 
             <label for="password">Password</label>
-            <input type="password" placeholder="Enter Password" name="password" required /><br />
+            <input type="password" placeholder="Enter Password" name="password" id="password" required /><br />
 
             <label for="repeatPassword">Repeat password</label>
-            <input type="password" placeholder="Enter Password" name="repeatPassword" required /><br />
+            <input
+                type="password"
+                placeholder="Enter Password"
+                name="repeatPassword"
+                id="repeatPassword"
+                required /><br />
 
             <ZodIssues {issues} />
             {error}
             <div class="button-container">
-                <button type="button" class="cancelbtn">Cancel</button>
+                <button type="button" class="cancelbtn" onclick={() => goto(resolve("/app/login"))}>Cancel</button>
                 <button type="submit" class="signupbtn">Sign Up</button>
             </div>
         </div>
