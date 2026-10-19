@@ -1,7 +1,7 @@
-import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 import adapter from "@sveltejs/adapter-static";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
     server: {
@@ -39,7 +39,6 @@ export default defineConfig({
                         instances: [{ browser: "chromium", headless: true }],
                     },
                     include: ["src/**/*.svelte.{test,spec}.{js,ts}"],
-                    exclude: ["src/lib/server/**"],
                 },
             },
 
