@@ -37,7 +37,11 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
     } else {
         reply.statusCode = 200;
 
-        const sessionToken = await UUIDSessionToken.new(targetUser);
+        const sessionToken = await UUIDSessionToken.new({
+            id: targetUser.id,
+            username: targetUser.username,
+        });
+
         reply.setCookie("session", sessionToken.getToken().toString(), {
             domain: configuration.appDomain,
             path: "/",
