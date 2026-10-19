@@ -8,6 +8,7 @@ export const load: LayoutLoad = async ({ url }) => {
     // If statement to redirect loggedout users
     if (window.cookieStore?.get && (await window.cookieStore.get("session")) === null) {
         loginRedirect(url.pathname);
+        return;
     }
 
     // userData defined
@@ -16,6 +17,7 @@ export const load: LayoutLoad = async ({ url }) => {
     // If statement to redirect loggedout users
     if (!api.ok) {
         loginRedirect(url.pathname);
+        return;
     }
 
     return { api };
