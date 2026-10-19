@@ -6,7 +6,7 @@ test("connect to websocket", async () => {
     await app.listen();
     await app.ready();
 
-    const ws = await app.injectWS('/websocket?fileID=abc.txt', { headers: { "api-key": "some-random-key" } });
+    const ws = await app.injectWS('/api/websocket?fileID=abc.txt');
 
     let fileResolve: (value: WsPacket | PromiseLike<WsPacket>) => void;
     const filePromise = new Promise<WsPacket>(r => { fileResolve = r })

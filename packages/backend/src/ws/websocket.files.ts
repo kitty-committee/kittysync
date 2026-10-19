@@ -10,8 +10,18 @@ export function clearMaps() {
 }
 
 export function addNewUserToFile(fileID: string, socket: WebSocket, userID: string) {
-    fileUsersMap.getOrInsert(fileID, []).push(userID);
-    fileSocketsMap.getOrInsert(fileID, []).push(socket);
+
+    if(fileUsersMap.get(fileID) === undefined){
+        fileUsersMap.set(fileID,[])
+    }
+    fileUsersMap.get(fileID)?.push(userID);
+
+    // fileSocketsMap.getOrInsert(fileID, [] as WebSocket[]).push(socket);
+
+    if(fileSocketsMap.get(fileID) === undefined){
+        fileSocketsMap.set(fileID,[]);
+    }
+    fileSocketsMap.get(fileID)?.push(socket);
 
     const packet: WsPacket = { type: "updateFile", data: { file: "this is a file" } }
     socket.send(JSON.stringify(packet));
@@ -20,7 +30,7 @@ export function addNewUserToFile(fileID: string, socket: WebSocket, userID: stri
 }
 
 function updateAllUserListsOnFile(fileID: string) {
-    const packet: WsPacket = { type: "updateUsers", data: { userList: fileUsersMap.getOrInsert(fileID, []) } };
+    const packet: WsPacket = { type: "updateUsers", data: { userList: fileUsersMap.get(fileID)??[] } };
     const jsonPacket = JSON.stringify(packet);
     fileSocketsMap.getOrInsert(fileID, []).forEach((e) => {
         e.send(jsonPacket);
@@ -31,16 +41,16 @@ export function updateFileForAllUsers(fileID: string, fileData: string) {
     // this will change once database implemented
     const packet: WsPacket = { type: "updateFile", data: { file: fileData } };
     const jsonPacket = JSON.stringify(packet);
-    fileSocketsMap.getOrInsert(fileID, []).forEach((e) => {
+    (fileSocketsMap.get(fileID)??[]).forEach((e) => {
         e.send(jsonPacket);
     })
 }
 
 export function removeUserFromFile(fileID: string, socket: WebSocket, userID: string) {
-    const userlist = fileUsersMap.getOrInsert(fileID, []);
+    const userlist = fileUsersMap.get(fileID)??[];
     userlist.splice(userlist.indexOf(userID), 1);
 
-    const socketList = fileSocketsMap.getOrInsert(fileID, []);
+    const socketList = fileSocketsMap.get(fileID)??[];
     socketList.splice(socketList.indexOf(socket), 1);
 
     updateAllUserListsOnFile(fileID);
