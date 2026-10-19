@@ -1,4 +1,4 @@
-import type { LayoutLoad } from "../../$types";
+import type { LayoutLoad } from "./$types";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { fetchApi } from "#lib";
