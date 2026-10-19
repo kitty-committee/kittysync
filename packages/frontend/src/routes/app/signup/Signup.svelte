@@ -30,7 +30,7 @@
             cancel();
             error = [];
             issues = [];
-            var user = {
+            const user = {
                 username: formData.get("username"),
                 password: formData.get("password"),
                 repeatPassword: formData.get("password-repeat"),
