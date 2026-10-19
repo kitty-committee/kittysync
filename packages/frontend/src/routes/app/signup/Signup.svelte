@@ -12,7 +12,7 @@
 
     export const userSchema = zod
         .object({
-            repeatPassword: zod.string(),
+            repeatPassword: zod.string().trim().min(5).max(255),
         })
         .and(userCredentialsSchema)
         .refine((data) => data.password === data.repeatPassword, {
