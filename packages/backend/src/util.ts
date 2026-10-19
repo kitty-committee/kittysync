@@ -28,6 +28,7 @@ export async function authenticationHook(request: FastifyRequest, reply: Fastify
             return;
         }
     } catch (error) {
+        console.error(error);
         reply.hijack();
         reply.code(503).send();
     }
