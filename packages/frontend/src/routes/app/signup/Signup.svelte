@@ -17,7 +17,7 @@
         .and(userCredentialsSchema)
         .refine((data) => data.password === data.repeatPassword, {
             message: "Passwords do not match",
-            path: ["password-repeat"],
+            path: ["repeatPassword"],
         })
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .transform(({ repeatPassword, ...rest }) => rest);
@@ -35,7 +35,7 @@
             const user = {
                 username: formData.get("username"),
                 password: formData.get("password"),
-                repeatPassword: formData.get("password-repeat"),
+                repeatPassword: formData.get("repeatPassword"),
             };
 
             const safeParse = userSchema.safeParse(user);
@@ -73,7 +73,7 @@
             <label for="password">Password</label>
             <input type="password" placeholder="Enter Password" name="password" required /><br />
 
-            <label for="password-repeat">Repeat password</label>
+            <label for="repeatPassword">Repeat password</label>
             <input type="password" placeholder="Enter Password" name="repeatPassword" required /><br />
 
             <ZodIssues {issues} />

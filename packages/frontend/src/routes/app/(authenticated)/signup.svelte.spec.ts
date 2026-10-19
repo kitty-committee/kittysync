@@ -66,10 +66,12 @@ describe("signup form", () => {
         await vi.waitFor(() => {
             expect(fetchApi).toHaveBeenCalledWith("auth/user", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify({ username: "kitten", password: "cat-password" }),
             });
-            expect(goto).toHaveBeenCalledWith("/app/landing");
+            expect(goto).toHaveBeenCalledWith("/app/login");
         });
         await expect.element(page.getByRole("listitem")).not.toBeInTheDocument();
     });

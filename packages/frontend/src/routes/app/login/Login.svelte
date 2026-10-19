@@ -5,8 +5,6 @@
     import { enhance } from "$app/forms";
     import { fetchApi } from "#lib";
 
-    const returnPage = sessionStorage.getItem("return-page");
-
     import { goto } from "$app/navigation";
     import * as zod from "zod";
 
@@ -54,7 +52,6 @@
                     sessionStorage.removeItem("return-page");
                     if (matched) goto(resolve(matched.id));
                     else goto(resolve("/app/(authenticated)/landing"));
-                }
                 }
             }
         }}>
