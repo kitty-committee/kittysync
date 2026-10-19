@@ -22,7 +22,7 @@ export async function authenticationHook(request: FastifyRequest, reply: Fastify
         return;
     }
     try {
-        if (!token?.verify()) {
+        if (!(await token?.verify())) {
             reply.hijack();
             reply.code(401).send();
             return;
