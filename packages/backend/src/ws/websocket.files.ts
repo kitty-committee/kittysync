@@ -32,7 +32,7 @@ export function addNewUserToFile(fileID: string, socket: WebSocket, userID: stri
 function updateAllUserListsOnFile(fileID: string) {
     const packet: WsPacket = { type: "updateUsers", data: { userList: fileUsersMap.get(fileID)??[] } };
     const jsonPacket = JSON.stringify(packet);
-    fileSocketsMap.getOrInsert(fileID, []).forEach((e) => {
+    (fileSocketsMap.get(fileID)??[]).forEach((e) => {
         e.send(jsonPacket);
     });
 }
