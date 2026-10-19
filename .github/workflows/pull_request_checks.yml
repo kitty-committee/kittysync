@@ -37,7 +37,7 @@ jobs:
 
             - name: Start compose stack
               if: matrix.script == 'check:test'
-              run: pnpm stack up -d
+              run: pnpm stack up --wait
 
             - name: Run check
               run: set -a; source .env.example; set +a; pnpm ${{ matrix.script }}
