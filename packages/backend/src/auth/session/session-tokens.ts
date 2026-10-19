@@ -55,10 +55,16 @@ export class UUIDSessionToken implements SessionToken {
         return this.token;
     }
 
+    /**
+     * @throws Redis exception on failing to pull
+     */
     async verify(): Promise<boolean> {
         return (await redis.exists(`user_${this.token.toString()}`)) == 1;
     }
 
+    /**
+     * @throws Redis exception on failing to pull
+     */
     async extractUser(): Promise<UserDb | undefined> {
         if (!(await this.verify())) return undefined;
         else {
