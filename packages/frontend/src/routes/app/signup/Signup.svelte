@@ -56,7 +56,7 @@
             } else if (!response.ok) {
                 error = (await response.json()).message;
             } else {
-                await goto(resolve("/app/(authenticated)/landing"));
+                await goto(resolve("/app/login"));
             }
         }}>
         <div class="signup-div">
