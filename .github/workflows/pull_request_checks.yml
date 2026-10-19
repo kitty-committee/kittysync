@@ -18,7 +18,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                script: [check:lint, check:format, check:type, check:test]
+                script: [check:lint, check:format, check:type, check:test, frontend build]
 
         steps:
             - name: Checkout code
