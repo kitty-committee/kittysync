@@ -1,4 +1,4 @@
-import { UserCredentialsSchema, type UserCredentials } from "@kittysync/common";
+import { userCredentialsSchema, type UserCredentials } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import { usersTable } from "../../db/schema.ts";
 import { DrizzleQueryError } from "drizzle-orm";
@@ -10,7 +10,7 @@ export async function postUserHandler(request: FastifyRequest, reply: FastifyRep
     let body: UserCredentials;
 
     try {
-        body = UserCredentialsSchema.parse(request.body);
+        body = userCredentialsSchema.parse(request.body);
     } catch (error) {
         // Validation failed, return BadRequest error
         if (error instanceof z.ZodError || error instanceof TypeError) {
