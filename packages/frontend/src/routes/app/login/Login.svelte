@@ -47,15 +47,14 @@
             } else if (!response.ok) {
                 error = (await response.json()).message;
             } else {
-                if (returnPage != null) {
+                const returnPage = sessionStorage.getItem("return-page");
+                if (returnPage === null) await goto(resolve("/app/(authenticated)/landing"));
+                else {
                     const matched = await match(returnPage);
-                    console.log(returnPage);
-                    console.log(matched?.id);
-                    if (matched) {
-                        await goto(resolve(matched.id));
-                    } else {
-                        await goto(resolve("/app/(authenticated)/landing"));
-                    }
+                    sessionStorage.removeItem("return-page");
+                    if (matched) goto(resolve(matched.id));
+                    else goto(resolve("/app/(authenticated)/landing"));
+                }
                 }
             }
         }}>
@@ -66,10 +65,10 @@
             <p>Did you mean to sign-up instead? Click <a href={resolve("/app/signup")}>here!</a></p>
 
             <label for="username">Username</label>
-            <input type="text" placeholder="Enter Username" name="username" required /><br />
+            <input type="text" placeholder="Enter Username" name="username" id="username" required /><br />
 
             <label for="password">Password</label>
-            <input type="password" placeholder="Enter Password" name="password" required /><br />
+            <input type="password" placeholder="Enter Password" name="password" id="password" required /><br />
 
             <ZodIssues {issues} />
             {error}

@@ -18,7 +18,9 @@
         .refine((data) => data.password === data.repeatPassword, {
             message: "Passwords do not match",
             path: ["password-repeat"],
-        });
+        })
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        .transform(({ repeatPassword, ...rest }) => rest);
 
     let error = $state();
 </script>
@@ -48,7 +50,7 @@
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ username: formData.get("username"), password: formData.get("password") }),
+                body: JSON.stringify(safeParse.data),
             });
 
             if (response.status == 409) {
@@ -72,7 +74,7 @@
             <input type="password" placeholder="Enter Password" name="password" required /><br />
 
             <label for="password-repeat">Repeat password</label>
-            <input type="password" placeholder="Enter Password" name="password-repeat" required /><br />
+            <input type="password" placeholder="Enter Password" name="repeatPassword" required /><br />
 
             <ZodIssues {issues} />
             {error}
