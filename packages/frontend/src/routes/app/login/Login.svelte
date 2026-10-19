@@ -39,7 +39,7 @@
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ username: formData.get("username"), password: formData.get("password") }),
+                body: JSON.stringify(user),
             });
 
             if (response.status == 401) {
