@@ -37,6 +37,12 @@ export class UUIDSessionToken implements SessionToken {
         } else return undefined;
     }
 
+    /**
+     * Create a new session token, pushing to redis.
+     * @param user - The user to create a new token for
+     * @returns The new token.
+     * @throws Redis exception on failing to push.
+     */
     static async new(user: UserDb): Promise<UUIDSessionToken> {
         const token = new UUIDSessionToken(v4());
         await redis.hset(`user_${token.token.toString()}`, user);

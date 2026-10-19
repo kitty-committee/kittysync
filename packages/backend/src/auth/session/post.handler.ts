@@ -35,23 +35,26 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
     if (!(await bcrypt.compare(body.password, targetUser.password))) {
         reply.code(401).send();
     } else {
-        reply.statusCode = 200;
+        try {
+            const sessionToken = await UUIDSessionToken.new({
+                id: targetUser.id,
+                username: targetUser.username,
+            });
 
-        const sessionToken = await UUIDSessionToken.new({
-            id: targetUser.id,
-            username: targetUser.username,
-        });
+            reply.setCookie("session", sessionToken.getToken().toString(), {
+                domain: configuration.appDomain,
+                path: "/",
+                sameSite: "strict",
+                maxAge: 86400,
+            });
 
-        reply.setCookie("session", sessionToken.getToken().toString(), {
-            domain: configuration.appDomain,
-            path: "/",
-            sameSite: "strict",
-            maxAge: 86400,
-        });
-
-        reply.send({
-            id: targetUser.id,
-            username: targetUser.username,
-        });
+            reply.code(200).send({
+                id: targetUser.id,
+                username: targetUser.username,
+            });
+        } catch (error) {
+            console.error(error);
+            reply.code(503).send();
+        }
     }
 }
