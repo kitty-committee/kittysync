@@ -10,7 +10,7 @@ const messageDataSchema = z.object({ message: z.string() });
 
 export const packetSchema = z.object({
     type: z.string(),
-    data: z.union([fileDataSchema, userListDataSchema, messageDataSchema])
+    data: z.union([fileDataSchema, userListDataSchema, messageDataSchema, z.null()])
 });
 
 export type WsPacket = z.infer<typeof packetSchema>;

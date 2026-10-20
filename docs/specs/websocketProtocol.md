@@ -1,4 +1,4 @@
-# Websocket Protocol v0.1
+# Websocket Protocol v0.1.1
 Date: 13/10/2026
 
 ## What we need
@@ -36,6 +36,9 @@ Date: 13/10/2026
 ### error handling
 + sent by either
 + for now just contains error message
+
+### ws open
++ sent by client to let server know its ready to recive data 
 
 ## Implementation
 ### Default JSON Packet
@@ -88,5 +91,13 @@ Date: 13/10/2026
     "data": {
         "message": string
     },
+}
+```
+
+### Open packet
+```ts
+{
+    "type": "open"
+    "data": null  
 }
 ```

@@ -1,26 +1,40 @@
 import Fastify from "fastify";
 import { type WebSocket } from "@fastify/websocket";
-import { packetSchema, type WsPacket } from "@kittysync/common";
-import * as z from "zod";
+import { packetSchema, type WsPacket, } from "@kittysync/common";
+import { clearMaps, addNewUserToFile, removeUserFromFile, updateFileForAllUsers } from "./websocket.files.ts";
 
-const fileUsersMap = new Map<string, string[]>();
 
 export function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
-    fileUsersMap.clear();
-    app.get('/websocket', { websocket: true }, (socket: WebSocket, req: Fastify.FastifyRequest<{ Querystring: { fileId: string } }>) => {
-        // update file user map
-        const { fileId } = req.query;
+    clearMaps();
+    app.register(async function (app) {
+        app.get('/api/websocket', { websocket: true }, (socket: WebSocket, req: Fastify.FastifyRequest<{ Querystring: { fileID: string } }>) => {
 
-        fileUsersMap.getOrInsert(fileId, []).push(req.ip)
+            const { fileID } = req.query;
 
-        //send the file on connection
-        let packet: WsPacket;
-        packet = { type: "updateFile", data: { file: "this is a file" } }
-        socket.send(JSON.stringify(packet));
 
-        // send list of users connected to that file
-        packet = { type: "updateUsers", data: { userList: fileUsersMap.get(fileId) ?? [] } }
-        socket.send(JSON.stringify(packet));
+            // recived message handling
+            socket.on('message', (message) => {
+                const packet: WsPacket = packetSchema.parse(JSON.parse(message.toString()));
 
+                switch (packet.type) {
+                    case "open":
+                        addNewUserToFile(fileID, socket, req.ip ?? "user");
+                        break;
+                    case "saveFile":
+                        updateFileForAllUsers(fileID, (packet.data as { file: string }).file)
+                        break;
+                    case "error":
+                        console.log(packet.data);
+                        break;
+                    default:
+                        console.log("unknown packet type");
+                        break;
+                }
+            })
+
+            socket.on('close', () => removeUserFromFile(fileID, socket, req.ip));
+
+
+        })
     })
 }
