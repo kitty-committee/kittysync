@@ -1,13 +1,20 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { page } from "$app/state";
     import { packetSchema } from "@kittysync/common";
+    //import { goto } from "$app/navigation";
+    //import { resolve } from "$app/paths";
+    import { page } from "$app/state";
+    import { onMount } from "svelte";
 
     let socket = $state<WebSocket | null>(null);
     let connected = $state(false);
+    let userList = $state(0);
 
     onMount(() => {
-        const fileID = page.params["fileID"];
+        const fileID = page.params["slug"];
+        if (!fileID) {
+            console.error("File ID is missing.");
+            return;
+        }
         console.log("File ID:", fileID);
         const url = new URL("ws://localhost:3000/websocket");
         url.searchParams.set("fileID", fileID);
@@ -45,6 +52,9 @@
             switch (packet.type) {
                 case "updateUsers":
                     console.log("Update users packet received:", packet.data);
+                    if (typeof packet.data == "object" && Array.isArray(packet.data)) {
+                        userList = packet.data[userList];
+                    }
                     break;
                 case "updateFile":
                     console.log("Update file packet received:", packet.data);
@@ -68,7 +78,38 @@
                 socket.close();
                 socket = null;
                 connected = false;
+                console.log(connected);
             }
         };
     });
 </script>
+
+<nav class="flex items-center justify-between p-4 bg-gray-800 text-white">
+    <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        onclick={() => {
+            //goto(resolve("/app/(authenticated)/documents"));
+        }}>Back</button>
+
+    <button
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        onclick={() => {
+            //TODO: Implement save functionality - send this to the server via WebSocket
+            console.log("Save button clicked");
+        }}>Save</button>
+
+    <h1 class="text-xl font-bold">Document Editor</h1>
+    <div>
+        {#if connected}
+            <span class="text-green-500">Connected</span>
+        {:else}
+            <span class="text-red-500">Disconnected</span>
+        {/if}
+    </div>
+
+    <div>
+        <span class="mr-4">Users: {userList}</span>
+    </div>
+</nav>
+
+// here, render the sent file from the backend, and allow edits. on edit, send the changes to backend via websocket.
