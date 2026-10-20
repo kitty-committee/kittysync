@@ -2,27 +2,24 @@ import Fastify from "fastify";
 import { type WebSocket } from "@fastify/websocket";
 import { packetSchema, type WsPacket, } from "@kittysync/common";
 import { clearMaps, addNewUserToFile, removeUserFromFile, updateFileForAllUsers } from "./websocket.files.ts";
-import * as z from "zod";
-import { convertProcessSignalToExitCode } from "util";
 
-const fileIdSchema = z.object({
-    fileID: z.string()
-});
 
 export function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
     clearMaps();
     app.register(async function (app) {
         app.get('/api/websocket', { websocket: true }, (socket: WebSocket, req: Fastify.FastifyRequest<{ Querystring: { fileID: string } }>) => {
 
-            const{fileID} = req.query;
+            const { fileID } = req.query;
 
-            addNewUserToFile(fileID, socket, req.ip);
 
             // recived message handling
-            socket.on('message', message => {
-                const packet: WsPacket = packetSchema.parse(message);
+            socket.on('message', (message) => {
+                const packet: WsPacket = packetSchema.parse(JSON.parse(message.toString()));
 
                 switch (packet.type) {
+                    case "open":
+                        addNewUserToFile(fileID, socket, req.ip ?? "user");
+                        break;
                     case "saveFile":
                         updateFileForAllUsers(fileID, (packet.data as { file: string }).file)
                         break;
@@ -36,6 +33,8 @@ export function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
             })
 
             socket.on('close', () => removeUserFromFile(fileID, socket, req.ip));
+
+
         })
     })
 }
