@@ -15,7 +15,7 @@ const env = z
         KITTYSYNC_DB_HOST: z.hostname(),
         KITTYSYNC_DB_NAME: z.string(),
         KITTYSYNC_DB_USER: z.string(),
-        KITTYSYNC_IS_SECURE: z.boolean(),
+        KITTYSYNC_IS_SECURE: z.stringbool(),
     })
     .parse(process.env);
 

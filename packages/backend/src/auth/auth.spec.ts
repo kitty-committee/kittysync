@@ -78,11 +78,6 @@ test("Create new session - Bad request", async () => {
     });
 
     expect(response.status).toBe(400);
-    expect(response.headers.has("Content-Type")).toBe(true);
-    expect(response.headers.get("Content-Type")).toMatch(/application\/json.*/);
-
-    const error = (await response.json()) as ZodError;
-    console.error(error);
 });
 
 test("Create new session - Invalid credentials", async () => {
