@@ -14,8 +14,9 @@ export async function postUserHandler(request: FastifyRequest, reply: FastifyRep
     } catch (error) {
         if (error instanceof ZodError) {
             reply.code(400).send(error.issues);
+            return;
         }
-        return;
+        throw error;
     }
 
     const saltRounds = 10;

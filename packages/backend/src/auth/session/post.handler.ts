@@ -16,8 +16,10 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
     } catch (error) {
         if (error instanceof ZodError) {
             reply.code(400).send(error.issues);
+            return;
         }
-        return;
+
+        throw error;
     }
 
     const result = await db.select().from(usersTable).where(eq(usersTable.username, body.username));
