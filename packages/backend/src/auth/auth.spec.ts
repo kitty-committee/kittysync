@@ -1,6 +1,5 @@
 import { type UserDb } from "@kittysync/common";
 import { expect, test } from "vitest";
-import type { ZodError } from "zod";
 import { app } from "../app.ts";
 
 test("Create user", async () => {
