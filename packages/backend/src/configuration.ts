@@ -15,6 +15,7 @@ const env = z
         KITTYSYNC_DB_HOST: z.hostname(),
         KITTYSYNC_DB_NAME: z.string(),
         KITTYSYNC_DB_USER: z.string(),
+        KITTYSYNC_IS_SECURE: z.boolean(),
     })
     .parse(process.env);
 
@@ -24,6 +25,7 @@ const env = z
 export const configuration = {
     appDomain: env.KITTYSYNC_APP_DOMAIN,
     redisHost: env.KITTYSYNC_REDIS_HOST,
+    isSecure: env.KITTYSYNC_IS_SECURE,
     database: {
         password: env.KITTYSYNC_DB_PASSWORD,
         database: env.KITTYSYNC_DB_NAME,

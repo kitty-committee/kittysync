@@ -5,6 +5,7 @@ import { UUIDSessionToken } from "./session-tokens.ts";
 import { usersTable } from "../../db/schema.ts";
 import { db } from "../../app.ts";
 import { eq } from "drizzle-orm";
+import { config } from "process";
 import { ZodError } from "zod";
 import bcrypt from "bcrypt";
 
@@ -44,6 +45,7 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
                 path: "/",
                 sameSite: "strict",
                 maxAge: 86400,
+                secure: configuration.isSecure,
             });
 
             reply.code(200).send({
