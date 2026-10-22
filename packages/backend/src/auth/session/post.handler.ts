@@ -5,7 +5,6 @@ import { UUIDSessionToken } from "./session-tokens.ts";
 import { usersTable } from "../../db/schema.ts";
 import { db } from "../../app.ts";
 import { eq } from "drizzle-orm";
-import { config } from "process";
 import { ZodError } from "zod";
 import bcrypt from "bcrypt";
 
