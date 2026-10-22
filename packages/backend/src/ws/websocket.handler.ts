@@ -6,7 +6,7 @@ import { clearMaps, addNewUserToFile, removeUserFromFile, updateFileForAllUsers 
 
 export function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
     clearMaps();
-    app.register(async function (app) {
+    app.register(function (app) {
         app.get('/api/websocket', { websocket: true }, (socket: WebSocket, req: Fastify.FastifyRequest<{ Querystring: { fileID: string } }>) => {
 
             const { fileID } = req.query;
