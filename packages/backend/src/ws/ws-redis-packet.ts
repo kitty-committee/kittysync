@@ -4,7 +4,7 @@ const fileUserDataSchema = z.object({ fileID: z.string(), userID: z.string() });
 
 const fileDataDataSchema = z.object({ fileID: z.string(), fileData: z.string() });
 
-export const websocketRedisPacketSchema = z.discriminatedUnion("command", [
+export const wsRedisPacketSchema = z.discriminatedUnion("command", [
     z.object({
         command: z.literal("addUserFile"),
         data: fileUserDataSchema
@@ -19,4 +19,4 @@ export const websocketRedisPacketSchema = z.discriminatedUnion("command", [
     }),
 ]);
 
-export type WebsocketRedisPacket = z.infer<typeof websocketRedisPacketSchema>;
+export type WsRedisPacket = z.infer<typeof wsRedisPacketSchema>;

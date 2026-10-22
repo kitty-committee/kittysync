@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
 import { packetSchema, type WsPacket } from "@kittysync/common";
+import { time } from "console";
 
 test("connect to websocket", async () => {
     await app.listen();
@@ -33,8 +34,6 @@ test("connect to websocket", async () => {
         }
     })
 
-
-
     expect((await filePromise).data).toStrictEqual({ file: "this is a file" });
     expect(((await userPromise).data as { userList: string[] }).userList.length).toStrictEqual(1);
 
@@ -58,11 +57,12 @@ test("connect two users to websocket", async () => {
     ws1.on('message', data => {
         const messageData = JSON.parse(data.toString());
         const packetData = packetSchema.parse(messageData);
+        console.log(packetData)
         switch (packetData.type) {
             case "updateFile":
                 break;
             case "updateUsers":
-                ws1UserCountResolve((packetData.data as { userList: string[] }).userList.length)
+                ws1UserCountResolve((packetData.data).userList.length)
                 break;
             default:
                 break;
@@ -72,11 +72,12 @@ test("connect two users to websocket", async () => {
     ws2.on('message', data => {
         const messageData = JSON.parse(data.toString());
         const packetData = packetSchema.parse(messageData);
+        console.log(packetData)
         switch (packetData.type) {
             case "updateFile":
                 break;
             case "updateUsers":
-                ws2UserCountResolve((packetData.data as { userList: string[] }).userList.length)
+                ws2UserCountResolve((packetData.data).userList.length)
                 break;
             default:
                 break;
