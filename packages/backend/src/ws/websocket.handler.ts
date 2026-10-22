@@ -21,7 +21,7 @@ export function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
                         addNewUserToFile(fileID, socket, req.ip ?? "user");
                         break;
                     case "saveFile":
-                        updateFileForAllUsers(fileID, (packet.data as { file: string }).file)
+                        updateFileForAllUsers(fileID, (packet.data).file)
                         break;
                     case "error":
                         console.log(packet.data);
