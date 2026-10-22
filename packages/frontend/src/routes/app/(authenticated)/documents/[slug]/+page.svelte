@@ -8,6 +8,7 @@
     let socket = $state<WebSocket | null>(null);
     let connected = $state(false);
     let userList = $state(0);
+    let filecontent = $state("");
 
     onMount(() => {
         const fileID = page.params["slug"];
@@ -16,7 +17,7 @@
             return;
         }
         console.log("File ID:", fileID);
-        const url = new URL("ws://localhost:3000/websocket");
+        const url = new URL("ws://localhost:3000/api/websocket");
         url.searchParams.set("fileID", fileID);
 
         socket = new WebSocket(url.toString());
@@ -52,12 +53,17 @@
             switch (packet.type) {
                 case "updateUsers":
                     console.log("Update users packet received:", packet.data);
-                    if (typeof packet.data == "object" && Array.isArray(packet.data)) {
-                        userList = packet.data[userList];
+                    if (packet.data !== null && "userList" in packet.data && Array.isArray(packet.data.userList)) {
+                        userList = packet.data.userList.length;
                     }
                     break;
                 case "updateFile":
                     console.log("Update file packet received:", packet.data);
+                    if (typeof packet.data === "object" && packet.data !== null && "file" in packet.data) {
+                        filecontent = packet.data.file;
+                    } else {
+                        filecontent = "";
+                    }
                     break;
                 default:
                     console.warn("Unknown packet type received:", packet.type);
@@ -82,6 +88,21 @@
             }
         };
     });
+
+    function saveContent(event: Event) {
+        const target = event.currentTarget;
+
+        if (target instanceof HTMLTextAreaElement) {
+            if (socket && connected) {
+                socket.send(
+                    JSON.stringify({
+                        type: "saveFile",
+                        data: { file: target.value },
+                    }),
+                );
+            }
+        }
+    }
 </script>
 
 <nav class="flex items-center justify-between p-4 bg-gray-800 text-white">
@@ -90,13 +111,6 @@
         onclick={() => {
             //goto(resolve("/app/(authenticated)/documents"));
         }}>Back</button>
-
-    <button
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        onclick={() => {
-            //TODO: Implement save functionality - send this to the server via WebSocket
-            console.log("Save button clicked");
-        }}>Save</button>
 
     <h1 class="text-xl font-bold">Document Editor</h1>
     <div>
@@ -112,4 +126,7 @@
     </div>
 </nav>
 
-// here, render the sent file from the backend, and allow edits. on edit, send the changes to backend via websocket.
+<main class="p-4">
+    <textarea class="w-full h-96 p-2 border border-gray-300 rounded" bind:value={filecontent} oninput={saveContent}>
+    </textarea>
+</main>
