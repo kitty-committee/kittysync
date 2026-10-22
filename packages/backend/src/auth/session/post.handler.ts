@@ -5,8 +5,8 @@ import { UUIDSessionToken } from "./session-tokens.ts";
 import { usersTable } from "../../db/schema.ts";
 import { db } from "../../app.ts";
 import { eq } from "drizzle-orm";
+import { ZodError } from "zod";
 import bcrypt from "bcrypt";
-import * as z from "zod";
 
 export async function postSessionHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
@@ -14,14 +14,10 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
     try {
         body = userCredentialsSchema.parse(request.body);
     } catch (error) {
-        // Validation failed, return BadRequest error
-        if (error instanceof z.ZodError || error instanceof TypeError) {
-            reply.statusCode = 400;
-            reply.send(error);
-            return;
+        if (error instanceof ZodError) {
+            reply.code(400).send(error.issues);
         }
-
-        throw error;
+        return;
     }
 
     const result = await db.select().from(usersTable).where(eq(usersTable.username, body.username));

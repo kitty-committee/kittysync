@@ -3,8 +3,8 @@ import { type FastifyReply, type FastifyRequest } from "fastify";
 import { usersTable } from "../../db/schema.ts";
 import { DrizzleQueryError } from "drizzle-orm";
 import { db } from "../../app.ts";
+import { ZodError } from "zod";
 import bcrypt from "bcrypt";
-import * as z from "zod";
 
 export async function postUserHandler(request: FastifyRequest, reply: FastifyReply) {
     let body: UserCredentials;
@@ -12,14 +12,10 @@ export async function postUserHandler(request: FastifyRequest, reply: FastifyRep
     try {
         body = userCredentialsSchema.parse(request.body);
     } catch (error) {
-        // Validation failed, return BadRequest error
-        if (error instanceof z.ZodError || error instanceof TypeError) {
-            reply.statusCode = 400;
-            reply.send(error);
-            return;
+        if (error instanceof ZodError) {
+            reply.code(400).send(error.issues);
         }
-
-        throw error;
+        return;
     }
 
     const saltRounds = 10;
