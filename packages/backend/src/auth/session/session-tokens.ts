@@ -99,8 +99,11 @@ export class JwtTokenProvider implements TokenProvider {
 
     decode(token: string): Promise<UserDb | null> {
         try {
-            const user = this.verifier(token) as UserDb;
-            return Promise.resolve(user);
+            const decoded = this.verifier(token) as UserDb;
+            return Promise.resolve({
+                username: decoded.username,
+                id: decoded.id,
+            });
         } catch {
             return Promise.resolve(null);
         }
