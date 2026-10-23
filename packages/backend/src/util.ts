@@ -7,13 +7,15 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 export async function authenticationHook(request: FastifyRequest, reply: FastifyReply) {
     const token = request.cookies["session"];
 
-    if (token === undefined) reply.hijack().code(401).send();
+    if (token === undefined) return reply.code(401).send();
     else {
         try {
-            if ((await TOKEN_PROVIDER.verify(token)) !== null) reply.hijack().code(401).send();
+            const user = await TOKEN_PROVIDER.decode(token);
+            if (user === null) return reply.code(401).send();
+            else request.user = user;
         } catch (error) {
             console.error(error);
-            reply.hijack().code(503).send();
+            return reply.code(503).send();
         }
     }
 }
