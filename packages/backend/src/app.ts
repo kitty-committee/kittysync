@@ -6,7 +6,8 @@ import fastifyCookie from "@fastify/cookie";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
-
+import { postDocumentHandler } from "./document/post.handler.ts";
+import { getDocumentHandler } from "./document/get.handler.ts";
 export const redis = new Redis(6379, configuration.redisHost);
 
 const pool = new Pool(configuration.database);
@@ -27,6 +28,9 @@ app.addHook("onClose", async (_instance) => {
 app.get("/", function (_, reply) {
     reply.send({ hello: "world" });
 });
+
+app.post("/document", postDocumentHandler);
+app.get("/document/:id?", getDocumentHandler);
 
 // Register auth routes
 register(app);
