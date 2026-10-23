@@ -1,4 +1,5 @@
 <script lang="ts">
+    import SvelteMarkdown from "@humanspeak/svelte-markdown";
     import { packetSchema } from "@kittysync/common";
     //import { goto } from "$app/navigation";
     //import { resolve } from "$app/paths";
@@ -9,6 +10,7 @@
     let connected = $state(false);
     let userList = $state(0);
     let filecontent = $state("");
+    let inEditMode = $state(false);
 
     onMount(() => {
         const fileID = page.params["slug"];
@@ -125,8 +127,16 @@
         <span class="mr-4">Users: {userList}</span>
     </div>
 </nav>
-
-<main class="p-4">
-    <textarea class="w-full h-96 p-2 border border-gray-300 rounded" bind:value={filecontent} oninput={saveContent}>
-    </textarea>
-</main>
+<button
+    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+    onclick={() => {
+        inEditMode = !inEditMode;
+    }}>Change View</button>
+{#if inEditMode}
+    <main class="p-4">
+        <textarea class="w-full h-96 p-2 border border-gray-300 rounded" bind:value={filecontent} oninput={saveContent}>
+        </textarea>
+    </main>
+{:else}
+    <div><SvelteMarkdown source={filecontent} /></div>
+{/if}
