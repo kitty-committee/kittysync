@@ -41,9 +41,18 @@ export class UuidTokenProvider implements TokenProvider {
      */
     async new(user: UserDb): Promise<string> {
         const token = crypto.randomUUID();
-        await redis.hset(`user_${token}`, user);
-        await redis.expire(`user_${token}`, configuration.tokenLifetime);
-
+        await redis.hsetex(
+            `user_${token}`,
+            "FNX",
+            "EX",
+            configuration.tokenLifetime,
+            "FIELDS",
+            2,
+            "id",
+            user.id,
+            "username",
+            user.username,
+        );
         return token;
     }
 
