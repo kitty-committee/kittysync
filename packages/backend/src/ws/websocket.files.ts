@@ -11,17 +11,16 @@ export function clearMaps() {
 
 export function addNewUserToFile(fileID: string, socket: WebSocket, userID: string) {
     if (fileUsersMap.get(fileID) === undefined) {
-        fileUsersMap.set(fileID, [])
+        fileUsersMap.set(fileID, []);
     }
     fileUsersMap.get(fileID)?.push(userID);
-
 
     if (fileSocketsMap.get(fileID) === undefined) {
         fileSocketsMap.set(fileID, []);
     }
     fileSocketsMap.get(fileID)?.push(socket);
 
-    const packet: WsPacket = { type: "updateFile", data: { file: "this is a file" } }
+    const packet: WsPacket = { type: "updateFile", data: { file: "this is a file" } };
     socket.send(JSON.stringify(packet));
 
     updateAllUserListsOnFile(fileID);
@@ -41,7 +40,7 @@ export function updateFileForAllUsers(fileID: string, fileData: string) {
     const jsonPacket = JSON.stringify(packet);
     (fileSocketsMap.get(fileID) ?? []).forEach((e) => {
         e.send(jsonPacket);
-    })
+    });
 }
 
 export function removeUserFromFile(fileID: string, socket: WebSocket, userID: string) {
