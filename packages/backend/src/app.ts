@@ -1,13 +1,12 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
-import { register } from "./auth/auth.routes.ts";
+import { register as registerAuth } from "./auth/auth.routes.ts";
+import { register as registerDocument } from "./document/document.routes.ts";
 import fastifyCookie from "@fastify/cookie";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
-import { postDocumentHandler } from "./document/post.handler.ts";
-import { getDocumentHandler } from "./document/get.handler.ts";
 export const redis = new Redis(6379, configuration.redisHost);
 
 const pool = new Pool(configuration.database);
@@ -29,8 +28,7 @@ app.get("/", function (_, reply) {
     reply.send({ hello: "world" });
 });
 
-app.post("/document", postDocumentHandler);
-app.get<{ Params: { id?: string } }>("/document/:id?", getDocumentHandler);
 
-// Register auth routes
-register(app);
+// Register routes
+registerAuth(app);
+registerDocument(app);
