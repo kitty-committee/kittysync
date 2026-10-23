@@ -33,7 +33,7 @@ sync_start() {
     ln -sT "$SRC" "$DST"
   else
     unison "${UNISON_ARGS[@]}" >>"$LOG" 2>&1
-    setsid -f bash "$SRC/.devcontainer/daemon.sh" "${UNISON_ARGS[@]}" >>"$LOG" 2>&1 </dev/null
+    setsid -f bash "/.devcontainer/daemon.sh" "${UNISON_ARGS[@]}" >>"$LOG" 2>&1 </dev/null
   fi
 }
 
