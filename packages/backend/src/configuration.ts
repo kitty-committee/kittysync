@@ -16,7 +16,7 @@ const env = z
         KITTYSYNC_DB_NAME: z.string(),
         KITTYSYNC_DB_USER: z.string(),
         KITTYSYNC_IS_SECURE: z.stringbool(),
-        KITTYSYNC_SECRET_KEY: z.string(),
+        KITTYSYNC_SECRET_KEY: z.string().min(32),
         KITTYSYNC_TOKEN_LIFETIME: z
             .string()
             .transform((val) => parseInt(val, 10))
