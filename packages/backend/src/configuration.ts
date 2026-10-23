@@ -17,10 +17,7 @@ const env = z
         KITTYSYNC_DB_USER: z.string(),
         KITTYSYNC_IS_SECURE: z.stringbool(),
         KITTYSYNC_SECRET_KEY: z.string().min(32),
-        KITTYSYNC_TOKEN_LIFETIME: z
-            .string()
-            .transform((val) => parseInt(val, 10))
-            .default(86400),
+        KITTYSYNC_TOKEN_LIFETIME: z.coerce.number().int().positive().default(86400), // Default to 24 hours if not specified
     })
     .parse(process.env);
 
