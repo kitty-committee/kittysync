@@ -30,7 +30,7 @@ app.get("/", function (_, reply) {
 });
 
 app.post("/document", postDocumentHandler);
-app.get("/document/:id?", getDocumentHandler);
+app.get<{ Params: { id?: string } }>("/document/:id?", getDocumentHandler);
 
 // Register auth routes
 register(app);

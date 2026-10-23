@@ -3,11 +3,10 @@ import { documentsTable } from '../db/schema.ts'
 import {db} from '../app.ts'
 import { eq } from 'drizzle-orm';
 import { type FastifyReply, type FastifyRequest } from "fastify";
-export async function getDocuments(id?: number) {
-    if (id) {
-        const idString = id.toString();
+export async function getDocuments(id?: string) {
+    if (id !== undefined) {
         try {
-            const result = await db.select().from(documentsTable).where(eq(documentsTable.id, idString));
+            const result = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
             return result;
         } catch (error) {
             console.error('Error fetching document by ID:', error);
@@ -23,8 +22,12 @@ export async function getDocuments(id?: number) {
         throw error;
     }
 }
-export async function getDocumentHandler(request: FastifyRequest, reply: FastifyReply) {
-    const id = request.params?.id ? parseInt(request.params.id) : undefined;
+
+export async function getDocumentHandler(
+    request: FastifyRequest<{ Params: { id?: string } }>,
+    reply: FastifyReply,
+) {
+    const id = request.params?.id;
 
     try {
         const documents = await getDocuments(id);
