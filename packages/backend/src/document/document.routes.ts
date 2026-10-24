@@ -3,8 +3,8 @@ import { postDocumentHandler } from "./post.handler.ts";
 import Fastify from "fastify";
 
 function routes(app: Fastify.FastifyInstance) {
-    app.get("user", getDocumentHandler);
-    app.post("user", postDocumentHandler);
+    app.get("document", getDocumentHandler);
+    app.post("document", postDocumentHandler);
 
 }
 
@@ -13,5 +13,5 @@ function routes(app: Fastify.FastifyInstance) {
  * @param app - Fastify app instance to register routes to
  */
 export function register(app: Fastify.FastifyInstance) {
-    app.register(routes, { prefix: "/api/document/" });
+    app.register(routes, { prefix: "/api/" });
 }

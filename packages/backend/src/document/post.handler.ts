@@ -3,9 +3,9 @@ import { documentsTable } from '../db/schema.ts'
 import {db} from '../app.ts'
 import { type FastifyReply, type FastifyRequest } from "fastify";
 
-export async function insertDocument(title: string, slug: string, content: string) {
+export async function insertDocument(title: string,) {
     try {
-        await db.insert(documentsTable).values({ title, slug, content });
+        await db.insert(documentsTable).values({ title});
         console.log('Document inserted successfully');
     } catch (error) {
         console.error('Error inserting document:', error);
@@ -20,10 +20,10 @@ type DocumentBody = {
 };
 
 export async function postDocumentHandler(request: FastifyRequest, reply: FastifyReply) {
-    const { title, slug, content } = request.body as DocumentBody;
+    const { title } = request.body as DocumentBody;
 
     try {
-        await insertDocument(title, slug, content);
+        await insertDocument(title);
         reply.statusCode = 201;
         reply.send({ message: 'Document created successfully' });
     } catch (error) {
