@@ -1,7 +1,7 @@
 import { userCredentialsSchema, type UserCredentials } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import { configuration } from "../../configuration.ts";
-import { UUIDSessionToken } from "./session-tokens.ts";
+import { TOKEN_PROVIDER } from "./session-tokens.ts";
 import { usersTable } from "../../db/schema.ts";
 import { db } from "../../app.ts";
 import { eq } from "drizzle-orm";
@@ -34,17 +34,17 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
         reply.code(401).send();
     } else {
         try {
-            const sessionToken = await UUIDSessionToken.new({
-                id: targetUser.id,
+            const sessionToken = await TOKEN_PROVIDER.new({
                 username: targetUser.username,
+                id: targetUser.id,
             });
 
-            reply.setCookie("session", sessionToken.getToken().toString(), {
+            reply.setCookie("session", sessionToken, {
+                maxAge: configuration.tokenLifetime,
                 domain: configuration.appDomain,
-                path: "/",
-                sameSite: "strict",
-                maxAge: 86400,
                 secure: configuration.isSecure,
+                sameSite: "strict",
+                path: "/",
             });
 
             reply.code(200).send({

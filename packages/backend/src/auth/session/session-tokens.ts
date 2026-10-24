@@ -1,78 +1,122 @@
+import { createSigner, createVerifier } from "fast-jwt";
+import { configuration } from "../../configuration.ts";
 import type { UserDb } from "@kittysync/common";
-import type { FastifyRequest } from "fastify";
-import { v4, type UUIDTypes } from "uuid";
 import { redis } from "../../app.ts";
 
 /**
- * Base type of session tokens.
+ * Base type of session token providers.
  */
-export interface SessionToken {
+export interface TokenProvider {
+    /**
+     * Create a new session token for the given user.
+     * @param user - The user to create a new token for
+     * @returns The new token.
+     */
+    new: (user: UserDb) => Promise<string>;
+
     /**
      * Verify whether a session token is valid or not.
+     * @param token - The token to verify
+     * @returns True if the token is valid, false otherwise.
      */
-    verify(): Promise<boolean>;
+    verify(token: string): Promise<boolean>;
+
     /**
-     * Extract the user associated with the token. May return undefined if the token is not valid.
+     * Extract the user associated with the token. May return null if the token is not valid.
+     * @param token - The token to decode
+     * @returns The user associated with the token, or null if the token is not valid.
      */
-    extractUser(): Promise<UserDb | undefined>;
+    decode(token: string): Promise<UserDb | null>;
 }
 
 /**
- * Encapsulates a UUID session token
+ * Represents a UUID session token provider
  */
-export class UUIDSessionToken implements SessionToken {
-    private token: UUIDTypes;
-
-    private constructor(token: UUIDTypes) {
-        this.token = token;
-    }
-
-    /**
-     * Extract a UUID session token from a request. May be undefined if the request contains no token.
-     * @param request - The request to attempt to extract a UUID session token from
-     */
-    static from(request: FastifyRequest): UUIDSessionToken | undefined {
-        if (request.cookies["session"]) {
-            return new UUIDSessionToken(request.cookies["session"]);
-        } else return undefined;
-    }
-
+export class UuidTokenProvider implements TokenProvider {
     /**
      * Create a new session token, pushing to redis.
      * @param user - The user to create a new token for
      * @returns The new token.
      * @throws Redis exception on failing to push.
      */
-    static async new(user: UserDb): Promise<UUIDSessionToken> {
-        const token = new UUIDSessionToken(v4());
-        await redis.hset(`user_${token.token.toString()}`, user);
-        await redis.expire(`user_${token.token.toString()}`, 86400);
-
+    async new(user: UserDb): Promise<string> {
+        const token = crypto.randomUUID();
+        await redis.hsetex(
+            `user_${token}`,
+            "FNX",
+            "EX",
+            configuration.tokenLifetime,
+            "FIELDS",
+            2,
+            "id",
+            user.id,
+            "username",
+            user.username,
+        );
         return token;
     }
 
-    getToken(): UUIDTypes {
-        return this.token;
+    /**
+     * Verify whether a session token is valid or not.
+     * @param token - The token to verify
+     * @returns True if the token is valid, false otherwise.
+     * @throws Redis exception on failing to pull
+     */
+    async verify(token: string): Promise<boolean> {
+        return (await redis.exists(`user_${token}`)) == 1;
     }
 
     /**
+     * Extract the user associated with the token. May return undefined if the token is not valid.
+     * @param token - The token to decode
+     * @returns The user associated with the token, or undefined if the token is not valid.
      * @throws Redis exception on failing to pull
      */
-    async verify(): Promise<boolean> {
-        return (await redis.exists(`user_${this.token.toString()}`)) == 1;
-    }
-
-    /**
-     * @throws Redis exception on failing to pull
-     */
-    async extractUser(): Promise<UserDb | undefined> {
-        if (!(await this.verify())) return undefined;
+    async decode(token: string): Promise<UserDb | null> {
+        if (!(await this.verify(token))) return null;
         else {
-            const r = await redis.hgetall(`user_${this.token.toString()}`);
-            if (r["username"] === undefined || r["id"] === undefined) return undefined;
-            else {
-                return { id: r["id"], username: r["username"] };
-            }
+            const r = await redis.hgetall(`user_${token}`);
+            if (r["username"] === undefined || r["id"] === undefined) return null;
+            else return { id: r["id"], username: r["username"] };
         }
     }
 }
+
+/**
+ * Represents a JWT session token provider
+ */
+export class JwtTokenProvider implements TokenProvider {
+    private verifier = createVerifier({ key: configuration.secretKey, algorithms: ["HS256"] });
+    private signer = createSigner({
+        expiresIn: configuration.tokenLifetime * 1000,
+        key: configuration.secretKey,
+        algorithm: "HS256",
+    });
+
+    new(user: UserDb): Promise<string> {
+        return Promise.resolve(this.signer(user));
+    }
+
+    verify(token: string): Promise<boolean> {
+        try {
+            this.verifier(token);
+            return Promise.resolve(true);
+        } catch {
+            return Promise.resolve(false);
+        }
+    }
+
+    decode(token: string): Promise<UserDb | null> {
+        try {
+            const decoded = this.verifier(token) as UserDb;
+            return Promise.resolve({
+                username: decoded.username,
+                id: decoded.id,
+            });
+        } catch {
+            return Promise.resolve(null);
+        }
+    }
+}
+
+export const TOKEN_PROVIDER: TokenProvider = new JwtTokenProvider(); // new UuidTokenProvider();
