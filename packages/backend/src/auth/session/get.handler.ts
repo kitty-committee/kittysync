@@ -1,24 +1,22 @@
 import { type FastifyReply, type FastifyRequest } from "fastify";
-import type { UserDb } from "@kittysync/common";
-import { redis } from "../../app.ts";
+import { UUIDSessionToken } from "./session-tokens.ts";
 
 export async function getSessionHandler(request: FastifyRequest, reply: FastifyReply) {
-    if (request.cookies["session"]) {
-        const session = request.cookies["session"];
-        const record = await redis.hgetall(`user_${session}`);
-        if (record["id"] === undefined || record["username"] == undefined) {
+    const token = UUIDSessionToken.from(request);
+
+    try {
+        if (token === undefined || !(await token.verify())) {
             reply.code(401).send();
-            return;
+        } else {
+            const user = await token.extractUser();
+            if (user === undefined) {
+                reply.code(401).send();
+            } else {
+                reply.code(200).send(user);
+            }
         }
-
-        const user: UserDb = {
-            id: record["id"],
-            username: record["username"],
-        };
-
-        reply.statusCode = 200;
-        reply.send(user);
-    } else {
-        reply.code(401).send();
+    } catch (error) {
+        console.error(error);
+        reply.code(503).send();
     }
 }

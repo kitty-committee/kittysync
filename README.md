@@ -23,7 +23,7 @@ To see your code changes in action, you can use the `pnpm dev` command, which wi
 
 ### Testing and linting
 
-There are four types of checks that must pass before you can merge a pull request. Type checking, unit tests, formatting checks and general linting. You can run these locally with `pnpm check` to catch issues before you make your pull request.
+There are five types of checks that must pass before you can merge a pull request. Type checking, unit tests, formatting checks, general linting and frontend build success. You can run these locally with `pnpm check` to catch issues before you make your pull request.
 
 > [!TIP]
 > Prettier can automatically update your code to conform to our code style conventions by running `pnpm format`.
