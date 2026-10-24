@@ -19,7 +19,12 @@ export const load: PageLoad = async ({params, fetch }) => {
         throw error(response.status, 'Failed to fetch document');
     }
 
-    const document: DocumentRecord = await response.json() as DocumentRecord;
+    const documents: DocumentRecord = await response.json() as DocumentRecord;
+    const document = documents[0];
+
+    if (!document) {
+        throw error(404, 'Document not found');
+    }
 
     return {
         document

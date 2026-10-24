@@ -2,5 +2,5 @@
     let { data } = $props();
 </script>
 
-<h1>{data.post.title}</h1>
-<div>{@html data.post.content}</div>
+<h1>{data.document.title}</h1>
+<div>{data.document.content}</div>
