@@ -4,6 +4,12 @@
     import { resolve } from '$app/paths';
     let { data } = $props();
 
+    /*
+        Create a new document.
+        @param event - The submit event from the form.
+        will prevent the default form submission and send a POST request to create a new document.
+
+    */
     async function createDocument(event: SubmitEvent) {
         event.preventDefault();
 
@@ -42,6 +48,7 @@
     <input type="text" name="title" placeholder="Document Title" required />
     <button type="submit">Create Document</button>
 </form>
+
 <ul>
     {#each data.summaries as summary (summary.id)}
         <li><a href={resolve(`/app/(authenticated)/documents/[id]`, {id: summary.id})}> {summary.title}</a></li>

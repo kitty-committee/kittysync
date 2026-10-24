@@ -1,8 +1,11 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
+
+//split the registers of auth and document to keep a consistent naming convetion
 import { register as registerAuth } from "./auth/auth.routes.ts";
 import { register as registerDocument } from "./document/document.routes.ts";
+
 import fastifyCookie from "@fastify/cookie";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
