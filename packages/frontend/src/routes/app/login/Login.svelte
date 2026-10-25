@@ -20,7 +20,7 @@
             cancel();
             error = [];
             issues = [];
-            const safeParse = userSchema.safeParse(Object.fromEntries(formData.entries()));
+            const safeParse = userCredentialsSchema.safeParse(Object.fromEntries(formData.entries()));
 
             if (!safeParse.success) {
                 issues = safeParse.error.issues;

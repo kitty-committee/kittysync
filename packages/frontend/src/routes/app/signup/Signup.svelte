@@ -12,7 +12,7 @@
 
     const userSchema = zod
         .object({
-            repeatPassword: userCredentialsSchema.shape.password,,
+            repeatPassword: userCredentialsSchema.shape.password,
         })
         .and(userCredentialsSchema)
         .refine((data) => data.password === data.repeatPassword, {
