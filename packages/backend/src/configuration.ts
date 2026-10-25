@@ -16,6 +16,8 @@ const env = z
         KITTYSYNC_DB_NAME: z.string(),
         KITTYSYNC_DB_USER: z.string(),
         KITTYSYNC_IS_SECURE: z.stringbool(),
+        KITTYSYNC_SECRET_KEY: z.string().min(32),
+        KITTYSYNC_TOKEN_LIFETIME: z.coerce.number().int().positive().default(86400), // Default to 24 hours if not specified
     })
     .parse(process.env);
 
@@ -23,9 +25,17 @@ const env = z
  * Configuration object containing application settings loaded from environment variables.
  */
 export const configuration = {
+    /// The domain of the application, used for for cookie settings.
     appDomain: env.KITTYSYNC_APP_DOMAIN,
+    /// The host of the Redis server used for session management.
     redisHost: env.KITTYSYNC_REDIS_HOST,
+    /// Indicates whether the application is running in a secure context (HTTPS).
     isSecure: env.KITTYSYNC_IS_SECURE,
+    /// The secret key used for signing and verifying JWT tokens.
+    secretKey: env.KITTYSYNC_SECRET_KEY,
+    /// The lifetime of a session token in seconds. Defaults to 86400 (24 hours) if not specified in the environment variables.
+    tokenLifetime: env.KITTYSYNC_TOKEN_LIFETIME,
+    /// Database configuration settings for connecting to the application's database.
     database: {
         password: env.KITTYSYNC_DB_PASSWORD,
         database: env.KITTYSYNC_DB_NAME,

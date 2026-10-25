@@ -26,6 +26,14 @@ app.addHook("onClose", async (_instance) => {
     await Promise.all([redis.quit(), pool.end()]);
 });
 
+// decorate fastify
+app.decorateRequest("user", null);
+declare module "fastify" {
+    interface FastifyRequest {
+        user: UserDb | null;
+    }
+}
+
 // Declare a route
 app.get("/", function (_, reply) {
     reply.send({ hello: "world" });
