@@ -20,12 +20,7 @@
             cancel();
             error = [];
             issues = [];
-            const user = {
-                username: formData.get("username"),
-                password: formData.get("password"),
-            };
-
-            const safeParse = userCredentialsSchema.safeParse(user);
+            const safeParse = userSchema.safeParse(Object.fromEntries(formData.entries()));
 
             if (!safeParse.success) {
                 issues = safeParse.error.issues;
@@ -37,7 +32,7 @@
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(user),
+                body: JSON.stringify(safeParse.data),
             });
 
             if (response.status == 401) {
