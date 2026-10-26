@@ -3,6 +3,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 import { register } from "./auth/auth.routes.ts";
+import type { UserDb } from "@kittysync/common";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
 import { Redis } from "ioredis";
@@ -25,6 +26,14 @@ app.register(websocket);
 app.addHook("onClose", async (_instance) => {
     await Promise.all([redis.quit(), pool.end()]);
 });
+
+// decorate fastify
+app.decorateRequest("user", null);
+declare module "fastify" {
+    interface FastifyRequest {
+        user: UserDb | null;
+    }
+}
 
 // Declare a route
 app.get("/", function (_, reply) {
