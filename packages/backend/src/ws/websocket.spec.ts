@@ -1,7 +1,6 @@
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
 import { packetSchema, type WsPacket } from "@kittysync/common";
-import { time } from "console";
 
 test("connect to websocket", async () => {
     await app.listen();
