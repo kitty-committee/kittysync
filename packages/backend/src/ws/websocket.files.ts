@@ -17,7 +17,7 @@ export function addNewUserToFile(fileID: string, socket: WebSocket, userID: stri
     }
     fileSocketsMap.get(fileID)?.push(socket);
 
-    const packet: WsPacket = { type: "updateFile", data: { file: "this is a file" } }
+    const packet: WsPacket = { type: "updateFile", data: { file: "this is a file" } };
     socket.send(JSON.stringify(packet));
 
     const redisPacket: WsRedisPacket = { command: "addUserFile", data: { fileID: fileID, userID: userID } }
@@ -47,7 +47,7 @@ export function updateFileForAllUsers(fileID: string, fileData: string) {
     const jsonPacket = JSON.stringify(packet);
     (fileSocketsMap.get(fileID) ?? []).forEach((e) => {
         e.send(jsonPacket);
-    })
+    });
 }
 
 export function removeUserFromFile(fileID: string, socket: WebSocket, userID: string) {

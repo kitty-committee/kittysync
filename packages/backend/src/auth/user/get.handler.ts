@@ -1,4 +1,4 @@
-import { UserDbSchema, UserSearchSchema, type UserDb, type UserSearch } from "@kittysync/common";
+import { userDbSchema, userSearchSchema, type UserDb, type UserSearch } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import { usersTable } from "../../db/schema.ts";
 import { like } from "drizzle-orm";
@@ -9,7 +9,7 @@ export async function getUserHandler(request: FastifyRequest, reply: FastifyRepl
     let query: UserSearch;
 
     try {
-        query = UserSearchSchema.parse(request.query);
+        query = userSearchSchema.parse(request.query);
     } catch (error) {
         if (error instanceof z.ZodError) {
             reply.statusCode = 400;
@@ -29,7 +29,7 @@ export async function getUserHandler(request: FastifyRequest, reply: FastifyRepl
     const parsedResults: UserDb[] = [];
 
     for (let i = 0; i < result.length; i++) {
-        parsedResults.push(UserDbSchema.parse(result[i]));
+        parsedResults.push(userDbSchema.parse(result[i]));
     }
 
     reply.statusCode = 200;
