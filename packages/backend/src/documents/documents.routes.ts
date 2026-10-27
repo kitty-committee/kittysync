@@ -3,7 +3,7 @@ import { postDocumentHandler } from "./post.handler.ts";
 import { getDocumentHandler } from "./get.handler.ts";
 import Fastify from "fastify";
 
-/* 
+/**
     defines the routes for the document endpoints 
     .get will retreive a document by id if provided, otherwise it will retrieve all documents
     .post will create a new document with the provided title    
