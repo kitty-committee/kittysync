@@ -29,7 +29,7 @@
 
             if (response.ok) {
                 // Document created successfully, reload the page to show the new document
-                invalidate("/app/(authenticated)/documents/");
+                await invalidate("/api/documents");
             } else {
                 console.error("Failed to create document");
                 error = "Failed to create document";
