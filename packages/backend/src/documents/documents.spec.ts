@@ -1,4 +1,3 @@
-
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
 
@@ -9,7 +8,7 @@ test("Create document", async () => {
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
 
-    let response = await fetch(`http://localhost:${port}/api/document/`, {
+    let response = await fetch(`http://localhost:${port}/api/documents`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -21,7 +20,7 @@ test("Create document", async () => {
 
     expect(response.status).toBe(201);
 
-    response = await fetch(`http://localhost:${port}/api/document/`, {
+    response = await fetch(`http://localhost:${port}/api/documents`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -37,7 +36,7 @@ test("Get document by ID", async () => {
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
 
-    let response = await fetch(`http://localhost:${port}/api/document/db11a2dd-d4a1-4386-a839-8d1cbfdba7a9/`, {
+    let response = await fetch(`http://localhost:${port}/api/documents/db11a2dd-d4a1-4386-a839-8d1cbfdba7a9`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -46,7 +45,7 @@ test("Get document by ID", async () => {
 
     expect(response.status).toBe(200);
 
-    response = await fetch(`http://localhost:${port}/api/document/invalid-id/`, {
+    response = await fetch(`http://localhost:${port}/api/documents/invalid-id`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -62,7 +61,7 @@ test("get all documents", async () => {
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
 
-    const response = await fetch(`http://localhost:${port}/api/document/`, {
+    const response = await fetch(`http://localhost:${port}/api/documents`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -71,4 +70,3 @@ test("get all documents", async () => {
 
     expect(response.status).toBe(200);
 });
-

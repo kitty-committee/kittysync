@@ -26,7 +26,7 @@ export async function insertDocument(title: string) {
     - content: string, the content of the document
  */
 const documentBodySchema = z.object({
-    title: z.string().trim().min(1),
+    title: z.string().trim().min(1).max(255),
 });
 
 /*
