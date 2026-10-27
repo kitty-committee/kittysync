@@ -36,7 +36,17 @@ type DocumentBody = {
     will throw a 500 error if the insert fails.
 */
 export async function postDocumentHandler(request: FastifyRequest, reply: FastifyReply) {
-    const { title } = request.body as DocumentBody;
+    let title: string;
+    try {
+            const doc = documentBodySchema.parse(request.body);
+            title = doc.title;
+    } catch (error) {
+            if (error instanceof ZodError) {
+                    reply.code(400).send(error.issues);
+                    return;
+            }
+            throw error;
+    }
 
     try {
         await insertDocument(title);
