@@ -9,9 +9,9 @@ import "dotenv/config";
     @param title - The title of the document to insert.
     will throw an error if the insert fails.
 */
-export async function insertDocument(title: string) {
+export async function insertDocument(title: string, authorId: string) {
     try {
-        await db.insert(documentsTable).values({ title });
+        await db.insert(documentsTable).values({ title, authorId });
         console.log("Document inserted successfully");
     } catch (error) {
         console.error("Error inserting document:", error);
@@ -37,9 +37,15 @@ const documentBodySchema = z.object({
 */
 export async function postDocumentHandler(request: FastifyRequest, reply: FastifyReply) {
     let title: string;
+    let authorId: string;
     try {
         const doc = documentBodySchema.parse(request.body);
         title = doc.title;
+        if (!request.user) {
+            reply.code(401).send({ error: "Unauthorized" });
+            return;
+        }
+        authorId = request.user.id;
     } catch (error) {
         if (error instanceof ZodError) {
             reply.code(400).send(error.issues);
@@ -49,7 +55,7 @@ export async function postDocumentHandler(request: FastifyRequest, reply: Fastif
     }
 
     try {
-        await insertDocument(title);
+        await insertDocument(title, authorId);
         reply.statusCode = 201;
         reply.send({ message: "Document created successfully" });
     } catch (error) {

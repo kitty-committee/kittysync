@@ -3,8 +3,9 @@
     import { resolve } from "$app/paths";
     let props = $props();
     let data = $derived(props.data);
+    let error = $state<string | null>(null);
 
-/**
+    /**
         Create a new document.
         @param event - The submit event from the form.
         will prevent the default form submission and send a POST request to create a new document.
@@ -31,9 +32,11 @@
                 invalidate("/app/(authenticated)/documents/");
             } else {
                 console.error("Failed to create document");
+                error = "Failed to create document";
             }
-        } catch (error) {
-            console.error("Error creating document:", error);
+        } catch (err) {
+            console.error("Error creating document:", err);
+            error = "Error creating document" + String(err);
         }
     }
 </script>
@@ -44,6 +47,8 @@
     <input type="text" name="title" placeholder="Document Title" required />
     <button type="submit">Create Document</button>
 </form>
+
+{error}
 
 <ul>
     {#each data.summaries as summary (summary.id)}

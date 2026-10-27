@@ -1,8 +1,8 @@
+import { mockSession } from "../auth/auth.spec.ts";
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
 
 test("Create document", async () => {
-    await app.listen();
     await app.ready();
 
     const address = app.server.address();
@@ -12,6 +12,7 @@ test("Create document", async () => {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            ...(await mockSession()),
         },
         body: JSON.stringify({
             title: "test-document",
@@ -24,6 +25,7 @@ test("Create document", async () => {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
+            ...(await mockSession()),
         },
     });
 
@@ -35,11 +37,24 @@ test("Get document by ID", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
+    const tempdocument = await fetch(`http://localhost:${port}/api/documents`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...(await mockSession()),
+        },
+        body: JSON.stringify({
+            title: "test-document",
+        }),
+    });
 
-    let response = await fetch(`http://localhost:${port}/api/documents/db11a2dd-d4a1-4386-a839-8d1cbfdba7a9`, {
+    const documentId: string = (await tempdocument.json()) as string;
+
+    let response = await fetch(`http://localhost:${port}/api/documents/${documentId}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
+            ...(await mockSession()),
         },
     });
 
@@ -49,6 +64,7 @@ test("Get document by ID", async () => {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
+            ...(await mockSession()),
         },
     });
 
@@ -65,6 +81,7 @@ test("get all documents", async () => {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
+            ...(await mockSession()),
         },
     });
 
