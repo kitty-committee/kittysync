@@ -4,7 +4,7 @@
     let props = $props();
     let data = $derived(props.data);
 
-    /*
+/**
         Create a new document.
         @param event - The submit event from the form.
         will prevent the default form submission and send a POST request to create a new document.
