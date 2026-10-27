@@ -1,0 +1,150 @@
+{
+    "version": "8",
+    "dialect": "postgres",
+    "id": "5a5ee854-da03-45c0-b8d4-c790d88b9a35",
+    "prevIds": ["d881cee3-d0d0-4688-90f5-3e113f92a7fa"],
+    "ddl": [
+        {
+            "isRlsEnabled": false,
+            "name": "documents",
+            "entityType": "tables",
+            "schema": "public"
+        },
+        {
+            "isRlsEnabled": false,
+            "name": "users",
+            "entityType": "tables",
+            "schema": "public"
+        },
+        {
+            "type": "uuid",
+            "typeSchema": null,
+            "notNull": true,
+            "dimensions": 0,
+            "default": "gen_random_uuid()",
+            "generated": null,
+            "identity": null,
+            "name": "id",
+            "entityType": "columns",
+            "schema": "public",
+            "table": "documents"
+        },
+        {
+            "type": "varchar(255)",
+            "typeSchema": null,
+            "notNull": true,
+            "dimensions": 0,
+            "default": null,
+            "generated": null,
+            "identity": null,
+            "name": "title",
+            "entityType": "columns",
+            "schema": "public",
+            "table": "documents"
+        },
+        {
+            "type": "text",
+            "typeSchema": null,
+            "notNull": true,
+            "dimensions": 0,
+            "default": "''",
+            "generated": null,
+            "identity": null,
+            "name": "content",
+            "entityType": "columns",
+            "schema": "public",
+            "table": "documents"
+        },
+        {
+            "type": "uuid",
+            "typeSchema": null,
+            "notNull": true,
+            "dimensions": 0,
+            "default": null,
+            "generated": null,
+            "identity": null,
+            "name": "authorId",
+            "entityType": "columns",
+            "schema": "public",
+            "table": "documents"
+        },
+        {
+            "type": "uuid",
+            "typeSchema": null,
+            "notNull": true,
+            "dimensions": 0,
+            "default": "gen_random_uuid()",
+            "generated": null,
+            "identity": null,
+            "name": "id",
+            "entityType": "columns",
+            "schema": "public",
+            "table": "users"
+        },
+        {
+            "type": "varchar(255)",
+            "typeSchema": null,
+            "notNull": true,
+            "dimensions": 0,
+            "default": null,
+            "generated": null,
+            "identity": null,
+            "name": "username",
+            "entityType": "columns",
+            "schema": "public",
+            "table": "users"
+        },
+        {
+            "type": "varchar(60)",
+            "typeSchema": null,
+            "notNull": true,
+            "dimensions": 0,
+            "default": null,
+            "generated": null,
+            "identity": null,
+            "name": "password",
+            "entityType": "columns",
+            "schema": "public",
+            "table": "users"
+        },
+        {
+            "nameExplicit": false,
+            "columns": ["authorId"],
+            "schemaTo": "public",
+            "tableTo": "users",
+            "columnsTo": ["id"],
+            "onUpdate": "NO ACTION",
+            "onDelete": "CASCADE",
+            "name": "documents_authorId_users_id_fkey",
+            "entityType": "fks",
+            "schema": "public",
+            "table": "documents"
+        },
+        {
+            "columns": ["id"],
+            "nameExplicit": false,
+            "name": "documents_pkey",
+            "schema": "public",
+            "table": "documents",
+            "entityType": "pks"
+        },
+        {
+            "columns": ["id"],
+            "nameExplicit": false,
+            "name": "users_pkey",
+            "schema": "public",
+            "table": "users",
+            "entityType": "pks"
+        },
+        {
+            "nameExplicit": false,
+            "columns": ["username"],
+            "nullsNotDistinct": false,
+            "name": "users_username_key",
+            "schema": "public",
+            "table": "users",
+            "entityType": "uniques"
+        }
+    ],
+    "renames": []
+}
