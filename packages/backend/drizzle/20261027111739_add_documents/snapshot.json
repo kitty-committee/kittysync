@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "e30e33b8-612e-4397-96fe-c336190fe677",
+  "id": "86e2af8d-d43e-4e39-9cce-abfcf0bafcf1",
   "prevIds": [
     "d881cee3-d0d0-4688-90f5-3e113f92a7fa"
   ],
@@ -45,24 +45,11 @@
       "table": "documents"
     },
     {
-      "type": "varchar(255)",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "slug",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
       "type": "varchar(10000)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "''",
       "generated": null,
       "identity": null,
       "name": "content",
@@ -128,17 +115,6 @@
       "schema": "public",
       "table": "users",
       "entityType": "pks"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "slug"
-      ],
-      "nullsNotDistinct": false,
-      "name": "documents_slug_key",
-      "schema": "public",
-      "table": "documents",
-      "entityType": "uniques"
     },
     {
       "nameExplicit": false,
