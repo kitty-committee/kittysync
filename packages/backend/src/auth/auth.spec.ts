@@ -1,7 +1,18 @@
 import { TOKEN_PROVIDER } from "./session/session-tokens.ts";
+import { expect, test, beforeEach, afterEach } from "vitest";
 import { type UserDb } from "@kittysync/common";
-import { expect, test } from "vitest";
-import { app } from "../app.ts";
+import { createApp } from "../app.ts";
+
+let app: Awaited<ReturnType<typeof createApp>>;
+
+beforeEach(async () => {
+    app = await createApp();
+    await app.listen();
+});
+
+afterEach(async () => {
+    await app.close();
+});
 
 /**
  * Creates a valid session token for the given user and returns a cookie header object which can be used to authenticate requests.
@@ -15,7 +26,6 @@ export async function mockSession(user: UserDb = { username: "test-user", id: cr
 }
 
 test("Create user", async () => {
-    await app.listen();
     await app.ready();
 
     const address = app.server.address();

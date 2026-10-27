@@ -1,9 +1,18 @@
-import { expect, test } from "vitest";
-import { type WsPacket, type UserDb } from "@kittysync/common";
 import { parseWebsocketPacket } from "./websocket.handler.ts";
-import { app } from "../app.ts";
-import { TOKEN_PROVIDER } from "../auth/session/session-tokens.ts";
-// import { mockSession } from "../auth/auth.spec.ts"
+import { expect, test, beforeEach, afterEach } from "vitest";
+import { type WsPacket } from "@kittysync/common";
+import { createApp } from "../app.ts";
+
+let app: Awaited<ReturnType<typeof createApp>>;
+
+beforeEach(async () => {
+    app = await createApp();
+    await app.listen();
+});
+
+afterEach(async () => {
+    await app.close();
+});
 
 /**
  * Creates a valid session token for the given user and returns a cookie header object which can be used to authenticate requests.
@@ -16,9 +25,7 @@ export async function mockSession(user: UserDb = { username: "test-user", id: cr
     };
 }
 
-
 test("connect to websocket", async () => {
-    await app.listen();
     await app.ready();
 
     const ws = await app.injectWS('/api/websocket?fileID=abc.txt', { headers: await mockSession() });

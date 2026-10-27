@@ -30,13 +30,14 @@ export function parseWebsocketPacket(message: RawData): WsPacket {
 }
 
 export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
-    clearMaps()
+    console.log("beforemaps");
+    clearMaps();
+    console.log("after maps");
     await redis.subscribe("ws-channel", (err) => {
         if (err) {
             console.log(err);
         }
     });
-
 
     redis.on("message", (channel, message) => {
         if (channel === "ws-channel") {
@@ -59,8 +60,8 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
         app.addHook("preHandler", authenticationHook);
 
         app.get(
-            '/api/websocket',
-            { websocket: true, },
+            "/api/websocket",
+            { websocket: true },
             (socket: WebSocket, req: Fastify.FastifyRequest<{ Querystring: { fileID: string } }>) => {
                 const { fileID } = req.query;
 

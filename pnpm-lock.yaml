@@ -309,11 +309,10 @@ importers:
         version: 5.0.4(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/frontend:
-    dependencies:
+    devDependencies:
       '@humanspeak/svelte-markdown':
         specifier: ^2.1.3
         version: 2.1.3(svelte@5.57.2(@typescript-eslint/types@8.71.2))
-    devDependencies:
       '@kittysync/common':
         specifier: workspace:*
         version: link:../common
@@ -350,6 +349,9 @@ importers:
       vitest-browser-svelte:
         specifier: ^2.1.1
         version: 2.2.1(svelte@5.57.2(@typescript-eslint/types@8.71.2))(vitest@4.1.11)
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
 
 packages:
 
