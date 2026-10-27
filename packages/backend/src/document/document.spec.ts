@@ -57,7 +57,6 @@ test("Get document by ID", async () => {
 });
 
 test("get all documents", async () => {
-    await app.listen();
     await app.ready();
 
     const address = app.server.address();
