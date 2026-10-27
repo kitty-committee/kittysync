@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { documentsTable } from '../db/schema.ts'
 import {db} from '../app.ts'
 import { type FastifyReply, type FastifyRequest } from "fastify";
+import { z, ZodError } from 'zod/v3';
 
 /*
     Insert a new document into the database.
@@ -24,10 +25,10 @@ export async function insertDocument(title: string,) {
     - title: string, the title of the document
     - content: string, the content of the document
  */
-type DocumentBody = {
-    title: string;
-    content: string;
-};
+const documentBodySchema = z.object({
+    title: z.string(),
+    content: z.string(),
+});
 
 /*
     Handle the POST request for documents.
