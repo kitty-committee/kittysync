@@ -1,7 +1,7 @@
 import type { PageLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 
-/*
+/**
     data type for the document record
     contains the following properties:
     - id: string, the id of the document
