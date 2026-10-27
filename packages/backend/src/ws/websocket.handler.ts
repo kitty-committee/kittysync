@@ -1,10 +1,18 @@
-import Fastify from "fastify";
-import { type WebSocket } from "@fastify/websocket";
-import { packetSchema, type WsPacket, } from "@kittysync/common";
-import { clearMaps, addNewUserToFile, removeUserFromFile, updateFileForAllUsers, addNewUserToFileMap, removeUserFromFileMap } from "./websocket.files.ts";
-import { redis } from "../app.ts";
+import {
+    clearMaps,
+    addNewUserToFile,
+    removeUserFromFile,
+    updateFileForAllUsers,
+    addNewUserToFileMap,
+    removeUserFromFileMap,
+} from "./websocket.files.ts";
 import { wsRedisPacketSchema, type WsRedisPacket } from "./ws-redis-packet.ts";
+import { packetSchema, type WsPacket } from "@kittysync/common";
+import { type WebSocket } from "@fastify/websocket";
+import { authenticationHook } from "../util.ts";
+import { redis } from "../app.ts";
 import type { RawData } from "ws";
+import Fastify from "fastify";
 
 /**
  * Parses a raw WebSocket message into a WsPacket object.
@@ -22,12 +30,15 @@ export function parseWebsocketPacket(message: RawData): WsPacket {
 }
 
 export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
+    console.log("beforemaps")
     clearMaps();
+    console.log("after maps")
     await redis.subscribe("ws-channel", (err) => {
         if (err) {
-            console.log(err)
+            console.log(err);
         }
-    })
+    });
+
 
     redis.on("message", (channel, message) => {
         if (channel === "ws-channel") {
@@ -44,12 +55,14 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
                     break;
             }
         }
-    })
+    });
 
     app.register(function (app) {
+        app.addHook("preHandler", authenticationHook);
+
         app.get(
-            "/api/websocket",
-            { websocket: true },
+            '/api/websocket',
+            { websocket: true, },
             (socket: WebSocket, req: Fastify.FastifyRequest<{ Querystring: { fileID: string } }>) => {
                 const { fileID } = req.query;
 
@@ -59,7 +72,7 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
 
                     switch (packet.type) {
                         case "open":
-                            addNewUserToFile(fileID, socket, req.ip ?? "user");
+                            addNewUserToFile(fileID, socket, req.user?.username ?? "unknownUser");
                             break;
                         case "saveFile":
                             updateFileForAllUsers(fileID, packet.data.file);
@@ -73,7 +86,7 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
                     }
                 });
 
-                socket.on("close", () => removeUserFromFile(fileID, socket, req.ip));
+                socket.on("close", () => removeUserFromFile(fileID, socket, req.user?.username ?? "unknownUser"));
             },
         );
     });
