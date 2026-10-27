@@ -22,10 +22,10 @@
             issues = [];
             const safeParse = userCredentialsSchema.safeParse(Object.fromEntries(formData.entries()));
 
-            /*if (!safeParse.success) {
+            if (!safeParse.success) {
                 issues = safeParse.error.issues;
                 return;
-            }*/
+            }
 
             const response = await fetchApi("auth/session", {
                 method: "POST",
