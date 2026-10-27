@@ -14,7 +14,7 @@ function routes(app: Fastify.FastifyInstance) {
     app.post("/documents", postDocumentHandler);
 }
 
-//registers the routes with the fastify instance and adds a prefix of /api/ to all routes
+/** registers the routes with the fastify instance and adds a prefix of /api/ to all routes */
 export function register(app: Fastify.FastifyInstance) {
     app.register(routes, { prefix: "/api" });
 }
