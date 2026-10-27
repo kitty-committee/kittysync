@@ -4,7 +4,6 @@ import {db} from '../app.ts'
 import { eq } from 'drizzle-orm';
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import * as z from 'zod/v3';
-
 /* 
     Fetch documents from the database.
     @param id - The ID of the document to fetch.
@@ -43,8 +42,8 @@ export async function getDocumentHandler(
 ) {
     let id: string;
     try {
-            id = z.uuid().parse(request.params?.id);
-    } catch (error) {
+            id = z.string().uuid().parse(request.params?.id);
+    } catch {
             reply.code(404).send();
             return;
     }

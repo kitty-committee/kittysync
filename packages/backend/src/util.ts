@@ -2,7 +2,7 @@ import { TOKEN_PROVIDER } from "./auth/session/session-tokens.ts";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { documentsTable } from './db/schema.ts'
 import { eq } from 'drizzle-orm';
-import {db} from './app.ts'
+import { db } from './app.ts'
 
 /**
  * Prehandler for backend routes which enforces an authentication check. If the session token does not exist or cannot be verified, or redis is innaccessible, the response will be hijacked here and not proceed any further.

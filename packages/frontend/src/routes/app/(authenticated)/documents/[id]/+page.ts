@@ -35,8 +35,7 @@ export const load: PageLoad = async ({params, fetch }) => {
         throw error(response.status, 'Failed to fetch document');
     }
 
-    const documents: DocumentRecord = await response.json() as DocumentRecord;
-    //this line has an error but removing it causes no data to be returned to the page, so I will leave it for now but please suggest a fix for it
+    const documents: DocumentRecord[] = await response.json() as DocumentRecord[];
     const document = documents[0];
 
     //404 error if the document is not found
