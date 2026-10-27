@@ -1,7 +1,7 @@
+import { type WsRedisPacket } from "./ws-redis-packet.ts";
 import { type WebSocket } from "@fastify/websocket";
 import { type WsPacket } from "@kittysync/common";
 import { redis } from "../app.ts";
-import { type WsRedisPacket } from "./ws-redis-packet.ts";
 
 const fileUsersMap = new Map<string, string[]>();
 const fileSocketsMap = new Map<string, WebSocket[]>();
@@ -20,16 +20,16 @@ export function addNewUserToFile(fileID: string, socket: WebSocket, userID: stri
     const packet: WsPacket = { type: "updateFile", data: { file: "this is a file" } };
     socket.send(JSON.stringify(packet));
 
-    const redisPacket: WsRedisPacket = { command: "addUserFile", data: { fileID: fileID, userID: userID } }
+    const redisPacket: WsRedisPacket = { command: "addUserFile", data: { fileID: fileID, userID: userID } };
     void redis.publish("ws-channel", JSON.stringify(redisPacket));
 }
 
 export function addNewUserToFileMap(fileID: string, userID: string) {
     if (fileUsersMap.get(fileID) === undefined) {
-        fileUsersMap.set(fileID, [])
+        fileUsersMap.set(fileID, []);
     }
     fileUsersMap.get(fileID)?.push(userID);
-    console.log("updating user lists")
+    console.log("updating user lists");
     updateAllUserListsOnFile(fileID);
 }
 
@@ -54,7 +54,7 @@ export function removeUserFromFile(fileID: string, socket: WebSocket, userID: st
     const socketList = fileSocketsMap.get(fileID) ?? [];
     socketList.splice(socketList.indexOf(socket), 1);
 
-    const redisPacket: WsRedisPacket = { command: "removeUserFile", data: { fileID: fileID, userID: userID } }
+    const redisPacket: WsRedisPacket = { command: "removeUserFile", data: { fileID: fileID, userID: userID } };
     void redis.publish("ws-channel", JSON.stringify(redisPacket));
 }
 

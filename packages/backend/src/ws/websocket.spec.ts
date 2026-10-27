@@ -1,15 +1,24 @@
-import { expect, test } from "vitest";
-import { type WsPacket } from "@kittysync/common";
 import { parseWebsocketPacket } from "./websocket.handler.ts";
-import { app } from "../app.ts";
+import { expect, test, beforeEach, afterEach } from "vitest";
+import { type WsPacket } from "@kittysync/common";
+import { createApp } from "../app.ts";
+
+let app: Awaited<ReturnType<typeof createApp>>;
+
+beforeEach(async () => {
+    app = await createApp();
+    await app.listen();
+});
+
+afterEach(async () => {
+    await app.close();
+});
 
 test("connect to websocket", async () => {
-    await app.listen();
     await app.ready();
-    console.log("here")
+    console.log("here");
 
-    const ws = await app.injectWS('/api/websocket?fileID=abc.txt');
-
+    const ws = await app.injectWS("/api/websocket?fileID=abc.txt");
 
     let fileResolve: (value: WsPacket | PromiseLike<WsPacket>) => void;
     const filePromise = new Promise<WsPacket>((r) => {

@@ -14,32 +14,36 @@ export const redis = new Redis(6379, configuration.redisHost);
 
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
-await migrate(db, { migrationsFolder: "./drizzle" });
 
-export const app = Fastify({
-    logger: true,
-});
-
-app.register(fastifyCookie);
-app.register(websocket);
-
-app.addHook("onClose", async (_instance) => {
-    await Promise.all([redis.quit(), pool.end()]);
-});
-
-// decorate fastify
-app.decorateRequest("user", null);
 declare module "fastify" {
     interface FastifyRequest {
         user: UserDb | null;
     }
 }
 
-// Declare a route
-app.get("/", function (_, reply) {
-    reply.send({ hello: "world" });
-});
+/** Creates an instance of the KittySync backend application */
+export async function createApp() {
+    await migrate(db, { migrationsFolder: "./drizzle" });
 
-// Register auth routes
-register(app);
-registerWebsocketRoutes(app);
+    const app = Fastify({
+        logger: true,
+    });
+
+    app.register(fastifyCookie);
+    app.register(websocket);
+
+    // decorate fastify
+    app.decorateRequest("user", null);
+
+    // Declare a route
+    app.get("/", function (_, reply) {
+        reply.send({ hello: "world" });
+    });
+
+    // Register auth routes
+    register(app);
+    await registerWebsocketRoutes(app);
+
+    // return the app instance
+    return app;
+}

@@ -7,15 +7,15 @@ const fileDataDataSchema = z.object({ fileID: z.string(), fileData: z.string() }
 export const wsRedisPacketSchema = z.discriminatedUnion("command", [
     z.object({
         command: z.literal("addUserFile"),
-        data: fileUserDataSchema
+        data: fileUserDataSchema,
     }),
     z.object({
         command: z.literal("removeUserFile"),
-        data: fileUserDataSchema
+        data: fileUserDataSchema,
     }),
     z.object({
         command: z.literal("saveFile"),
-        data: fileDataDataSchema
+        data: fileDataDataSchema,
     }),
 ]);
 
