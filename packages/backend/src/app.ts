@@ -2,9 +2,11 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 
+import type { UserDb } from "@kittysync/common";
+
 //split the registers of auth and document to keep a consistent naming convetion
 import { register as registerAuth } from "./auth/auth.routes.ts";
-import { register as registerDocument } from "./document/document.routes.ts";
+import { register as registerDocuments } from "./documents/documents.routes.ts";
 
 import fastifyCookie from "@fastify/cookie";
 import { Redis } from "ioredis";
@@ -42,4 +44,4 @@ app.get("/", function (_, reply) {
 
 // Register routes
 registerAuth(app);
-registerDocument(app);
+registerDocuments(app);

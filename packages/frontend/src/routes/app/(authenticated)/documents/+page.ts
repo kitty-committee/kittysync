@@ -21,7 +21,7 @@ type DocimentRecord = {
     will throw an error if the fetch fails.
 */
 export const load: PageLoad = async ({fetch }) => {
-    const response = await fetch(`/api/document`);
+    const response = await fetch(`/api/documents`);
 
     if (!response.ok) {
         throw error(response.status, 'Failed to fetch documents');

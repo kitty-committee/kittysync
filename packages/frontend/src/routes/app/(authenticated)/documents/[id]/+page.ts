@@ -23,7 +23,7 @@ type DocumentRecord = {
     will throw an error if the fetch fails.
 */
 export const load: PageLoad = async ({params, fetch }) => {
-    const response = await fetch(`/api/document/${encodeURIComponent(params.id)}`);
+    const response = await fetch(`/api/documents/${encodeURIComponent(params.id)}`);
 
     //404 error if the document is not found
     if (response.status === 404) {
