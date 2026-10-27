@@ -4,7 +4,7 @@ import { z, ZodError } from "zod/v3";
 import { db } from "../app.ts";
 import "dotenv/config";
 
-/*
+/**
     Insert a new document into the database.
     @param title - The title of the document to insert.
     will throw an error if the insert fails.
