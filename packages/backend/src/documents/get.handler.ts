@@ -1,9 +1,9 @@
-import 'dotenv/config';
-import { documentsTable } from '../db/schema.ts'
-import {db} from '../app.ts'
-import { eq } from 'drizzle-orm';
 import { type FastifyReply, type FastifyRequest } from "fastify";
-import * as z from 'zod/v3';
+import { documentsTable } from "../db/schema.ts";
+import { eq } from "drizzle-orm";
+import { db } from "../app.ts";
+import * as z from "zod/v3";
+import "dotenv/config";
 /* 
     Fetch documents from the database.
     @param id - The ID of the document to fetch.
@@ -15,7 +15,7 @@ export async function getDocuments(id?: string) {
             const result = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
             return result;
         } catch (error) {
-            console.error('Error fetching document by ID:', error);
+            console.error("Error fetching document by ID:", error);
             throw error;
         }
     }
@@ -24,7 +24,7 @@ export async function getDocuments(id?: string) {
         const result = await db.select({ id: documentsTable.id, title: documentsTable.title }).from(documentsTable);
         return result;
     } catch (error) {
-        console.error('Error fetching documents:', error);
+        console.error("Error fetching documents:", error);
         throw error;
     }
 }
@@ -36,29 +36,29 @@ export async function getDocuments(id?: string) {
     @returns - A list of documents or a single document if an ID is provided.
     will throw a 500 error if the fetch fails or if the document is not found.
 */
-export async function getDocumentHandler(
-    request: FastifyRequest<{ Params: { id?: string } }>,
-    reply: FastifyReply,
-) {
-    let id: string;
-    try {
+export async function getDocumentHandler(request: FastifyRequest<{ Params: { id?: string } }>, reply: FastifyReply) {
+    let id: string | undefined;
+    if (request.params?.id != undefined) {
+        try {
             id = z.string().uuid().parse(request.params?.id);
-    } catch {
+        } catch {
             reply.code(404).send();
             return;
+        }
     }
 
     try {
         const documents = await getDocuments(id);
-        if (documents.length === 0) {
-                reply.code(404).send();
-                return;
+        if (id !== undefined && documents.length == 0) {
+            reply.code(404).send();
+            return;
         }
+
         reply.statusCode = 200;
         reply.send(documents);
     } catch (error) {
-        console.error('Error fetching documents:', error);
+        console.error("Error fetching documents:", error);
         reply.statusCode = 500;
-        reply.send({ error: 'Internal Server Error' });
+        reply.send({ error: "Internal Server Error" });
     }
 }

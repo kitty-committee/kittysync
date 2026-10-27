@@ -18,7 +18,7 @@
         const title = formData.get('title') as string;
 
         try {
-            const response = await fetch('/api/document', {
+            const response = await fetch('/api/documents', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -1,7 +1,6 @@
-
 //imports fastify and the handler functions for the get and post routes
-import { getDocumentHandler } from "./get.handler.ts";
 import { postDocumentHandler } from "./post.handler.ts";
+import { getDocumentHandler } from "./get.handler.ts";
 import Fastify from "fastify";
 
 /* 
@@ -11,12 +10,11 @@ import Fastify from "fastify";
 */
 
 function routes(app: Fastify.FastifyInstance) {
-    app.get<{ Params: { id?: string } }>("document/:id?", getDocumentHandler);
-    app.post("document", postDocumentHandler);
-
+    app.get<{ Params: { id?: string } }>("/documents/:id?", getDocumentHandler);
+    app.post("/documents", postDocumentHandler);
 }
 
 //registers the routes with the fastify instance and adds a prefix of /api/ to all routes
 export function register(app: Fastify.FastifyInstance) {
-    app.register(routes, { prefix: "/api/" });
+    app.register(routes, { prefix: "/api" });
 }
