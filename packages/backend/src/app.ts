@@ -2,14 +2,18 @@ import { registerWebsocketRoutes } from "./ws/websocket.handler.ts";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
-import { register } from "./auth/auth.routes.ts";
+
 import type { UserDb } from "@kittysync/common";
+
+//split the registers of auth and document to keep a consistent naming convetion
+import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { register as registerAuth } from "./auth/auth.routes.ts";
+
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
-
 export const redis = new Redis(6379, configuration.redisHost);
 
 const pool = new Pool(configuration.database);
@@ -41,7 +45,8 @@ export async function createApp() {
     });
 
     // Register auth routes
-    register(app);
+    registerAuth(app);
+    registerDocuments(app);
     await registerWebsocketRoutes(app);
 
     // return the app instance

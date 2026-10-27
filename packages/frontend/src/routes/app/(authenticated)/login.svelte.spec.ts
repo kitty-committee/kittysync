@@ -28,7 +28,7 @@ vi.mock("$app/paths", () => ({
             "/app/landing": "/app/(authenticated)/landing",
         };
         const id = routes[path];
-        return id ? { id } : undefined;
+        return id ? { id, params: {} } : undefined;
     }),
     resolve: vi.fn((id: string) => {
         const routes: Record<string, string> = {
@@ -127,7 +127,7 @@ describe("login form", () => {
 
         await vi.waitFor(() => {
             expect(match).toHaveBeenCalledWith("/app/example");
-            expect(resolve).toHaveBeenCalledWith("/app/(authenticated)/example");
+            expect(resolve).toHaveBeenCalledWith("/app/(authenticated)/example", {});
             expect(goto).toHaveBeenCalledWith("/app/example");
         });
     });

@@ -14,17 +14,6 @@ afterEach(async () => {
     await app.close();
 });
 
-/**
- * Creates a valid session token for the given user and returns a cookie header object which can be used to authenticate requests.
- * @param user
- * @returns
- */
-export async function mockSession(user: UserDb = { username: "test-user", id: crypto.randomUUID() }) {
-    return {
-        Cookie: `session=${await TOKEN_PROVIDER.new(user)}`,
-    };
-}
-
 test("Create user", async () => {
     await app.ready();
 
@@ -161,8 +150,8 @@ test("Search user data", async () => {
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
 
-    const response = await fetch(`http://localhost:${port}/api/auth/user?username=%`, {
-        headers: await mockSession(),
+    const response = await fetch(`http://localhost:${port}/api/auth/user?username=test-user`, {
+        headers: await mockSession(port!),
         method: "GET",
     });
 
