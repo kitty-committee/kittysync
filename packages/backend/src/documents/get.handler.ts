@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../app.ts";
 import * as z from "zod/v3";
 import "dotenv/config";
-/* 
+/** 
     Fetch documents from the database.
     @param id - The ID of the document to fetch.
     @returns - A list of documents or a single document if an ID is provided.
