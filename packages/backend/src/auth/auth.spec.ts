@@ -1,61 +1,7 @@
 import { type UserDb } from "@kittysync/common";
+import { mockSession } from "./test-utils.ts";
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
-
-/**
- * Creates a valid session token for the given user and returns a cookie header object which can be used to authenticate requests.
- * @param user
- * @returns
- */
-export async function mockSession(
-    port: string | number,
-    user: UserDb = { username: "mock-user", id: crypto.randomUUID() },
-) {
-    const password = "hello-world";
-
-    const newUserResponse = await fetch(`http:localhost:${port}/api/auth/user`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: user.username, password: password }),
-    });
-
-    if (newUserResponse.status === 500) {
-        throw new Error("Failed to create mock user, API returned 500.");
-    }
-
-    // At this point, either the user already exists and new_user_response gave 409, or it
-    // was created and returned 201.
-
-    const loginResponse = await fetch(`http://localhost:${port}/api/auth/session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            username: user.username,
-            password: password,
-        }),
-    });
-
-    if (loginResponse.status !== 200) {
-        throw new Error("Failed to login to mock user.");
-    }
-
-    const setCookies = loginResponse.headers.getSetCookie();
-    let sessionToken: string | undefined;
-    for (let i = 0; i < setCookies.length; i++) {
-        if (setCookies[i].match(/session=(.*)/) !== null) {
-            sessionToken = setCookies[i];
-            break;
-        }
-    }
-
-    if (sessionToken === undefined) {
-        throw new Error("Failed to extract session token from login response.");
-    }
-
-    return {
-        Cookie: sessionToken,
-    };
-}
 
 test("Create user", async () => {
     await app.listen();
@@ -194,7 +140,7 @@ test("Search user data", async () => {
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
 
-    const response = await fetch(`http://localhost:${port}/api/auth/user?username=%`, {
+    const response = await fetch(`http://localhost:${port}/api/auth/user?username=test-user`, {
         headers: await mockSession(port!),
         method: "GET",
     });

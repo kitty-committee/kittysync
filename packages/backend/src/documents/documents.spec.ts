@@ -1,8 +1,9 @@
-import { mockSession } from "../auth/auth.spec.ts";
+import { mockSession } from "../auth/test-utils.ts";
 import { expect, test } from "vitest";
 import { app } from "../app.ts";
 
 test("Create document", async () => {
+    await app.listen();
     await app.ready();
 
     const address = app.server.address();
