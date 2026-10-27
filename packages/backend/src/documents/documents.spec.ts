@@ -12,7 +12,7 @@ test("Create document", async () => {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            ...(await mockSession()),
+            ...(await mockSession(port!)),
         },
         body: JSON.stringify({
             title: "test-document",
@@ -25,7 +25,7 @@ test("Create document", async () => {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            ...(await mockSession()),
+            ...(await mockSession(port!)),
         },
     });
 
@@ -41,7 +41,7 @@ test("Get document by ID", async () => {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            ...(await mockSession()),
+            ...(await mockSession(port!)),
         },
         body: JSON.stringify({
             title: "test-document",
@@ -54,7 +54,7 @@ test("Get document by ID", async () => {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            ...(await mockSession()),
+            ...(await mockSession(port!)),
         },
     });
 
@@ -64,7 +64,7 @@ test("Get document by ID", async () => {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            ...(await mockSession()),
+            ...(await mockSession(port!)),
         },
     });
 
@@ -81,7 +81,7 @@ test("get all documents", async () => {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            ...(await mockSession()),
+            ...(await mockSession(port!)),
         },
     });
 
