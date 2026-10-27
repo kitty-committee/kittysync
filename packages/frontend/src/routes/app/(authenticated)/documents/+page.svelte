@@ -28,7 +28,7 @@
 
             if (response.ok) {
                 // Document created successfully, reload the page to show the new document
-                invalidate("/app/(authenticated/documents/");
+                invalidate("/app/(authenticated)/documents/");
             } else {
                 console.error("Failed to create document");
             }
