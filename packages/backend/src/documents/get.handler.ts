@@ -3,6 +3,7 @@ import { documentsTable } from '../db/schema.ts'
 import {db} from '../app.ts'
 import { eq } from 'drizzle-orm';
 import { type FastifyReply, type FastifyRequest } from "fastify";
+import * as z from 'zod/v3';
 
 /* 
     Fetch documents from the database.
@@ -21,7 +22,7 @@ export async function getDocuments(id?: string) {
     }
 
     try {
-        const result = await db.select({id: string, title: string}).from(documentsTable);
+        const result = await db.select({ id: documentsTable.id, title: documentsTable.title }).from(documentsTable);
         return result;
     } catch (error) {
         console.error('Error fetching documents:', error);
