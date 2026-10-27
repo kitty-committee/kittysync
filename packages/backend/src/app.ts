@@ -1,13 +1,17 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
-import { register } from "./auth/auth.routes.ts";
+
 import type { UserDb } from "@kittysync/common";
+
+//split the registers of auth and document to keep a consistent naming convetion
+import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { register as registerAuth } from "./auth/auth.routes.ts";
+
 import fastifyCookie from "@fastify/cookie";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
-
 export const redis = new Redis(6379, configuration.redisHost);
 
 const pool = new Pool(configuration.database);
@@ -37,5 +41,6 @@ app.get("/", function (_, reply) {
     reply.send({ hello: "world" });
 });
 
-// Register auth routes
-register(app);
+// Register routes
+registerAuth(app);
+registerDocuments(app);
