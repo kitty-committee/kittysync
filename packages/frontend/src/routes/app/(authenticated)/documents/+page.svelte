@@ -17,7 +17,7 @@
         const form = event.currentTarget as HTMLFormElement;
         const formData = new FormData(form);
         const title = formData.get("title") as string;
-
+        error = null
         try {
             const response = await fetch("/api/documents", {
                 method: "POST",
