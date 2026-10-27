@@ -32,7 +32,6 @@ test("Create document", async () => {
 });
 
 test("Get document by ID", async () => {
-    await app.listen();
     await app.ready();
 
     const address = app.server.address();
