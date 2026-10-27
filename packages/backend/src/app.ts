@@ -5,8 +5,8 @@ import { configuration } from "./configuration.ts";
 import type { UserDb } from "@kittysync/common";
 
 //split the registers of auth and document to keep a consistent naming convetion
-import { register as registerAuth } from "./auth/auth.routes.ts";
 import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { register as registerAuth } from "./auth/auth.routes.ts";
 
 import fastifyCookie from "@fastify/cookie";
 import { Redis } from "ioredis";
@@ -40,7 +40,6 @@ declare module "fastify" {
 app.get("/", function (_, reply) {
     reply.send({ hello: "world" });
 });
-
 
 // Register routes
 registerAuth(app);

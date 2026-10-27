@@ -1,6 +1,5 @@
-
-import { error } from '@sveltejs/kit';
-import type { PageLoad } from './$types';
+import type { PageLoad } from "./$types";
+import { error } from "@sveltejs/kit";
 
 /*
     data type for the document record
@@ -22,28 +21,28 @@ type DocumentRecord = {
     @returns - A promise resolving to the loaded document.
     will throw an error if the fetch fails.
 */
-export const load: PageLoad = async ({params, fetch }) => {
+export const load: PageLoad = async ({ params, fetch }) => {
     const response = await fetch(`/api/documents/${encodeURIComponent(params.id)}`);
 
     //404 error if the document is not found
     if (response.status === 404) {
-        throw error(404, 'Document not found');
+        throw error(404, "Document not found");
     }
 
     //500 error if the fetch fails
     if (!response.ok) {
-        throw error(response.status, 'Failed to fetch document');
+        throw error(response.status, "Failed to fetch document");
     }
 
-    const documents: DocumentRecord[] = await response.json() as DocumentRecord[];
+    const documents: DocumentRecord[] = (await response.json()) as DocumentRecord[];
     const document = documents[0];
 
     //404 error if the document is not found
     if (!document) {
-        throw error(404, 'Document not found');
+        throw error(404, "Document not found");
     }
 
     return {
-        document
+        document,
     };
-}
+};
