@@ -16,7 +16,7 @@ export const usersTable = pgTable("users", {
 export const documentsTable = pgTable("documents", {
     id: uuid().primaryKey().notNull().defaultRandom(),
     title: varchar({ length: 255 }).notNull(),
-    content: varchar({ length: 10000 }).notNull().default(""),
+    content: text().notNull().default(""),
 });
 
 export type InsertUser = typeof usersTable.$inferInsert;
