@@ -44,6 +44,10 @@ export async function getDocumentHandler(
 
     try {
         const documents = await getDocuments(id);
+        if (documents.length === 0) {
+                reply.code(404).send();
+                return;
+        }
         reply.statusCode = 200;
         reply.send(documents);
     } catch (error) {
