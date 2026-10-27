@@ -23,7 +23,7 @@ export async function authenticationHook(request: FastifyRequest, reply: Fastify
     }
 }
 
-/*
+/**
     Update a document in the database by its ID.
     @param id - The ID of the document to update.
     @param title - The new title for the document.
