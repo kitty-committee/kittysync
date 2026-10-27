@@ -29,7 +29,7 @@ export async function getDocuments(id?: string) {
     }
 }
 
-/*
+/**
     Handle the GET request for documents.
     @param request - The Fastify request object.
     @param reply - The Fastify reply object.
