@@ -14,7 +14,7 @@ type DocumentRecord = {
     content: string;
 };
 
-/* 
+/**
     Load the document for the page.
     @param params - The URL parameters for the request, containing the document ID.
     @param fetch - The fetch function for making API requests.
