@@ -21,7 +21,7 @@ export async function getDocuments(id?: string) {
     }
 
     try {
-        const result = await db.select().from(documentsTable);
+        const result = await db.select({id: string, title: string}).from(documentsTable);
         return result;
     } catch (error) {
         console.error('Error fetching documents:', error);
