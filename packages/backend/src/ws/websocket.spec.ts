@@ -1,15 +1,27 @@
 import { expect, test } from "vitest";
-import { type WsPacket } from "@kittysync/common";
+import { type WsPacket, type UserDb } from "@kittysync/common";
 import { parseWebsocketPacket } from "./websocket.handler.ts";
 import { app } from "../app.ts";
+import { TOKEN_PROVIDER } from "../auth/session/session-tokens.ts";
+// import { mockSession } from "../auth/auth.spec.ts"
+
+/**
+ * Creates a valid session token for the given user and returns a cookie header object which can be used to authenticate requests.
+ * @param user
+ * @returns
+ */
+export async function mockSession(user: UserDb = { username: "test-user", id: crypto.randomUUID() }) {
+    return {
+        cookie: `session=${await TOKEN_PROVIDER.new(user)}`,
+    };
+}
+
 
 test("connect to websocket", async () => {
     await app.listen();
     await app.ready();
-    console.log("here")
 
-    const ws = await app.injectWS('/api/websocket?fileID=abc.txt');
-
+    const ws = await app.injectWS('/api/websocket?fileID=abc.txt', { headers: await mockSession() });
 
     let fileResolve: (value: WsPacket | PromiseLike<WsPacket>) => void;
     const filePromise = new Promise<WsPacket>((r) => {
