@@ -22,14 +22,14 @@ test("Create document", async () => {
     expect(response.status).toBe(201);
 
     response = await fetch(`http://localhost:${port}/api/documents`, {
-        method: "GET",
+        method: "POST",
         headers: {
             "Content-Type": "application/json",
             ...(await mockSession(port!)),
         },
     });
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
 });
 
 test("Get document by ID", async () => {
@@ -37,7 +37,7 @@ test("Get document by ID", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
-    const tempdocument = await fetch(`http://localhost:${port}/api/documents`, {
+    await fetch(`http://localhost:${port}/api/documents`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -48,9 +48,16 @@ test("Get document by ID", async () => {
         }),
     });
 
-    const documentId: string = (await tempdocument.json()) as string;
+    const getDocument = await fetch(`http://localhost:${port}/api/documents`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            ...(await mockSession(port!)),
+        },
+    });
 
-    let response = await fetch(`http://localhost:${port}/api/documents/${documentId}`, {
+    const documentId = (await getDocument.json()) as { id: string; title: string }[];
+    let response = await fetch(`http://localhost:${port}/api/documents/${documentId[0].id}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
