@@ -8,7 +8,7 @@ import { app } from "../app.ts";
  * @param user
  * @returns
  */
-export async function mockSession(user: UserDb = { username: "test-user", id: crypto.randomUUID() }) {
+export async function mockSession(user: UserDb = { username: "test-user-temp", id: crypto.randomUUID() }) {
     return {
         Cookie: `session=${await TOKEN_PROVIDER.new(user)}`,
     };
