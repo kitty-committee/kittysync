@@ -13,7 +13,7 @@
     let inEditMode = $state(false);
 
     onMount(() => {
-        const fileID = page.params["slug"];
+        const fileID = page.params["id"];
         if (!fileID) {
             console.error("File ID is missing.");
             return;
