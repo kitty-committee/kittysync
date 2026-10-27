@@ -41,7 +41,13 @@ export async function getDocumentHandler(
     request: FastifyRequest<{ Params: { id?: string } }>,
     reply: FastifyReply,
 ) {
-    const id = request.params?.id;
+    let id: string;
+    try {
+            id = z.uuid().parse(request.params?.id);
+    } catch (error) {
+            reply.code(404).send();
+            return;
+    }
 
     try {
         const documents = await getDocuments(id);
