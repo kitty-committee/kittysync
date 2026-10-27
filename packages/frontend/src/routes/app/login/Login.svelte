@@ -22,10 +22,10 @@
             issues = [];
             const safeParse = userCredentialsSchema.safeParse(Object.fromEntries(formData.entries()));
 
-            if (!safeParse.success) {
+            /*if (!safeParse.success) {
                 issues = safeParse.error.issues;
                 return;
-            }
+            }*/
 
             const response = await fetchApi("auth/session", {
                 method: "POST",
@@ -38,7 +38,7 @@
             if (response.status == 401) {
                 error = "Invalid password, please try again.";
             } else if (!response.ok) {
-                error = (await response.json()).message;
+                issues = await response.json();
             } else {
                 const returnPage = sessionStorage.getItem("return-page");
                 if (returnPage === null) await goto(resolve("/app/(authenticated)/landing"));

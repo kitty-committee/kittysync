@@ -32,13 +32,7 @@
             cancel();
             error = [];
             issues = [];
-            const user = {
-                username: formData.get("username"),
-                password: formData.get("password"),
-                repeatPassword: formData.get("repeatPassword"),
-            };
-
-            const safeParse = userSchema.safeParse(user);
+            const safeParse = userSchema.safeParse(Object.fromEntries(formData.entries()));
 
             if (!safeParse.success) {
                 issues = safeParse.error.issues;
@@ -56,7 +50,7 @@
             if (response.status == 409) {
                 error = "Account with that username already created, please use another username.";
             } else if (!response.ok) {
-                error = (await response.json()).message;
+                issues = await response.json();
             } else {
                 await goto(resolve("/app/login"));
             }
