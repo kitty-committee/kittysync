@@ -1,8 +1,8 @@
-
-
 <script lang="ts">
-    import { resolve } from '$app/paths';
-    let { data } = $props();
+    import { invalidate } from "$app/navigation";
+    import { resolve } from "$app/paths";
+    let props = $props();
+    let data = $derived(props.data);
 
     /*
         Create a new document.
@@ -15,32 +15,28 @@
 
         const form = event.currentTarget as HTMLFormElement;
         const formData = new FormData(form);
-        const title = formData.get('title') as string;
+        const title = formData.get("title") as string;
 
         try {
-            const response = await fetch('/api/documents', {
-                method: 'POST',
+            const response = await fetch("/api/documents", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ title })
+                body: JSON.stringify({ title }),
             });
 
             if (response.ok) {
                 // Document created successfully, reload the page to show the new document
-                window.location.reload();
+                invalidate("/app/(authenticated/documents/");
             } else {
-                console.error('Failed to create document');
+                console.error("Failed to create document");
             }
         } catch (error) {
-            console.error('Error creating document:', error);
+            console.error("Error creating document:", error);
         }
     }
-
-
-
 </script>
-
 
 <h1>Available Documents</h1>
 
@@ -51,6 +47,6 @@
 
 <ul>
     {#each data.summaries as summary (summary.id)}
-        <li><a href={resolve(`/app/(authenticated)/documents/[id]`, {id: summary.id})}> {summary.title}</a></li>
+        <li><a href={resolve(`/app/(authenticated)/documents/[id]`, { id: summary.id })}> {summary.title}</a></li>
     {/each}
 </ul>
