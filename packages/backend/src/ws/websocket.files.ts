@@ -6,11 +6,20 @@ import { type WsRedisPacket } from "./ws-redis-packet.ts";
 const fileUsersMap = new Map<string, string[]>();
 const fileSocketsMap = new Map<string, WebSocket[]>();
 
+/**
+ * Clears the maps storing what sockets and what users are connected to what files
+ */
 export function clearMaps() {
     fileUsersMap.clear();
     fileSocketsMap.clear();
 }
 
+/**
+ * adds a new user and their connection to a file,
+ * @param fileID the file to connect to
+ * @param socket the ws connection
+ * @param userID the user connecting
+ */
 export function addNewUserToFile(fileID: string, socket: WebSocket, userID: string) {
     if (fileSocketsMap.get(fileID) === undefined) {
         fileSocketsMap.set(fileID, []);
@@ -24,6 +33,11 @@ export function addNewUserToFile(fileID: string, socket: WebSocket, userID: stri
     void redis.publish("ws-channel", JSON.stringify(redisPacket));
 }
 
+/**
+ * adds a new user to the file map and then lets all users connected to that file know
+ * @param fileID file to add the user to 
+ * @param userID the user to add
+ */
 export function addNewUserToFileMap(fileID: string, userID: string) {
     if (fileUsersMap.get(fileID) === undefined) {
         fileUsersMap.set(fileID, [])
@@ -33,6 +47,10 @@ export function addNewUserToFileMap(fileID: string, userID: string) {
     updateAllUserListsOnFile(fileID);
 }
 
+/**
+ * sends the userlist for a specific file to all connections to that file on this server
+ * @param fileID the file send the user list for 
+ */
 function updateAllUserListsOnFile(fileID: string) {
     const packet: WsPacket = { type: "updateUsers", data: { userList: fileUsersMap.get(fileID) ?? [] } };
     const jsonPacket = JSON.stringify(packet);
@@ -41,6 +59,11 @@ function updateAllUserListsOnFile(fileID: string) {
     });
 }
 
+/**
+ * sends the filedata to all the connections connected to that file
+ * @param fileID the file to update the users with
+ * @param fileData the data to send to the users
+ */
 export function updateFileForAllUsers(fileID: string, fileData: string) {
     // this will change once database implemented
     const packet: WsPacket = { type: "updateFile", data: { file: fileData } };
@@ -50,6 +73,12 @@ export function updateFileForAllUsers(fileID: string, fileData: string) {
     });
 }
 
+/**
+ * removes a user and their connection from a file
+ * @param fileID the file to remove them from
+ * @param socket the connection to remove
+ * @param userID the user to remove
+ */
 export function removeUserFromFile(fileID: string, socket: WebSocket, userID: string) {
     const socketList = fileSocketsMap.get(fileID) ?? [];
     socketList.splice(socketList.indexOf(socket), 1);
@@ -58,6 +87,11 @@ export function removeUserFromFile(fileID: string, socket: WebSocket, userID: st
     void redis.publish("ws-channel", JSON.stringify(redisPacket));
 }
 
+/**
+ * removes a user from a file and then updates the connections on that file
+ * @param fileID the file to remove the user from 
+ * @param userID the user to remove
+ */
 export function removeUserFromFileMap(fileID: string, userID: string) {
     const userlist = fileUsersMap.get(fileID) ?? [];
     userlist.splice(userlist.indexOf(userID), 1);
