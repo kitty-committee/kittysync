@@ -1,7 +1,8 @@
 import { parseWebsocketPacket } from "./websocket.handler.ts";
 import { expect, test, beforeEach, afterEach } from "vitest";
-import { type WsPacket } from "@kittysync/common";
+import { type WsPacket, type UserDb } from "@kittysync/common";
 import { createApp } from "../app.ts";
+import { TOKEN_PROVIDER } from "../auth/session/session-tokens.ts"
 
 let app: Awaited<ReturnType<typeof createApp>>;
 
