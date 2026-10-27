@@ -29,7 +29,7 @@ const documentBodySchema = z.object({
     title: z.string().trim().min(1).max(255),
 });
 
-/*
+/**
     Handle the POST request for documents.
     @param request - The Fastify request object.
     @param reply - The Fastify reply object.
