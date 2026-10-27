@@ -14,7 +14,7 @@ type DocumentRecord = {
     content: string;
 };
 
-/* 
+/**
     Load the documents for the page.
     @param fetch - The fetch function for making API requests.
     @returns - A promise resolving to the loaded documents.
