@@ -19,7 +19,7 @@ export async function insertDocument(title: string, authorId: string) {
     }
 }
 
-/*
+/**
     define the type for the document body
     contains the following properties:
     - title: string, the title of the document
