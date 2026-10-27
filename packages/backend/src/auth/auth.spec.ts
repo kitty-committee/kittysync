@@ -2,6 +2,7 @@ import { TOKEN_PROVIDER } from "./session/session-tokens.ts";
 import { expect, test, beforeEach, afterEach } from "vitest";
 import { type UserDb } from "@kittysync/common";
 import { createApp } from "../app.ts";
+import { mockSession } from "./test-utils.ts";
 
 let app: Awaited<ReturnType<typeof createApp>>;
 

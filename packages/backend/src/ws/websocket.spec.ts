@@ -67,8 +67,8 @@ test("connect to websocket", async () => {
 // test("connect two users to websocket", async () => {
 //     await app.ready();
 
-//     const ws1 = await app.injectWS("/api/websocket?fileID=abc.txt");
-//     const ws2 = await app.injectWS("/api/websocket?fileID=abc.txt");
+//     const ws1 = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
+//     const ws2 = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
 
 //     let ws1UserCountResolve: (value: number | PromiseLike<number>) => void;
 //     const ws1UserCountPromise = new Promise<number>((r) => {
@@ -94,9 +94,7 @@ test("connect to websocket", async () => {
 //     });
 
 //     ws2.on("message", (data) => {
-//         const messageData = parseWebsocketPacket(data);
-//         const packetData = packetSchema.parse(messageData);
-//         console.log(packetData)
+//         const packetData = parseWebsocketPacket(data);
 //         switch (packetData.type) {
 //             case "updateFile":
 //                 break;

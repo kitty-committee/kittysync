@@ -1,9 +1,19 @@
 import { mockSession } from "../auth/test-utils.ts";
-import { expect, test } from "vitest";
-import { app } from "../app.ts";
+import { expect, test, beforeEach, afterEach } from "vitest";
+import { createApp } from "../app.ts";
+
+let app: Awaited<ReturnType<typeof createApp>>;
+
+beforeEach(async () => {
+    app = await createApp();
+    await app.listen();
+});
+
+afterEach(async () => {
+    await app.close();
+});
 
 test("Create document", async () => {
-    await app.listen();
     await app.ready();
 
     const address = app.server.address();
