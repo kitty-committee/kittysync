@@ -6,7 +6,7 @@ export const usersTable = pgTable("users", {
     password: varchar({ length: 60 }).notNull(),
 });
 
-/* 
+/**
     Define the documents table
     contsains the following columns:
     - id: UUID, primary key, not null, default random
