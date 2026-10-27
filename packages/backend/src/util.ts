@@ -30,10 +30,8 @@ export async function authenticationHook(request: FastifyRequest, reply: Fastify
     @param content - The new content for the document.
     will throw an error if the update fails.
 */
-export async function updateDocument(id: number, title: string, content: string) {
+export async function updateDocument(id: string, title: string, content: string) {
     try {
-        const idString = id.toString();
-        await db.update(documentsTable).set({ title, content }).where(eq(documentsTable.id, idString));
         await db.update(documentsTable).set({ title, content }).where(eq(documentsTable.id, id));
         console.log("Document updated successfully");
     } catch (error) {
