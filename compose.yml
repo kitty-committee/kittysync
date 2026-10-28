@@ -22,6 +22,29 @@ services:
             KITTYSYNC_SECRET_KEY: super-duper-secret-key-that-is-at-least-32-characters-long
             KITTYSYNC_TOKEN_LIFETIME: 86400
 
+    backend-two:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        ports:
+            - 3001:3000
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        environment:
+            KITTYSYNC_APP_DOMAIN: localhost
+            KITTYSYNC_REDIS_HOST: redis
+            KITTYSYNC_DB_PASSWORD: password
+            KITTYSYNC_DB_HOST: postgres
+            KITTYSYNC_DB_NAME: kittysync
+            KITTYSYNC_DB_USER: kittysync
+            KITTYSYNC_IS_SECURE: false
+            KITTYSYNC_SECRET_KEY: super-duper-secret-key-that-is-at-least-32-characters-long
+            KITTYSYNC_TOKEN_LIFETIME: 86400
+
     postgres:
         image: postgres:latest
         restart: unless-stopped
