@@ -63,7 +63,6 @@ describe("document page", () => {
 
     it("connects for the route document and displays the connection state", async () => {
         render(DocumentPage);
-
         const socket = MockWebSocket.instances[0];
         expect(socket).toBeDefined();
         expect(socket?.url).toBe("ws://localhost:3000/api/websocket?fileID=notes.md");
