@@ -8,6 +8,7 @@
 
     let socket = $state<WebSocket | null>(null);
     let connected = $state(false);
+    let documentLoaded = $state(false);
     let userList = $state(0);
     let filecontent = $state("");
     let inEditMode = $state(false);
@@ -19,8 +20,14 @@
             return;
         }
 
-        socket = new WebSocket(`/api/documents/${fileID}/websocket`);
+        const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        socket = new WebSocket(`${protocol}//${location.host}/api/websocket?fileID=${encodeURIComponent(fileID)}`);
         const ws = socket;
+
+        ws.addEventListener("open", () => {
+            connected = true;
+            ws.send(JSON.stringify({ type: "open", data: null }));
+        });
 
         // Handle incoming messages from the WebSocket
         ws.addEventListener("message", (event) => {
@@ -53,6 +60,7 @@
                 case "updateFile":
                     console.log("Update file packet received:", packet.data);
                     filecontent = packet.data.file;
+                    documentLoaded = true;
                     break;
                 // display error if unknown type
                 default:
@@ -63,6 +71,7 @@
         // Handle WebSocket close and error events
         ws.addEventListener("close", () => {
             connected = false;
+            documentLoaded = false;
             console.log("WebSocket connection closed.");
         });
 
@@ -82,7 +91,7 @@
     });
 
     function saveContent(content = filecontent) {
-        if (socket && connected) {
+        if (socket && connected && documentLoaded) {
             socket.send(
                 JSON.stringify({
                     type: "saveFile",
@@ -120,14 +129,18 @@
     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     onclick={() => {
         inEditMode = !inEditMode;
-    }}>Change View</button>
+    }}
+    disabled={!connected || !documentLoaded}>Change View</button>
 {#if inEditMode}
     <main class="p-4">
-        <textarea class="w-full h-96 p-2 border border-gray-300 rounded" bind:value={filecontent}></textarea>
+        <textarea
+            class="w-full h-96 p-2 border border-gray-300 rounded"
+            bind:value={filecontent}
+            disabled={!connected || !documentLoaded}></textarea>
         <button
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             onclick={() => saveContent()}
-            disabled={!connected}>Save</button>
+            disabled={!connected || !documentLoaded}>Save</button>
     </main>
 {:else}
     <div><SvelteMarkdown source={filecontent} /></div>
