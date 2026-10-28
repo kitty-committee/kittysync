@@ -41,13 +41,13 @@
                 issues = await response.json();
             } else {
                 const returnPage = sessionStorage.getItem("return-page");
-                if (returnPage === null) await goto(resolve("/app/(authenticated)/landing"));
+                if (returnPage === null) await goto(resolve("/app/(authenticated)/documents"));
                 else {
                     const matched = await match(returnPage);
                     sessionStorage.removeItem("return-page");
                     // @ts-expect-error - resolve does't realise that id and params are related https://github.com/sveltejs/kit/issues/17552
                     if (matched) goto(resolve(matched.id, matched.params));
-                    else goto(resolve("/app/(authenticated)/landing"));
+                    else goto(resolve("/app/(authenticated)/documents"));
                 }
             }
         }}>

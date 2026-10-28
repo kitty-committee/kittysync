@@ -28,6 +28,7 @@
         "@kittysync/common": "workspace:*",
         "@types/bcrypt": "^6.0.0",
         "@types/uuid": "^11.0.0",
+        "@types/ws": "^8.18.2",
         "bcrypt": "^6.0.0",
         "dotenv": "^18.0.7",
         "drizzle-orm": "^1.0.0-rc.4",

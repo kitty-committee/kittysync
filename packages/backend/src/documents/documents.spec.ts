@@ -1,9 +1,19 @@
+import { expect, test, beforeEach, afterEach } from "vitest";
 import { mockSession } from "../auth/test-utils.ts";
-import { expect, test } from "vitest";
-import { app } from "../app.ts";
+import { createApp } from "../app.ts";
+
+let app: Awaited<ReturnType<typeof createApp>>;
+
+beforeEach(async () => {
+    app = await createApp();
+    await app.listen();
+});
+
+afterEach(async () => {
+    await app.close();
+});
 
 test("Create document", async () => {
-    await app.listen();
     await app.ready();
 
     const address = app.server.address();
@@ -38,7 +48,7 @@ test("Get document by ID", async () => {
 
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
-    await fetch(`http://localhost:${port}/api/documents`, {
+    const createResponse = await fetch(`http://localhost:${port}/api/documents`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -49,16 +59,15 @@ test("Get document by ID", async () => {
         }),
     });
 
-    const getDocument = await fetch(`http://localhost:${port}/api/documents`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            ...(await mockSession(port!)),
-        },
-    });
+    expect(createResponse.status).toBe(201);
 
-    const documentId = (await getDocument.json()) as { id: string; title: string }[];
-    let response = await fetch(`http://localhost:${port}/api/documents/${documentId[0].id}`, {
+    const createdDocument = (await createResponse.json()) as {
+        id: string;
+        title: string;
+        content: string;
+        authorId: string;
+    };
+    let response = await fetch(`http://localhost:${port}/api/documents/${createdDocument.id}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",

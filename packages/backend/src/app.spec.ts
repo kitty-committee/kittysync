@@ -1,6 +1,16 @@
-import { afterAll, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
+import { createApp } from "./app.ts";
 import supertest from "supertest";
-import { app } from "./app.ts";
+
+let app: Awaited<ReturnType<typeof createApp>>;
+
+beforeEach(async () => {
+    app = await createApp();
+});
+
+afterEach(async () => {
+    await app.close();
+});
 
 test("with HTTP injection", async () => {
     const response = await app.inject({
@@ -30,8 +40,4 @@ test("with fetch", async () => {
     const response = await fetch(`http://localhost:${port}/`).then((r) => r.json() as unknown);
 
     expect(response).toStrictEqual({ hello: "world" });
-});
-
-afterAll(async () => {
-    await app.close();
 });
