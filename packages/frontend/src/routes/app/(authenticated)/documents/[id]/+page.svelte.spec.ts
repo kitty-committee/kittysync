@@ -86,6 +86,25 @@ describe("document page", () => {
         await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
     });
 
+    it("reconnects after a close and ignores messages from the stale socket", async () => {
+        render(DocumentPage);
+        const staleSocket = MockWebSocket.instances[0];
+
+        staleSocket?.open();
+        staleSocket?.close();
+        staleSocket?.receive({ type: "updateFile", data: { file: "Stale document" } });
+
+        await expect.poll(() => MockWebSocket.instances.length, { timeout: 3000 }).toBe(2);
+        const currentSocket = MockWebSocket.instances[1];
+        currentSocket?.open();
+        currentSocket?.receive({ type: "updateFile", data: { file: "Recovered document" } });
+
+        await expect.element(page.getByText("Recovered document")).toBeInTheDocument();
+        staleSocket?.receive({ type: "updateFile", data: { file: "Stale document" } });
+        await expect.element(page.getByText("Recovered document")).toBeInTheDocument();
+        await expect.element(page.getByText("Stale document")).not.toBeInTheDocument();
+    });
+
     it("renders incoming document and user updates", async () => {
         render(DocumentPage);
 

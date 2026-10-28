@@ -21,16 +21,56 @@
         }
 
         const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        const url = `${protocol}//${location.host}/api/websocket?fileID=${encodeURIComponent(fileID)}`;
+
+        let currentSocket: WebSocket | null = null;
+        const baseRetry = 1000;
+        const maxRetry = 30000;
+        let retryTimer: ReturnType<typeof setTimeout> | undefined;
+        let retryCount = 0;
+        let disposed = false;
+
+        function scheduleReconnect() {
+            if (disposed || retryCount !== undefined) return;
+
+            const delay = Math.min(baseRetry * 2 ** retryCount, maxRetry);
+            retryCount = Math.min(retryCount + 1, 5);
+            retryTimer = setTimeout(() => {
+                console.log(`Attempting to reconnect... (attempt ${retryCount})`);
+                connect();
+            }, delay);
+        }
+
+        function connect() {
+            if (disposed || currentSocket || retryTimer !== undefined) return;
+
+            try {
+                currentSocket = new WebSocket(url);
+            } catch (error) {
+                console.error("WebSocket connection error:", error);
+                scheduleReconnect();
+                return;
+            }
+
+            const ws = currentSocket;
+            socket = ws;
+        }
+
         socket = new WebSocket(`${protocol}//${location.host}/api/websocket?fileID=${encodeURIComponent(fileID)}`);
         const ws = socket;
 
         ws.addEventListener("open", () => {
             connected = true;
             ws.send(JSON.stringify({ type: "open", data: null }));
+
+            if (disposed || currentSocket !== ws) return;
+
+            retryCount = 0;
         });
 
         // Handle incoming messages from the WebSocket
         ws.addEventListener("message", (event) => {
+            if (disposed || currentSocket !== ws) return;
             console.debug("Received message:", event.data);
 
             let raw: unknown;
@@ -70,23 +110,34 @@
 
         // Handle WebSocket close and error events
         ws.addEventListener("close", () => {
+            if (disposed || currentSocket !== ws) return;
+            currentSocket = null;
+            socket = null;
             connected = false;
             documentLoaded = false;
-            console.log("WebSocket connection closed.");
+            console.log("WebSocket connection closed. Attempting reconnect...");
+            scheduleReconnect();
         });
 
         // Handle WebSocket error events
         ws.addEventListener("error", (event) => {
+            if (disposed || currentSocket !== ws) return;
             console.error("WebSocket error:", event);
         });
 
+        connect();
+
         // Cleanup function to close the WebSocket when the component is destroyed
         return () => {
-            if (socket) {
-                socket.close();
-                socket = null;
-                connected = false;
+            disposed = true;
+            if (retryTimer !== undefined) {
+                clearTimeout(retryTimer);
             }
+            retryTimer = undefined;
+
+            const ws = currentSocket;
+            currentSocket = null;
+            if (ws) ws.close();
         };
     });
 
