@@ -28,14 +28,18 @@ Should we use CRDTs (Conflict-free Replicated Data Types) or OT (Operational Tra
 
 ## Considered Options
 
-- 1. Conflict-free Replicated Data Types
-- 2. Operational Transforms
+- 1. Conflict-free Replicated Data Types (Yjs, Automerge)
+- 2. Operational Transforms (ShareDB)
 
 ## Decision Outcome
 
 Chosen option: 1. Conflict-free Replicated Data Types, because it best satisfies our most important driver, horizontal scaling, as it does not need to use a central server to order the transformations to create consistency. Instead of this, CRDT operations commute, so replicas can converge regardless of the update order.
 
 The weaknesses of this option are acceptible due to the lack of document-level permissions needed, where all documents available to the user can be edited. The remaining weaknesses of the lack of history and the challenges of large document growth, are real, but will be mitigated during implementation to minimise the effects.
+
+Topology decision: Yjs or Automerge?
+
+ Yjs is more focused on high frequency editing workloads, small incremental updates, and efficient collaborative text editing, which will become a central part of the application in later tasks. Yjs provides state vectors and differential updates, so peers can exchange the missing changes rather than the entire document repeatedly. The update format of Yjs is designed to handle out-of-order delivery and duplicates, reducing the need for message ordering and deduplication. Yjs also has a mature ecosystem, with editor integrations and established persistence and transport providers, means less implementation effort. Although Automerge is also a valid decision, as it offers similar synchronization and eventual consistency capabilities, Yjs is preferred because its update model and ecosystem are particularly well suited to collaborative text editing.
 
 ### Consequences
 
