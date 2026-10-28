@@ -98,7 +98,9 @@ describe("document page", () => {
 
         await editor.fill("# Edited notes");
 
-        await expect.poll(() => socket?.sent).toContain(JSON.stringify({ type: "saveFile", data: { file: "# Edited notes" } }));
+        await expect
+            .poll(() => socket?.sent)
+            .toContain(JSON.stringify({ type: "saveFile", data: { file: "# Edited notes" } }));
     });
 
     it("saves the current document when the Save button is clicked", async () => {
@@ -115,8 +117,8 @@ describe("document page", () => {
 
         await page.getByRole("button", { name: "Save" }).click();
 
-        await expect.poll(() => socket?.sent).toContain(
-            JSON.stringify({ type: "saveFile", data: { file: "Saved from the button" } }),
-        );
+        await expect
+            .poll(() => socket?.sent)
+            .toContain(JSON.stringify({ type: "saveFile", data: { file: "Saved from the button" } }));
     });
 });
