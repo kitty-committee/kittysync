@@ -52,7 +52,6 @@ export function addNewUserToFileMap(fileID: string, userID: string) {
         fileUsersMap.set(fileID, []);
     }
     fileUsersMap.get(fileID)?.push(userID);
-    console.log("updating user lists");
     updateAllUserListsOnFile(fileID);
 }
 
