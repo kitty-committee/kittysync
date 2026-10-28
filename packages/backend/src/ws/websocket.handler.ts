@@ -76,10 +76,10 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
                         required: ["fileID"],
                         properties: { fileID: { type: "string", minLength: 1 } },
                     },
-                },
-            },
-            (socket: WebSocket, req: Fastify.FastifyRequest<{ Querystring: { fileID: string } }>) => {
-                const { fileID } = req.query;
+            "/api/documents/:id/websocket",
+            { websocket: true },
+            (socket: WebSocket, req: Fastify.FastifyRequest<{ Params: { id?: string } }>) => {
+                const { fileID } = request.params?.id;
 
                 // received message handling
                 socket.on("message", (message) => {
