@@ -4,6 +4,8 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 
 import type { UserDb } from "@kittysync/common";
+import { join } from "node:path";
+import staticFastify from "@fastify/static";
 
 //split the registers of auth and document to keep a consistent naming convetion
 import { register as registerDocuments } from "./documents/documents.routes.ts";
@@ -43,13 +45,18 @@ export async function createApp() {
     app.register(fastifyCookie);
     app.register(websocket);
 
+    app.register(staticFastify, {
+        root: join(process.cwd(), "./public"),
+        index: "404.html",
+    });
+
+    app.setNotFoundHandler((request, reply) => {
+        if (request.url.startsWith("/api")) return reply.code(404).send();
+        return reply.type("text/html").sendFile("404.html");
+    });
+
     // decorate fastify
     app.decorateRequest("user", null);
-
-    // Declare a route
-    app.get("/", function (_, reply) {
-        reply.send({ hello: "world" });
-    });
 
     // Register auth routes
     registerAuth(app);

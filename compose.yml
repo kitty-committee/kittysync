@@ -1,0 +1,75 @@
+services:
+    backend-one:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        ports:
+            - 5173:5173
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        environment:
+            KITTYSYNC_APP_DOMAIN: localhost
+            KITTYSYNC_REDIS_HOST: redis
+            KITTYSYNC_DB_PASSWORD: password
+            KITTYSYNC_DB_HOST: postgres
+            KITTYSYNC_DB_NAME: kittysync
+            KITTYSYNC_DB_USER: kittysync
+            KITTYSYNC_IS_SECURE: false
+            KITTYSYNC_SECRET_KEY: super-duper-secret-key-that-is-at-least-32-characters-long
+            KITTYSYNC_TOKEN_LIFETIME: 86400
+
+    backend-two:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        ports:
+            - 5174:5173
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        environment:
+            KITTYSYNC_APP_DOMAIN: localhost
+            KITTYSYNC_REDIS_HOST: redis
+            KITTYSYNC_DB_PASSWORD: password
+            KITTYSYNC_DB_HOST: postgres
+            KITTYSYNC_DB_NAME: kittysync
+            KITTYSYNC_DB_USER: kittysync
+            KITTYSYNC_IS_SECURE: false
+            KITTYSYNC_SECRET_KEY: super-duper-secret-key-that-is-at-least-32-characters-long
+            KITTYSYNC_TOKEN_LIFETIME: 86400
+
+    postgres:
+        image: postgres:latest
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+        volumes:
+            - postgres-data:/var/lib/postgresql
+        environment:
+            POSTGRES_PASSWORD: password
+            POSTGRES_USER: kittysync
+            POSTGRES_DB: kittysync
+
+    redis:
+        image: redis:latest
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+
+volumes:
+    postgres-data:
