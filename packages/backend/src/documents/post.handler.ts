@@ -6,7 +6,8 @@ import "dotenv/config";
 
 /**
     Insert a new document into the database.
-    @param title - The title of the document to insert.
+    @param {string} title - The title of the document to insert.
+    @param {string} authorId - The ID of the author of the document.
     will throw an error if the insert fails.
 */
 export async function insertDocument(title: string, authorId: string) {
@@ -31,8 +32,8 @@ const documentBodySchema = z.object({
 
 /**
     Handle the POST request for documents.
-    @param request - The Fastify request object.
-    @param reply - The Fastify reply object.
+    @param {FastifyRequest} request - The Fastify request object.
+    @param {FastifyReply} reply - The Fastify reply object.
     will throw a 500 error if the insert fails.
 */
 export async function postDocumentHandler(request: FastifyRequest, reply: FastifyReply) {

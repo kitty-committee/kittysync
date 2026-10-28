@@ -9,22 +9,22 @@ import { redis } from "../../app.ts";
 export interface TokenProvider {
     /**
      * Create a new session token for the given user.
-     * @param user - The user to create a new token for
-     * @returns The new token.
+     * @param {UserDb} user - The user to create a new token for
+     * @returns {Promise<string>} The new token.
      */
     new: (user: UserDb) => Promise<string>;
 
     /**
      * Verify whether a session token is valid or not.
-     * @param token - The token to verify
-     * @returns True if the token is valid, false otherwise.
+     * @param {string} token - The token to verify
+     * @returns {Promise<boolean>} True if the token is valid, false otherwise.
      */
     verify(token: string): Promise<boolean>;
 
     /**
      * Extract the user associated with the token. May return null if the token is not valid.
-     * @param token - The token to decode
-     * @returns The user associated with the token, or null if the token is not valid.
+     * @param {string} token - The token to decode
+     * @returns {Promise<UserDb | null>} The user associated with the token, or null if the token is not valid.
      */
     decode(token: string): Promise<UserDb | null>;
 }
@@ -35,8 +35,8 @@ export interface TokenProvider {
 export class UuidTokenProvider implements TokenProvider {
     /**
      * Create a new session token, pushing to redis.
-     * @param user - The user to create a new token for
-     * @returns The new token.
+     * @param {UserDb} user - The user to create a new token for
+     * @returns {Promise<string>} The new token.
      * @throws Redis exception on failing to push.
      */
     async new(user: UserDb): Promise<string> {
@@ -58,8 +58,8 @@ export class UuidTokenProvider implements TokenProvider {
 
     /**
      * Verify whether a session token is valid or not.
-     * @param token - The token to verify
-     * @returns True if the token is valid, false otherwise.
+     * @param {string} token - The token to verify
+     * @returns {Promise<boolean>} True if the token is valid, false otherwise.
      * @throws Redis exception on failing to pull
      */
     async verify(token: string): Promise<boolean> {
@@ -67,9 +67,9 @@ export class UuidTokenProvider implements TokenProvider {
     }
 
     /**
-     * Extract the user associated with the token. May return undefined if the token is not valid.
-     * @param token - The token to decode
-     * @returns The user associated with the token, or undefined if the token is not valid.
+     * Extract the user associated with the token. May return null if the token is not valid.
+     * @param {string} token - The token to decode
+     * @returns {Promise<UserDb | null>} The user associated with the token, or null if the token is not valid.
      * @throws Redis exception on failing to pull
      */
     async decode(token: string): Promise<UserDb | null> {

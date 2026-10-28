@@ -16,10 +16,10 @@ import Fastify from "fastify";
 
 /**
  * Parses a raw WebSocket message into a WsPacket object.
- * @param message Raw data received from the WebSocket connection
- * @returns A WsPacket object parsed from the message
- * @throws SyntaxError if the message is not a valid JSON string
- * @throws ZodError if the message does not conform to the WsPacket schema
+ * @param {RawData}message Raw data received from the WebSocket connection
+ * @returns {WsPacket} A WsPacket object parsed from the message
+ * @throws {SyntaxError} if the message is not a valid JSON string
+ * @throws {ZodError} if the message does not conform to the WsPacket schema
  */
 export function parseWebsocketPacket(message: RawData): WsPacket {
     let buffer: Buffer;

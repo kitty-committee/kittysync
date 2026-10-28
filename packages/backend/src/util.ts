@@ -25,9 +25,9 @@ export async function authenticationHook(request: FastifyRequest, reply: Fastify
 
 /**
     Update a document in the database by its ID.
-    @param id - The ID of the document to update.
-    @param title - The new title for the document.
-    @param content - The new content for the document.
+    @param {string} id - The ID of the document to update.
+    @param {string | undefined} title - The new title for the document.
+    @param {string} content - The new content for the document.
     will throw an error if the update fails.
 */
 export async function updateDocument(id: string, title: string | undefined, content: string) {

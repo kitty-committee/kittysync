@@ -6,8 +6,8 @@ import * as z from "zod/v3";
 import "dotenv/config";
 /** 
     Fetch documents from the database.
-    @param id - The ID of the document to fetch.
-    @returns - A list of documents or a single document if an ID is provided.
+    @param {string | undefined} id - The ID of the document to fetch.
+    @returns {Promise<any[]>} A list of documents or a single document if an ID is provided.
 */
 export async function getDocuments(): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title">[]>;
 export async function getDocuments(id: string): Promise<(typeof documentsTable.$inferSelect)[]>;
@@ -33,9 +33,9 @@ export async function getDocuments(id?: string) {
 
 /**
     Handle the GET request for documents.
-    @param request - The Fastify request object.
-    @param reply - The Fastify reply object.
-    @returns - A list of documents or a single document if an ID is provided.
+    @param {FastifyRequest} request - The Fastify request object.
+    @param {FastifyReply} reply - The Fastify reply object.
+    @returns {Promise<void>} A list of documents or a single document if an ID is provided.
     will throw a 500 error if the fetch fails or if the document is not found.
 */
 export async function getDocumentHandler(request: FastifyRequest<{ Params: { id?: string } }>, reply: FastifyReply) {
