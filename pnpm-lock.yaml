@@ -173,9 +173,6 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.12.0(jiti@2.7.0))
-      '@types/ws':
-        specifier: ^8.18.2
-        version: 8.18.2
       eslint:
         specifier: ^10.12.0
         version: 10.12.0(jiti@2.7.0)

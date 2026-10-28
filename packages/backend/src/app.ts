@@ -14,10 +14,17 @@ import websocket from "@fastify/websocket";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
-export const redis = new Redis(6379, configuration.redisHost);
 
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
+
+/** Creates a Redis client instance */
+export function createRedis() {
+    return new Redis(6379, configuration.redisHost);
+}
+
+/** The global redis client, not to be used with subscriptions */
+export const redis = createRedis();
 
 declare module "fastify" {
     interface FastifyRequest {
@@ -47,7 +54,7 @@ export async function createApp() {
     // Register auth routes
     registerAuth(app);
     registerDocuments(app);
-    await registerWebsocketRoutes(app);
+    registerWebsocketRoutes(app);
 
     // return the app instance
     return app;

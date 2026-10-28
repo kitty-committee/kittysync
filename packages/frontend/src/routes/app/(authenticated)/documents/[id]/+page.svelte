@@ -1,6 +1,6 @@
 <script lang="ts">
+    import { clientboundPacketSchema } from "@kittysync/common";
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
-    import { packetSchema } from "@kittysync/common";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
     import { page } from "$app/state";
@@ -20,23 +20,8 @@
             return;
         }
 
-        // Log the file ID for debugging purposes, could be removed?
-        // console.log("File ID:", fileID);
-
-        //determines the protocol to use for the websocket connection based on the current page protocol.
-        const protocol = location.protocol === "https:" ? "wss" : "ws";
-        const url = new URL(`${protocol}://${location.host}/api/websocket`);
-        // Append the fileID as a query parameter to the WebSocket URL
-        url.searchParams.set("fileID", fileID);
-        socket = new WebSocket(url.toString());
+        socket = new WebSocket(`/api/document/${fileID}/websocket`);
         const ws = socket;
-
-        // Handle WebSocket open event
-        ws.addEventListener("open", () => {
-            connected = true;
-            console.log("WebSocket connection established.");
-            ws.send(JSON.stringify({ type: "open", data: null }));
-        });
 
         // Handle incoming messages from the WebSocket
         ws.addEventListener("message", (event) => {
@@ -50,7 +35,7 @@
                 return;
             }
 
-            const result = packetSchema.safeParse(raw);
+            const result = clientboundPacketSchema.safeParse(raw);
             if (!result.success) {
                 console.error("Received invalid packet: ", result.error);
                 return;
@@ -65,7 +50,7 @@
                 case "updateUsers":
                     console.log("Update users packet received:", packet.data);
                     if (packet.data !== null && "userList" in packet.data && Array.isArray(packet.data.userList)) {
-                        userList = packet.data.userList.length;
+                        userList = new Set(packet.data.userList.map((s) => s.split(":")[0])).size;
                     }
                     break;
                 // handle updated file content
