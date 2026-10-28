@@ -62,6 +62,11 @@
             }
         });
 
+        ws.addEventListener("open", () => {
+            connected = true;
+            console.log("WebSocket connection established.");
+        });
+
         // Handle WebSocket close and error events
         ws.addEventListener("close", () => {
             connected = false;
