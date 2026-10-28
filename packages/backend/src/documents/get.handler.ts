@@ -10,7 +10,7 @@ import "dotenv/config";
     @returns - A list of documents or a single document if an ID is provided.
 */
 export async function getDocuments(): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title">[]>;
-export async function getDocuments(id: string): Promise<typeof documentsTable.$inferSelect[]>;
+export async function getDocuments(id: string): Promise<(typeof documentsTable.$inferSelect)[]>;
 export async function getDocuments(id?: string) {
     if (id !== undefined) {
         try {
