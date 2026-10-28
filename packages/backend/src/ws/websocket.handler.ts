@@ -37,22 +37,29 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
         }
     });
 
-    redis.on("message", (channel, message) => {
-        if (channel === "ws-channel") {
-            const messageData: WsRedisPacket = wsRedisPacketSchema.parse(JSON.parse(message));
-            switch (messageData.command) {
-                case "addUserFile":
-                    addNewUserToFileMap(messageData.data.fileID, messageData.data.userID);
-                    break;
-                case "removeUserFile":
-                    removeUserFromFileMap(messageData.data.fileID, messageData.data.userID);
-                    break;
-                case "saveFile":
-                    void updateDocument(messageData.data.fileID, undefined, messageData.data.fileData);
-                    updateFileForAllUsers(messageData.data.fileID, messageData.data.fileData);
-                    break;
-            }
+    const onRedisMessage = (channel: string, message: string): void => {
+        if (channel !== "ws-channel") return;
+
+        const messageData: WsRedisPacket = wsRedisPacketSchema.parse(JSON.parse(message));
+
+        switch (messageData.command) {
+            case "addUserFile":
+                addNewUserToFileMap(messageData.data.fileID, messageData.data.userID);
+                break;
+            case "removeUserFile":
+                removeUserFromFileMap(messageData.data.fileID, messageData.data.userID);
+                break;
+            case "saveFile":
+                void updateDocument(messageData.data.fileID, undefined, messageData.data.fileData);
+                updateFileForAllUsers(messageData.data.fileID, messageData.data.fileData);
+                break;
         }
+    };
+
+    redis.on("message", onRedisMessage);
+
+    app.addHook("onClose", async () => {
+        redis.off("message", onRedisMessage);
     });
 
     app.register(function (app) {
