@@ -26,7 +26,7 @@ Date 08/10/2026
     - Postgres as can be used for eventual consistency
     - Orm - Drizzle can provide this
 - RTT
-    - Websockets now change to sockets.io later if we need
+    - Websockets now change to sockets.io later if we need but will require significant work as they use a different handshake and protocol
 - Code editor component
     - CodeMirror - use later on if required by client
     - textarea- use for now maybe switch to a code editor component later
