@@ -20,27 +20,12 @@
             return;
         }
 
-        // Log the file ID for debugging purposes, could be removed?
-        // console.log("File ID:", fileID);
-
-        //determines the protocol to use for the websocket connection based on the current page protocol.
-        const protocol = location.protocol === "https:" ? "wss" : "ws";
-        const url = new URL(`${protocol}://${location.host}/api/websocket`);
-        // Append the fileID as a query parameter to the WebSocket URL
-        url.searchParams.set("fileID", fileID);
-        socket = new WebSocket(url.toString());
+        socket = new WebSocket(`/api/documents/${fileID}/websocket`);
         const ws = socket;
-
-        // Handle WebSocket open event
-        ws.addEventListener("open", () => {
-            connected = true;
-            console.log("WebSocket connection established.");
-            ws.send(JSON.stringify({ type: "open", data: null }));
-        });
 
         // Handle incoming messages from the WebSocket
         ws.addEventListener("message", (event) => {
-            console.log("Received message:", event.data);
+            console.debug("Received message:", event.data);
 
             let raw: unknown;
             try {
@@ -57,25 +42,18 @@
             }
 
             const packet = result.data;
-            console.log("Valid packet:", packet);
 
             // Handle the packet based on its type
             switch (packet.type) {
                 // handle updated user list
                 case "updateUsers":
-                    console.log("Update users packet received:", packet.data);
-                    if (packet.data !== null && "userList" in packet.data && Array.isArray(packet.data.userList)) {
-                        userList = packet.data.userList.length;
-                    }
+                    console.debug("Update users packet received:", packet.data);
+                    userList = packet.data.userList.length;
                     break;
                 // handle updated file content
                 case "updateFile":
                     console.log("Update file packet received:", packet.data);
-                    if (typeof packet.data === "object" && packet.data !== null && "file" in packet.data) {
-                        filecontent = packet.data.file;
-                    } else {
-                        filecontent = "";
-                    }
+                    filecontent = packet.data.file;
                     break;
                 // display error if unknown type
                 default:
@@ -100,7 +78,6 @@
                 socket.close();
                 socket = null;
                 connected = false;
-                console.log(connected);
             }
         };
     });
