@@ -52,7 +52,6 @@ export function addNewUserToFileMap(fileID: string, userID: string) {
         fileUsersMap.set(fileID, []);
     }
     fileUsersMap.get(fileID)?.push(userID);
-    console.log("updating user lists");
     updateAllUserListsOnFile(fileID);
 }
 
@@ -109,6 +108,5 @@ export function removeUserFromFileMap(fileID: string, userID: string) {
     const index = userlist.indexOf(userID);
     if (index !== -1) userlist.splice(index, 1);
 
-    console.log("removing users");
     updateAllUserListsOnFile(fileID);
 }
