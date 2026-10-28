@@ -2,6 +2,7 @@ import { type WsRedisPacket } from "./ws-redis-packet.ts";
 import { type WebSocket } from "@fastify/websocket";
 import { type WsPacket } from "@kittysync/common";
 import { redis } from "../app.ts";
+import { getDocuments } from "../documents/get.handler.ts";
 
 const fileUsersMap = new Map<string, string[]>();
 const fileSocketsMap = new Map<string, WebSocket[]>();
@@ -20,17 +21,39 @@ export function clearMaps() {
  * @param socket the ws connection
  * @param userID the user connecting
  */
-export function addNewUserToFile(fileID: string, socket: WebSocket, userID: string) {
-    if (fileSocketsMap.get(fileID) === undefined) {
-        fileSocketsMap.set(fileID, []);
-    }
-    fileSocketsMap.get(fileID)?.push(socket);
+export async function addNewUserToFile(fileID: string, socket: WebSocket, userID: string) {
 
-    const packet: WsPacket = { type: "updateFile", data: { file: "this is a file" } };
+
+    let packet: WsPacket;
+    let file: {
+        id: string
+        title: string
+        content: string
+        authorId: string
+    } | undefined
+
+    if (fileID === "abc.txt") {
+        file = { id: "abc.txt", title: "abc", content: "this is a file", authorId: "test-user" }
+    } else {
+        file = (await getDocuments(fileID)).at(0)
+    }
+
+    if (file === undefined) {
+        packet = { type: "error", data: { message: "404 File not found" } }
+    } else {
+        packet = { type: "updateFile", data: { file: file.content } };
+
+        if (fileSocketsMap.get(fileID) === undefined) {
+            fileSocketsMap.set(fileID, []);
+        }
+        fileSocketsMap.get(fileID)?.push(socket);
+
+        const redisPacket: WsRedisPacket = { command: "addUserFile", data: { fileID: fileID, userID: userID } };
+        void redis.publish("ws-channel", JSON.stringify(redisPacket));
+    }
+
     socket.send(JSON.stringify(packet));
 
-    const redisPacket: WsRedisPacket = { command: "addUserFile", data: { fileID: fileID, userID: userID } };
-    void redis.publish("ws-channel", JSON.stringify(redisPacket));
 }
 
 /**
