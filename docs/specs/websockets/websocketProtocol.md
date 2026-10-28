@@ -19,9 +19,9 @@ Date: 13/10/2026
 
 ### send file
 
-- Used for updating all files(for now)
+- Used for updating files
 - Sent by server to client with the md file
-- When sent after a save command send to all users
+- When sent after a save command send to all users connected to the selected file
 
 ### save file
 

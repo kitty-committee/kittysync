@@ -6,7 +6,7 @@ Date 08/10/2026
 
 - Official name Kittysync
 - Nathan has added an adr template
-- Licensing: add page with every library we used plus all the liscence
+- Licensing: add page with every library we used plus all the licence
 - PM: Brooke
 
 ## Application stack
@@ -20,16 +20,16 @@ Date 08/10/2026
     - Using load balancer
     - Use Redis for inter-server communication to maintain high availabity
     - Use yjs for crdts not using ot as crdts has better offline disconnect behaviour
-    - Fastify framwork
+    - Fastify framework
 - SQL backend
     - Need eventual consistency for databases
     - Postgres as can be used for eventual consistency
-    - Orm - Drizzle
+    - Orm - Drizzle can provide this
 - RTT
     - Websockets now change to sockets.io later if we need
 - Code editor component
-    - Code mirror - use later on if required by client
-    - Text area - use for now maybe switch to a code editor component later
+    - CodeMirror - use later on if required by client
+    - textarea- use for now maybe switch to a code editor component later
 
 # Decomposing issues
 
