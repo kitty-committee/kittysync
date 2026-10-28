@@ -3,7 +3,9 @@
     "main": "build/index.js",
     "types": "build/index.d.ts",
     "type": "module",
-    "files": ["build"],
+    "files": [
+        "build"
+    ],
     "scripts": {
         "build": "tsc",
         "check:type": "tsc --noEmit",

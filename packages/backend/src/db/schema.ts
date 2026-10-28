@@ -11,7 +11,8 @@ export const usersTable = pgTable("users", {
     contsains the following columns:
     - id: UUID, primary key, not null, default random
     - title: varchar(255), not null
-    - content: varchar(10000), not null, defaults to an empty string
+    - content: text(), not null, defaults to an empty string
+    - authorId: UUID, not null, references users.id, on delete cascade
 */
 export const documentsTable = pgTable("documents", {
     id: uuid().primaryKey().notNull().defaultRandom(),

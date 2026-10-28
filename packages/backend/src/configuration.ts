@@ -9,7 +9,7 @@ if (envPath) dotenv.config({ path: envPath });
 // Define a schema for the expected environment variables
 const env = z
     .object({
-        KITTYSYNC_APP_DOMAIN: z.hostname(),
+        KITTYSYNC_APP_DOMAIN: z.string(),
         KITTYSYNC_REDIS_HOST: z.hostname(),
         KITTYSYNC_DB_PASSWORD: z.string(),
         KITTYSYNC_DB_HOST: z.hostname(),

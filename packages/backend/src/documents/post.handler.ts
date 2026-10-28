@@ -6,13 +6,15 @@ import "dotenv/config";
 
 /**
     Insert a new document into the database.
-    @param title - The title of the document to insert.
+    @param {string} title - The title of the document to insert.
+    @param {string} authorId - The ID of the author of the document.
     will throw an error if the insert fails.
 */
 export async function insertDocument(title: string, authorId: string) {
     try {
-        await db.insert(documentsTable).values({ title, authorId });
+        const document = await db.insert(documentsTable).values({ title, authorId }).returning();
         console.log("Document inserted successfully");
+        return document;
     } catch (error) {
         console.error("Error inserting document:", error);
         throw error;
@@ -31,8 +33,8 @@ const documentBodySchema = z.object({
 
 /**
     Handle the POST request for documents.
-    @param request - The Fastify request object.
-    @param reply - The Fastify reply object.
+    @param {FastifyRequest} request - The Fastify request object.
+    @param {FastifyReply} reply - The Fastify reply object.
     will throw a 500 error if the insert fails.
 */
 export async function postDocumentHandler(request: FastifyRequest, reply: FastifyReply) {
@@ -55,9 +57,9 @@ export async function postDocumentHandler(request: FastifyRequest, reply: Fastif
     }
 
     try {
-        await insertDocument(title, authorId);
+        const [document] = await insertDocument(title, authorId);
         reply.statusCode = 201;
-        reply.send({ message: "Document created successfully" });
+        reply.send(document);
     } catch (error) {
         console.error("Error creating document:", error);
         reply.statusCode = 500;

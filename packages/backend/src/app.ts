@@ -1,4 +1,5 @@
 import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { registerWebsocketRoutes } from "./ws/websocket.handler.ts";
 import { register as registerAuth } from "./auth/auth.routes.ts";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -6,45 +7,58 @@ import { configuration } from "./configuration.ts";
 import type { UserDb } from "@kittysync/common";
 import staticFastify from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
+import websocket from "@fastify/websocket";
 import { join } from "node:path";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
 
-export const redis = new Redis(6379, configuration.redisHost);
-
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
-await migrate(db, { migrationsFolder: "./drizzle" });
 
-export const app = Fastify({
-    logger: true,
-});
+/** Creates a Redis client instance */
+export function createRedis() {
+    return new Redis(6379, configuration.redisHost);
+}
 
-app.register(staticFastify, {
-    root: join(process.cwd(), "./public"),
-    index: "index.html",
-});
+/** The global redis client, not to be used with subscriptions */
+export const redis = createRedis();
 
-app.setNotFoundHandler((request, reply) => {
-    if (request.url.startsWith("/api")) return reply.code(404).send();
-    return reply.type("text/html").sendFile("404.html");
-});
-
-app.register(fastifyCookie);
-
-app.addHook("onClose", async (_instance) => {
-    await Promise.all([redis.quit(), pool.end()]);
-});
-
-// decorate fastify
-app.decorateRequest("user", null);
 declare module "fastify" {
     interface FastifyRequest {
         user: UserDb | null;
     }
 }
 
-// Register routes
-registerAuth(app);
-registerDocuments(app);
+/** Creates an instance of the KittySync backend application */
+export async function createApp() {
+    await migrate(db, { migrationsFolder: "./drizzle" });
+
+    const app = Fastify({
+        logger: true,
+    });
+
+    app.register(fastifyCookie);
+    app.register(websocket);
+
+    app.register(staticFastify, {
+        root: join(process.cwd(), "./public"),
+        index: "index.html",
+    });
+
+    app.setNotFoundHandler((request, reply) => {
+        if (request.url.startsWith("/api")) return reply.code(404).send();
+        return reply.type("text/html").sendFile("404.html");
+    });
+
+    // decorate fastify
+    app.decorateRequest("user", null);
+
+    // Register auth routes
+    registerAuth(app);
+    registerDocuments(app);
+    registerWebsocketRoutes(app);
+
+    // return the app instance
+    return app;
+}
