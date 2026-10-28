@@ -11,6 +11,7 @@
     let userList = $state(0);
     let filecontent = $state("");
     let inEditMode = $state(false);
+    let debounceTimout: ReturnType<typeof setTimeout>;
 
     onMount(() => {
         const fileID = page.params["id"];
@@ -18,20 +19,26 @@
             console.error("File ID is missing.");
             return;
         }
-        console.log("File ID:", fileID);
+
+        // Log the file ID for debugging purposes, could be removed?
+        // console.log("File ID:", fileID);
+
+        //determines the protocol to use for the websocket connection based on the current page protocol.
         const protocol = location.protocol === "https:" ? "wss" : "ws";
         const url = new URL(`${protocol}://${location.host}/api/websocket`);
+        // Append the fileID as a query parameter to the WebSocket URL
         url.searchParams.set("fileID", fileID);
-
         socket = new WebSocket(url.toString());
         const ws = socket;
 
+        // Handle WebSocket open event
         ws.addEventListener("open", () => {
             connected = true;
             console.log("WebSocket connection established.");
             ws.send(JSON.stringify({ type: "open", data: null }));
         });
 
+        // Handle incoming messages from the WebSocket
         ws.addEventListener("message", (event) => {
             console.log("Received message:", event.data);
 
@@ -54,12 +61,14 @@
 
             // Handle the packet based on its type
             switch (packet.type) {
+                // handle updated user list
                 case "updateUsers":
                     console.log("Update users packet received:", packet.data);
                     if (packet.data !== null && "userList" in packet.data && Array.isArray(packet.data.userList)) {
                         userList = packet.data.userList.length;
                     }
                     break;
+                // handle updated file content
                 case "updateFile":
                     console.log("Update file packet received:", packet.data);
                     if (typeof packet.data === "object" && packet.data !== null && "file" in packet.data) {
@@ -68,20 +77,24 @@
                         filecontent = "";
                     }
                     break;
+                // display error if unknown type
                 default:
                     console.warn("Unknown packet type received:", packet.type);
             }
         });
 
+        // Handle WebSocket close and error events
         ws.addEventListener("close", () => {
             connected = false;
             console.log("WebSocket connection closed.");
         });
 
+        // Handle WebSocket error events
         ws.addEventListener("error", (event) => {
             console.error("WebSocket error:", event);
         });
 
+        // Cleanup function to close the WebSocket when the component is destroyed
         return () => {
             if (socket) {
                 socket.close();
@@ -92,22 +105,28 @@
         };
     });
 
+    // Function to save content with debounce
     function saveContent(event: Event) {
         const target = event.currentTarget;
 
         if (target instanceof HTMLTextAreaElement) {
-            if (socket && connected) {
-                socket.send(
-                    JSON.stringify({
-                        type: "saveFile",
-                        data: { file: target.value },
-                    }),
-                );
-            }
+            //clears the timeout if it exists, so the socket only has information sent after the user has stopped typing for the given time
+            clearTimeout(debounceTimout);
+            debounceTimout = setTimeout(() => {
+                if (socket && connected) {
+                    socket.send(
+                        JSON.stringify({
+                            type: "saveFile",
+                            data: { file: target.value },
+                        }),
+                    );
+                }
+            }, 100);
         }
     }
 </script>
 
+<!-- navigation bar -->
 <nav class="flex items-center justify-between p-4 bg-gray-800 text-white">
     <button
         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -128,6 +147,8 @@
         <span class="mr-4">Users: {userList}</span>
     </div>
 </nav>
+
+<!-- button to toggle edit mode. text area contains file content, which can be edited. -->
 <button
     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     onclick={() => {
