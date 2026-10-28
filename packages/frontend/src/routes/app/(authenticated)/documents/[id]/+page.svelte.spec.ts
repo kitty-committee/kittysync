@@ -9,7 +9,7 @@ vi.mock("$app/state", () => ({ page: route }));
 
 class MockWebSocket extends EventTarget {
     static instances: MockWebSocket[] = [];
-    static CONNECTING = 0;
+    static connecting = 0;
 
     readyState = 0;
     onopen: ((event: Event) => void) | null = null;
