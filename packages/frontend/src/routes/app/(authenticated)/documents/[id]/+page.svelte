@@ -11,7 +11,6 @@
     let userList = $state(0);
     let filecontent = $state("");
     let inEditMode = $state(false);
-    let debounceTimeout: ReturnType<typeof setTimeout>;
 
     onMount(() => {
         const fileID = page.params["id"];
@@ -83,7 +82,6 @@
     });
 
     function saveContent(content = filecontent) {
-        clearTimeout(debounceTimeout);
         if (socket && connected) {
             socket.send(
                 JSON.stringify({
@@ -91,14 +89,6 @@
                     data: { file: content },
                 }),
             );
-        }
-    }
-
-    function handleContentInput(event: Event) {
-        const target = event.currentTarget;
-        if (target instanceof HTMLTextAreaElement) {
-            clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(() => saveContent(target.value), 100);
         }
     }
 </script>
@@ -133,11 +123,7 @@
     }}>Change View</button>
 {#if inEditMode}
     <main class="p-4">
-        <textarea
-            class="w-full h-96 p-2 border border-gray-300 rounded"
-            bind:value={filecontent}
-            oninput={handleContentInput}>
-        </textarea>
+        <textarea class="w-full h-96 p-2 border border-gray-300 rounded" bind:value={filecontent}></textarea>
         <button
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             onclick={() => saveContent()}
