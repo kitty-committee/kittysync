@@ -44,3 +44,18 @@ The weaknesses of this option are acceptible due to the lack of document-level p
 - Good, because OT implementation in a multi-server setup is typically more complicated compared to CRDT implementation.
 - Bad, because there is no ability for the server to validate the edits. This is acceptable as there is no implementation of document-level permissions.
 - Bad, because history and edit are not free. CDRTs retain the metadata needed for convergence, but it is not human readable, and any implementation of edit history will require extra design
+
+## AI Prompt Appendix
+
+```
+We are making a realtime markdown editing solution and am trying to decide between Conflict-free Replicated Data Types (CRDTs) like Yjs and automerge or Operational Transformation (OT) like ShareDB
+```
+
+The AI balanced suggestions between CRDTs and OT approaches, but leaned towards CRDTs unless central authority was a concern. It also mentioned considering document size, metadata, and server authority.
+
+
+```
+Our editor is not WYSIWYG, and we'd like to support only short periods of offline activity. Our app is designed for high availability and horizontal scaling.
+```
+
+The AI suggested that CRDTs biggest advantage was removed by this new information. The ease of horizontal scaling and the very high availability led towards it suggesting to remain with CDRTs over OT, however. After this, it suggested an architecture that would work well.  
