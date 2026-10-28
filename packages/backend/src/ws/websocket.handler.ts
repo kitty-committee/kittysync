@@ -50,7 +50,7 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
                 removeUserFromFileMap(messageData.data.fileID, messageData.data.userID);
                 break;
             case "saveFile":
-                void updateDocument(messageData.data.fileID, undefined, messageData.data.fileData);
+                void updateDocument(messageData.data.fileID, undefined, messageData.data.fileData).catch;
                 updateFileForAllUsers(messageData.data.fileID, messageData.data.fileData);
                 break;
         }
@@ -58,8 +58,9 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
 
     redis.on("message", onRedisMessage);
 
-    app.addHook("onClose", () => {
+    app.addHook("onClose", (_instance, done) => {
         redis.off("message", onRedisMessage);
+        done();
     });
 
     app.register(function (app) {
@@ -67,13 +68,29 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
 
         app.get(
             "/api/websocket",
-            { websocket: true },
+            {
+                websocket: true,
+                schema: {
+                    querystring: {
+                        type: "object",
+                        required: ["fileID"],
+                        properties: { fileID: { type: "string", minLength: 1 } },
+                    },
+                },
+            },
             (socket: WebSocket, req: Fastify.FastifyRequest<{ Querystring: { fileID: string } }>) => {
                 const { fileID } = req.query;
 
                 // received message handling
                 socket.on("message", (message) => {
-                    const packet = parseWebsocketPacket(message);
+                    let packet: WsPacket;
+                    try {
+                        packet = parseWebsocketPacket(message);
+                    } catch {
+                        const errorPacket: WsPacket = { type: "error", data: { message: "Invalid packet" } };
+                        socket.send(JSON.stringify(errorPacket));
+                        return;
+                    }
                     let redisPacket: WsRedisPacket;
                     switch (packet.type) {
                         case "open":

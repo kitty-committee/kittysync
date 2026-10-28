@@ -1,22 +1,21 @@
-import { type WsPacket } from "@kittysync/common";
 import { parseWebsocketPacket } from "./websocket.handler.ts";
 import { expect, test, beforeEach, afterEach } from "vitest";
-import { createApp } from "../app.ts";
 import { mockSession } from "../auth/test-utils.ts";
-
+import { type WsPacket } from "@kittysync/common";
+import { createApp } from "../app.ts";
 
 let app: Awaited<ReturnType<typeof createApp>>;
 
-let id = ""
+let id = "";
 
-let address = undefined
-let port: string | number | undefined = undefined
+let address = undefined;
+let port: string | number | undefined = undefined;
 beforeEach(async () => {
     app = await createApp();
     await app.listen();
     address = app.server.address();
     port = typeof address === "string" ? address : address?.port;
-    id = await createMockDocument()
+    id = await createMockDocument();
 });
 
 afterEach(async () => {
@@ -53,8 +52,6 @@ export async function createMockDocument() {
 
     return createdDocument.id;
 }
-
-
 
 test("connect to websocket", async () => {
     await app.ready();
@@ -96,7 +93,6 @@ test("connect to websocket", async () => {
 
 test("connect two users to websocket", async () => {
     await app.ready();
-
 
     const ws1 = await app.injectWS(`/api/websocket?fileID=${id}`, { headers: await mockSession(port!) });
     const ws2 = await app.injectWS(`/api/websocket?fileID=${id}`, { headers: await mockSession(port!) });

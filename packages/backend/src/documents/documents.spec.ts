@@ -61,7 +61,12 @@ test("Get document by ID", async () => {
 
     expect(createResponse.status).toBe(201);
 
-    const createdDocument = (await createResponse.json()) as { id: string; title: string; content: string; authorId: string; };
+    const createdDocument = (await createResponse.json()) as {
+        id: string;
+        title: string;
+        content: string;
+        authorId: string;
+    };
     let response = await fetch(`http://localhost:${port}/api/documents/${createdDocument.id}`, {
         method: "GET",
         headers: {

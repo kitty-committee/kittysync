@@ -25,7 +25,6 @@ export async function addNewUserToFile(fileID: string, socket: WebSocket, userID
     let packet: WsPacket;
     const file = (await getDocuments(fileID)).at(0);
 
-
     if (file === undefined) {
         packet = { type: "error", data: { message: "404 File not found" } };
     } else {
@@ -90,8 +89,11 @@ export function updateFileForAllUsers(fileID: string, fileData: string) {
  * @param {string} userID the user to remove
  */
 export function removeUserFromFile(fileID: string, socket: WebSocket, userID: string) {
-    const socketList = fileSocketsMap.get(fileID) ?? [];
-    socketList.splice(socketList.indexOf(socket), 1);
+    const socketList = fileSocketsMap.get(fileID);
+    const index = socketList?.indexOf(socket) ?? -1;
+    if (socketList === undefined || index === -1) return;
+    socketList.splice(index, 1);
+    if (socketList.length === 0) fileSocketsMap.delete(fileID);
 
     const redisPacket: WsRedisPacket = { command: "removeUserFile", data: { fileID: fileID, userID: userID } };
     void redis.publish("ws-channel", JSON.stringify(redisPacket));
@@ -104,7 +106,8 @@ export function removeUserFromFile(fileID: string, socket: WebSocket, userID: st
  */
 export function removeUserFromFileMap(fileID: string, userID: string) {
     const userlist = fileUsersMap.get(fileID) ?? [];
-    userlist.splice(userlist.indexOf(userID), 1);
+    const index = userlist.indexOf(userID);
+    if (index !== -1) userlist.splice(index, 1);
 
     console.log("removing users");
     updateAllUserListsOnFile(fileID);

@@ -62,7 +62,7 @@ export async function postDocumentHandler(request: FastifyRequest, reply: Fastif
     try {
         const [document] = await insertDocument(title, authorId);
         reply.statusCode = 201;
-        reply.send(document)
+        reply.send(document);
     } catch (error) {
         console.error("Error creating document:", error);
         reply.statusCode = 500;

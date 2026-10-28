@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
 import { createApp } from "./app.ts";
 import supertest from "supertest";
 
@@ -8,7 +8,7 @@ beforeEach(async () => {
     app = await createApp();
 });
 
-afterAll(async () => {
+afterEach(async () => {
     await app.close();
 });
 
