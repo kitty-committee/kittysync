@@ -8,10 +8,13 @@
 
     let socket = $state<WebSocket | null>(null);
     let connected = $state(false);
+    let documentLoaded = $state(false);
     let userList = $state(0);
     let filecontent = $state("");
     let inEditMode = $state(false);
-    let debounceTimeout: ReturnType<typeof setTimeout>;
+    let canManuallyRetry = $state(false);
+    let retryScheduled = $state(false);
+    let retryConnection = $state<() => void>(() => {});
 
     onMount(() => {
         const fileID = page.params["id"];
@@ -26,10 +29,117 @@
         // Handle incoming messages from the WebSocket
         ws.addEventListener("message", (event) => {
             console.log("Received message:", event.data);
+        const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        const url = `${protocol}//${location.host}/api/websocket?fileID=${encodeURIComponent(fileID)}`;
 
-            let raw: unknown;
+        let currentSocket: WebSocket | null = null;
+        const baseRetry = 1000;
+        const maxRetry = 30000;
+        const maxAutomaticRetries = 5;
+        const connectionTimeout = 10000;
+        let retryTimer: ReturnType<typeof setTimeout> | undefined;
+        let connectionTimer: ReturnType<typeof setTimeout> | undefined;
+        let retryCount = 0;
+        let disposed = false;
+
+        function scheduleReconnect() {
+            if (disposed || retryTimer !== undefined || currentSocket) return;
+            if (retryCount >= maxAutomaticRetries) {
+                canManuallyRetry = true;
+                return;
+            }
+
+            const delay = Math.min(baseRetry * 2 ** retryCount, maxRetry);
+            retryCount = Math.min(retryCount + 1, 5);
+            retryScheduled = true;
+            retryTimer = setTimeout(() => {
+                retryTimer = undefined;
+                retryScheduled = false;
+                console.log(`Attempting to reconnect... (attempt ${retryCount})`);
+                connect();
+            }, delay);
+        }
+
+        function connect() {
+            if (disposed || currentSocket || retryTimer !== undefined) return;
+
+            canManuallyRetry = false;
             try {
-                raw = JSON.parse(event.data);
+                const ws = new WebSocket(url);
+                currentSocket = ws;
+                socket = ws;
+
+                ws.addEventListener("open", () => {
+                    if (disposed || currentSocket !== ws) return;
+                    if (connectionTimer !== undefined) {
+                        clearTimeout(connectionTimer);
+                        connectionTimer = undefined;
+                    }
+
+                    connected = true;
+                    ws.send(JSON.stringify({ type: "open", data: null }));
+                    retryCount = 0;
+                });
+
+                ws.addEventListener("message", (event) => {
+                    if (disposed || currentSocket !== ws) return;
+                    console.debug("Received message:", event.data);
+
+                    let raw: unknown;
+                    try {
+                        raw = JSON.parse(event.data);
+                    } catch (error) {
+                        console.error("Error parsing packet, malformed JSON:", error);
+                        return;
+                    }
+
+                    const result = packetSchema.safeParse(raw);
+                    if (!result.success) {
+                        console.error("Received invalid packet: ", result.error);
+                        return;
+                    }
+
+                    const packet = result.data;
+                    switch (packet.type) {
+                        case "updateUsers":
+                            console.debug("Update users packet received:", packet.data);
+                            userList = packet.data.userList.length;
+                            break;
+                        case "updateFile":
+                            console.log("Update file packet received:", packet.data);
+                            filecontent = packet.data.file;
+                            documentLoaded = true;
+                            break;
+                        default:
+                            console.warn("Unknown packet type received:", packet.type);
+                    }
+                });
+
+                ws.addEventListener("close", () => {
+                    if (disposed || currentSocket !== ws) return;
+                    if (connectionTimer !== undefined) {
+                        clearTimeout(connectionTimer);
+                        connectionTimer = undefined;
+                    }
+
+                    currentSocket = null;
+                    socket = null;
+                    connected = false;
+                    documentLoaded = false;
+                    console.log("WebSocket connection closed. Attempting reconnect...");
+                    scheduleReconnect();
+                });
+
+                ws.addEventListener("error", (event) => {
+                    if (disposed || currentSocket !== ws) return;
+                    console.error("WebSocket error:", event);
+                });
+
+                connectionTimer = setTimeout(() => {
+                    if (disposed || currentSocket !== ws || ws.readyState !== WebSocket.CONNECTING) return;
+                    console.warn("WebSocket connection timed out.");
+                    ws.close();
+                }, connectionTimeout);
             } catch (error) {
                 console.error("Error parsing packet, malformed JSON:", error);
                 return;
@@ -83,30 +193,54 @@
         return () => {
             if (socket) {
                 socket.close();
+                console.error("WebSocket connection error:", error);
+                currentSocket = null;
                 socket = null;
-                connected = false;
-                console.log(connected);
+                scheduleReconnect();
             }
+        }
+
+        retryConnection = () => {
+            if (retryTimer !== undefined) {
+                clearTimeout(retryTimer);
+                retryTimer = undefined;
+            }
+            retryScheduled = false;
+            retryCount = 0;
+            canManuallyRetry = false;
+            connect();
+        };
+
+        connect();
+
+        return () => {
+            disposed = true;
+            if (retryTimer !== undefined) {
+                clearTimeout(retryTimer);
+            }
+            if (connectionTimer !== undefined) {
+                clearTimeout(connectionTimer);
+            }
+            retryTimer = undefined;
+            connectionTimer = undefined;
+            retryScheduled = false;
+            retryConnection = () => {};
+            canManuallyRetry = false;
+
+            const ws = currentSocket;
+            currentSocket = null;
+            if (ws) ws.close();
         };
     });
 
     function saveContent(content = filecontent) {
-        clearTimeout(debounceTimeout);
-        if (socket && connected) {
+        if (socket && connected && documentLoaded) {
             socket.send(
                 JSON.stringify({
                     type: "saveFile",
                     data: { file: content },
                 }),
             );
-        }
-    }
-
-    function handleContentInput(event: Event) {
-        const target = event.currentTarget;
-        if (target instanceof HTMLTextAreaElement) {
-            clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(() => saveContent(target.value), 100);
         }
     }
 </script>
@@ -126,6 +260,11 @@
         {:else}
             <span class="text-red-500">Disconnected</span>
         {/if}
+        {#if !socket && !retryScheduled && canManuallyRetry}
+            <button
+                class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                onclick={retryConnection}>Retry connection</button>
+        {/if}
     </div>
 
     <div>
@@ -138,18 +277,18 @@
     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     onclick={() => {
         inEditMode = !inEditMode;
-    }}>Change View</button>
+    }}
+    disabled={!connected || !documentLoaded}>Change View</button>
 {#if inEditMode}
     <main class="p-4">
         <textarea
             class="w-full h-96 p-2 border border-gray-300 rounded"
             bind:value={filecontent}
-            oninput={handleContentInput}>
-        </textarea>
+            disabled={!connected || !documentLoaded}></textarea>
         <button
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             onclick={() => saveContent()}
-            disabled={!connected}>Save</button>
+            disabled={!connected || !documentLoaded}>Save</button>
     </main>
 {:else}
     <div><SvelteMarkdown source={filecontent} /></div>
