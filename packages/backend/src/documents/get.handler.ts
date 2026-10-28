@@ -9,6 +9,8 @@ import "dotenv/config";
     @param id - The ID of the document to fetch.
     @returns - A list of documents or a single document if an ID is provided.
 */
+export async function getDocuments(): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title">[]>;
+export async function getDocuments(id: string): Promise<typeof documentsTable.$inferSelect[]>;
 export async function getDocuments(id?: string) {
     if (id !== undefined) {
         try {
@@ -21,7 +23,7 @@ export async function getDocuments(id?: string) {
     }
 
     try {
-        const result = await db.select().from(documentsTable);
+        const result = await db.select({ id: documentsTable.id, title: documentsTable.title }).from(documentsTable);
         return result;
     } catch (error) {
         console.error("Error fetching documents:", error);
@@ -48,7 +50,8 @@ export async function getDocumentHandler(request: FastifyRequest<{ Params: { id?
     }
 
     try {
-        const documents = await getDocuments(id);
+        const documents = id !== undefined ? await getDocuments(id) : await getDocuments();
+
         if (id !== undefined && documents.length == 0) {
             reply.code(404).send();
             return;
