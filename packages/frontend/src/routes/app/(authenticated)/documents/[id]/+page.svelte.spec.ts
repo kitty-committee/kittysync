@@ -98,8 +98,25 @@ describe("document page", () => {
 
         await editor.fill("# Edited notes");
 
-        await expect
-            .poll(() => socket?.sent)
-            .toContain(JSON.stringify({ type: "saveFile", data: { file: "# Edited notes" } }));
+        await expect.poll(() => socket?.sent).toContain(JSON.stringify({ type: "saveFile", data: { file: "# Edited notes" } }));
+    });
+
+    it("saves the current document when the Save button is clicked", async () => {
+        render(DocumentPage);
+
+        const socket = MockWebSocket.instances[0];
+        socket?.open();
+
+        await page.getByRole("button", { name: "Change View" }).click();
+        await page.getByRole("textbox").fill("Saved from the button");
+
+        // Ignore the automatic input save so this assertion covers the button action.
+        socket!.sent = [];
+
+        await page.getByRole("button", { name: "Save" }).click();
+
+        await expect.poll(() => socket?.sent).toContain(
+            JSON.stringify({ type: "saveFile", data: { file: "Saved from the button" } }),
+        );
     });
 });
