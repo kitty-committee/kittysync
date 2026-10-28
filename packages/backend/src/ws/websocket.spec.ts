@@ -108,15 +108,14 @@ test("connect two users to websocket", async () => {
 
     const packet: WsPacket = { type: "open", data: null };
     ws1.send(JSON.stringify(packet));
+    const usercount1 = await ws1UserCountPromise;
 
     ws2.send(JSON.stringify(packet));
-
-    const usercount1 = await ws1UserCountPromise;
     const usercount2 = await ws2UserCountPromise;
 
+    ws1.terminate();
     ws2.terminate();
 
-    ws1.terminate();
 
     expect(usercount1).toBe(1);
     expect(usercount2).toBe(2);
