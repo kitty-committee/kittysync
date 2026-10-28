@@ -12,7 +12,6 @@ export async function mockSession(
 ) {
     const password = "hello-world";
 
-    console.log("===== CREATING MOCK USER =====");
     const newUserResponse = await fetch(`http:localhost:${port}/api/auth/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
