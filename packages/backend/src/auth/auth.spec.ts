@@ -1,4 +1,3 @@
-import { TOKEN_PROVIDER } from "./session/session-tokens.ts";
 import { expect, test, beforeEach, afterEach } from "vitest";
 import { type UserDb } from "@kittysync/common";
 import { mockSession } from "./test-utils.ts";
