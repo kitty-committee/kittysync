@@ -6,7 +6,7 @@ Date 08/10/2026
 
 - Official name Kittysync
 - Nathan has added an adr template
-- Licensing: add page with every library we used plus all the licence
+- Licensing: Add a page listing every library we use and its licence information.
 - PM: Brooke
 
 ## Application stack
