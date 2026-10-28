@@ -98,6 +98,8 @@ describe("document page", () => {
 
         await editor.fill("# Edited notes");
 
-        await expect.poll(() => socket?.sent).toContain(JSON.stringify({ type: "saveFile", data: { file: "# Edited notes" } }));
+        await expect
+            .poll(() => socket?.sent)
+            .toContain(JSON.stringify({ type: "saveFile", data: { file: "# Edited notes" } }));
     });
 });
