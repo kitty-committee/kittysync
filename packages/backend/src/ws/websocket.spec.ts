@@ -116,7 +116,6 @@ test("connect two users to websocket", async () => {
     ws1.terminate();
     ws2.terminate();
 
-
     expect(usercount1).toBe(1);
     expect(usercount2).toBe(2);
 });
