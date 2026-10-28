@@ -43,9 +43,10 @@ export async function mockSession(
 
     const setCookies = loginResponse.headers.getSetCookie();
     let sessionToken: string | undefined;
-    for (let i = 0; i < setCookies.length; i++) {
-        if (setCookies[i].match(/session=(.*)/) !== null) {
-            sessionToken = setCookies[i];
+    for (const cookie of setCookies) {
+        const match = cookie.match(/^session=([^;]+)/);
+        if (match !== null) {
+            sessionToken = `session=${match[1]}`;
             break;
         }
     }
@@ -56,5 +57,6 @@ export async function mockSession(
 
     return {
         Cookie: sessionToken,
+        cookie: sessionToken,
     };
 }

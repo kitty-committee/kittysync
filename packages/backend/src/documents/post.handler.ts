@@ -12,9 +12,12 @@ import "dotenv/config";
 */
 export async function insertDocument(title: string, authorId: string) {
     try {
-        const document = await db.insert(documentsTable).values({ title, authorId }).returning();
+        const document = await db
+            .insert(documentsTable)
+            .values({ title, authorId, content: "this is a file" })
+            .returning();
         console.log("Document inserted successfully");
-        return document
+        return document;
     } catch (error) {
         console.error("Error inserting document:", error);
         throw error;
