@@ -17,19 +17,19 @@ export function clearMaps() {
 
 /**
  * adds a new user and their connection to a file,
- * @param fileID the file to connect to
- * @param socket the ws connection
- * @param userID the user connecting
+ * @param {string} fileID the file to connect to
+ * @param {WebSocket} socket the ws connection
+ * @param {string} userID the user connecting
  */
 export async function addNewUserToFile(fileID: string, socket: WebSocket, userID: string) {
     let packet: WsPacket;
     let file:
         | {
-              id: string;
-              title: string;
-              content: string;
-              authorId: string;
-          }
+            id: string;
+            title: string;
+            content: string;
+            authorId: string;
+        }
         | undefined;
 
     if (fileID === "abc.txt") {
@@ -57,8 +57,8 @@ export async function addNewUserToFile(fileID: string, socket: WebSocket, userID
 
 /**
  * adds a new user to the file map and then lets all users connected to that file know
- * @param fileID file to add the user to
- * @param userID the user to add
+ * @param {string} fileID file to add the user to
+ * @param {string} userID the user to add
  */
 export function addNewUserToFileMap(fileID: string, userID: string) {
     if (fileUsersMap.get(fileID) === undefined) {
@@ -71,7 +71,7 @@ export function addNewUserToFileMap(fileID: string, userID: string) {
 
 /**
  * sends the userlist for a specific file to all connections to that file on this server
- * @param fileID the file send the user list for
+ * @param {string} fileID the file send the user list for
  */
 function updateAllUserListsOnFile(fileID: string) {
     const packet: WsPacket = { type: "updateUsers", data: { userList: fileUsersMap.get(fileID) ?? [] } };
@@ -83,8 +83,8 @@ function updateAllUserListsOnFile(fileID: string) {
 
 /**
  * sends the filedata to all the connections connected to that file
- * @param fileID the file to update the users with
- * @param fileData the data to send to the users
+ * @param {string} fileID the file to update the users with
+ * @param {string} fileData the data to send to the users
  */
 export function updateFileForAllUsers(fileID: string, fileData: string) {
     // this will change once database implemented
@@ -97,9 +97,9 @@ export function updateFileForAllUsers(fileID: string, fileData: string) {
 
 /**
  * removes a user and their connection from a file
- * @param fileID the file to remove them from
- * @param socket the connection to remove
- * @param userID the user to remove
+ * @param {string} fileID the file to remove them from
+ * @param {WebSocket} socket the connection to remove
+ * @param {string} userID the user to remove
  */
 export function removeUserFromFile(fileID: string, socket: WebSocket, userID: string) {
     const socketList = fileSocketsMap.get(fileID) ?? [];
@@ -111,8 +111,8 @@ export function removeUserFromFile(fileID: string, socket: WebSocket, userID: st
 
 /**
  * removes a user from a file and then updates the connections on that file
- * @param fileID the file to remove the user from
- * @param userID the user to remove
+ * @param {string} fileID the file to remove the user from
+ * @param {string} userID the user to remove
  */
 export function removeUserFromFileMap(fileID: string, userID: string) {
     const userlist = fileUsersMap.get(fileID) ?? [];
