@@ -1,8 +1,11 @@
 {
     "name": "@kittysync/common",
-    "main": "src/index.ts",
+    "main": "build/index.js",
+    "types": "build/index.d.ts",
     "type": "module",
+    "files": ["build"],
     "scripts": {
+        "build": "tsc",
         "check:type": "tsc --noEmit",
         "check:test": "vitest run"
     },

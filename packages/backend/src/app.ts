@@ -1,17 +1,16 @@
+import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { register as registerAuth } from "./auth/auth.routes.ts";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
-
 import type { UserDb } from "@kittysync/common";
-
-//split the registers of auth and document to keep a consistent naming convetion
-import { register as registerDocuments } from "./documents/documents.routes.ts";
-import { register as registerAuth } from "./auth/auth.routes.ts";
-
+import staticFastify from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
+import { join } from "node:path";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
+
 export const redis = new Redis(6379, configuration.redisHost);
 
 const pool = new Pool(configuration.database);
@@ -20,6 +19,16 @@ await migrate(db, { migrationsFolder: "./drizzle" });
 
 export const app = Fastify({
     logger: true,
+});
+
+app.register(staticFastify, {
+    root: join(process.cwd(), "./public"),
+    index: "index.html",
+});
+
+app.setNotFoundHandler((request, reply) => {
+    if (request.url.startsWith("/api")) return reply.code(404).send();
+    return reply.type("text/html").sendFile("404.html");
 });
 
 app.register(fastifyCookie);
@@ -35,11 +44,6 @@ declare module "fastify" {
         user: UserDb | null;
     }
 }
-
-// Declare a route
-app.get("/", function (_, reply) {
-    reply.send({ hello: "world" });
-});
 
 // Register routes
 registerAuth(app);
