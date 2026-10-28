@@ -1,12 +1,17 @@
+import {
+    serverboundPacketSchema,
+    clientboundPacketSchema,
+    type ClientboundPacket,
+    type ServerboundPacket,
+} from "@kittysync/common/src/packet.ts";
 import { authenticationHook, updateDocument } from "../util.ts";
+import { getDocuments } from "../documents/get.handler.ts";
 import { type WebSocket } from "@fastify/websocket";
+import type { UserDb } from "@kittysync/common";
 import { createRedis, redis } from "../app.ts";
 import type { RawData } from "ws";
-import Fastify from "fastify";
-import { serverboundPacketSchema, clientboundPacketSchema, type ClientboundPacket, type ServerboundPacket } from "@kittysync/common/src/packet.ts";
-import type { UserDb } from "@kittysync/common";
-import { getDocuments } from "../documents/get.handler.ts";
 import type Redis from "ioredis";
+import Fastify from "fastify";
 
 const documents = new Map<string, DocumentManager>();
 
@@ -49,7 +54,7 @@ export function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
                     return;
                 }
 
-                const manager = documents.get(documentId) ?? await DocumentManager.create(documentId);
+                const manager = documents.get(documentId) ?? (await DocumentManager.create(documentId));
                 await manager.addClient(socket, req.user as UserDb);
             },
         );
@@ -90,7 +95,7 @@ class DocumentManager {
 
         const r = redis.multi();
         r.zadd(key, ...this.managedUsers.values().flatMap((user) => [now, user.salted]));
-        r.zremrangebyscore(key, '-inf', now - 30_000);
+        r.zremrangebyscore(key, "-inf", now - 30_000);
         r.zrange(key, "0", "-1");
         const results = await r.exec();
 
@@ -111,7 +116,6 @@ class DocumentManager {
             await this.publish({ type: "updateUsers", data: { userList: Array.from(current) } });
             this.users = current;
         }
-
     }
 
     public async addClient(socket: WebSocket, user: UserDb) {
@@ -128,7 +132,17 @@ class DocumentManager {
 
         // notify other users that this user has left
         this.users.delete(manager.salted);
-        await redis.multi().zrem(`document:${this.id}:users`, manager.user.username).publish(`document:${this.id}`, JSON.stringify({ type: "updateUsers", data: { userList: Array.from(this.users) } } satisfies ClientboundPacket)).exec();
+        await redis
+            .multi()
+            .zrem(`document:${this.id}:users`, manager.user.username)
+            .publish(
+                `document:${this.id}`,
+                JSON.stringify({
+                    type: "updateUsers",
+                    data: { userList: Array.from(this.users) },
+                } satisfies ClientboundPacket),
+            )
+            .exec();
     }
 
     public close() {

@@ -23,14 +23,8 @@
             return;
         }
 
-        socket = new WebSocket(`/api/document/${fileID}/websocket`);
-        const ws = socket;
-
-        // Handle incoming messages from the WebSocket
-        ws.addEventListener("message", (event) => {
-            console.log("Received message:", event.data);
         const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-        const url = `${protocol}//${location.host}/api/websocket?fileID=${encodeURIComponent(fileID)}`;
+        const url = `${protocol}//${location.host}/api/document/${fileID}/websocket`;
 
         let currentSocket: WebSocket | null = null;
         const baseRetry = 1000;
@@ -50,7 +44,7 @@
             }
 
             const delay = Math.min(baseRetry * 2 ** retryCount, maxRetry);
-            retryCount = Math.min(retryCount + 1, 5);
+            retryCount += 1;
             retryScheduled = true;
             retryTimer = setTimeout(() => {
                 retryTimer = undefined;
@@ -75,9 +69,8 @@
                         clearTimeout(connectionTimer);
                         connectionTimer = undefined;
                     }
-
                     connected = true;
-                    ws.send(JSON.stringify({ type: "open", data: null }));
+                    connected = true;
                     retryCount = 0;
                 });
 
@@ -93,7 +86,7 @@
                         return;
                     }
 
-                    const result = packetSchema.safeParse(raw);
+                    const result = clientboundPacketSchema.safeParse(raw);
                     if (!result.success) {
                         console.error("Received invalid packet: ", result.error);
                         return;
@@ -112,6 +105,7 @@
                             break;
                         default:
                             console.warn("Unknown packet type received:", packet.type);
+                            break;
                     }
                 });
 
@@ -136,64 +130,12 @@
                 });
 
                 connectionTimer = setTimeout(() => {
-                    if (disposed || currentSocket !== ws || ws.readyState !== WebSocket.CONNECTING) return;
+                    if (disposed || currentSocket !== ws || ws.readyState !== 0) return;
                     console.warn("WebSocket connection timed out.");
                     ws.close();
                 }, connectionTimeout);
             } catch (error) {
-                console.error("Error parsing packet, malformed JSON:", error);
-                return;
-            }
-
-            const result = clientboundPacketSchema.safeParse(raw);
-            if (!result.success) {
-                console.error("Received invalid packet: ", result.error);
-                return;
-            }
-
-            const packet = result.data;
-            console.log("Valid packet:", packet);
-
-            // Handle the packet based on its type
-            switch (packet.type) {
-                // handle updated user list
-                case "updateUsers":
-                    console.log("Update users packet received:", packet.data);
-                    if (packet.data !== null && "userList" in packet.data && Array.isArray(packet.data.userList)) {
-                        userList = new Set(packet.data.userList.map((s) => s.split(":")[0])).size;
-                    }
-                    break;
-                // handle updated file content
-                case "updateFile":
-                    console.log("Update file packet received:", packet.data);
-                    if (typeof packet.data === "object" && packet.data !== null && "file" in packet.data) {
-                        filecontent = packet.data.file;
-                    } else {
-                        filecontent = "";
-                    }
-                    break;
-                // display error if unknown type
-                default:
-                    console.warn("Unknown packet type received:", packet.type);
-            }
-        });
-
-        // Handle WebSocket close and error events
-        ws.addEventListener("close", () => {
-            connected = false;
-            console.log("WebSocket connection closed.");
-        });
-
-        // Handle WebSocket error events
-        ws.addEventListener("error", (event) => {
-            console.error("WebSocket error:", event);
-        });
-
-        // Cleanup function to close the WebSocket when the component is destroyed
-        return () => {
-            if (socket) {
-                socket.close();
-                console.error("WebSocket connection error:", error);
+                console.error("Unable to create WebSocket connection:", error);
                 currentSocket = null;
                 socket = null;
                 scheduleReconnect();
@@ -229,6 +171,7 @@
 
             const ws = currentSocket;
             currentSocket = null;
+            socket = null;
             if (ws) ws.close();
         };
     });

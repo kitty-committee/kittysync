@@ -41,7 +41,6 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
 
             reply.setCookie("session", sessionToken, {
                 maxAge: configuration.tokenLifetime,
-                domain: configuration.appDomain,
                 secure: configuration.isSecure,
                 sameSite: "strict",
                 path: "/",
