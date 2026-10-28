@@ -12,7 +12,7 @@ Date 08/10/2026
 
 ## Application stack
 
-+ Svelt frontend 
++ Svelte frontend 
     - 4 people have experience with svelt, everyone with js 
 + Node backend  
     - makes sense to use the same language for front and back
