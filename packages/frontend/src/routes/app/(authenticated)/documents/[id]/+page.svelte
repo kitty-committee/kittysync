@@ -12,6 +12,9 @@
     let userList = $state(0);
     let filecontent = $state("");
     let inEditMode = $state(false);
+    let canManuallyRetry = $state(false);
+    let retryScheduled = $state(false);
+    let retryConnection = $state<() => void>(() => {});
 
     onMount(() => {
         const fileID = page.params["id"];
@@ -26,16 +29,26 @@
         let currentSocket: WebSocket | null = null;
         const baseRetry = 1000;
         const maxRetry = 30000;
+        const maxAutomaticRetries = 5;
+        const connectionTimeout = 10000;
         let retryTimer: ReturnType<typeof setTimeout> | undefined;
+        let connectionTimer: ReturnType<typeof setTimeout> | undefined;
         let retryCount = 0;
         let disposed = false;
 
         function scheduleReconnect() {
-            if (disposed || retryCount !== undefined) return;
+            if (disposed || retryTimer !== undefined || currentSocket) return;
+            if (retryCount >= maxAutomaticRetries) {
+                canManuallyRetry = true;
+                return;
+            }
 
             const delay = Math.min(baseRetry * 2 ** retryCount, maxRetry);
             retryCount = Math.min(retryCount + 1, 5);
+            retryScheduled = true;
             retryTimer = setTimeout(() => {
+                retryTimer = undefined;
+                retryScheduled = false;
                 console.log(`Attempting to reconnect... (attempt ${retryCount})`);
                 connect();
             }, delay);
@@ -44,96 +57,117 @@
         function connect() {
             if (disposed || currentSocket || retryTimer !== undefined) return;
 
+            canManuallyRetry = false;
             try {
-                currentSocket = new WebSocket(url);
+                const ws = new WebSocket(url);
+                currentSocket = ws;
+                socket = ws;
+
+                ws.addEventListener("open", () => {
+                    if (disposed || currentSocket !== ws) return;
+                    if (connectionTimer !== undefined) {
+                        clearTimeout(connectionTimer);
+                        connectionTimer = undefined;
+                    }
+
+                    connected = true;
+                    ws.send(JSON.stringify({ type: "open", data: null }));
+                    retryCount = 0;
+                });
+
+                ws.addEventListener("message", (event) => {
+                    if (disposed || currentSocket !== ws) return;
+                    console.debug("Received message:", event.data);
+
+                    let raw: unknown;
+                    try {
+                        raw = JSON.parse(event.data);
+                    } catch (error) {
+                        console.error("Error parsing packet, malformed JSON:", error);
+                        return;
+                    }
+
+                    const result = packetSchema.safeParse(raw);
+                    if (!result.success) {
+                        console.error("Received invalid packet: ", result.error);
+                        return;
+                    }
+
+                    const packet = result.data;
+                    switch (packet.type) {
+                        case "updateUsers":
+                            console.debug("Update users packet received:", packet.data);
+                            userList = packet.data.userList.length;
+                            break;
+                        case "updateFile":
+                            console.log("Update file packet received:", packet.data);
+                            filecontent = packet.data.file;
+                            documentLoaded = true;
+                            break;
+                        default:
+                            console.warn("Unknown packet type received:", packet.type);
+                    }
+                });
+
+                ws.addEventListener("close", () => {
+                    if (disposed || currentSocket !== ws) return;
+                    if (connectionTimer !== undefined) {
+                        clearTimeout(connectionTimer);
+                        connectionTimer = undefined;
+                    }
+
+                    currentSocket = null;
+                    socket = null;
+                    connected = false;
+                    documentLoaded = false;
+                    console.log("WebSocket connection closed. Attempting reconnect...");
+                    scheduleReconnect();
+                });
+
+                ws.addEventListener("error", (event) => {
+                    if (disposed || currentSocket !== ws) return;
+                    console.error("WebSocket error:", event);
+                });
+
+                connectionTimer = setTimeout(() => {
+                    if (disposed || currentSocket !== ws || ws.readyState !== WebSocket.CONNECTING) return;
+                    console.warn("WebSocket connection timed out.");
+                    ws.close();
+                }, connectionTimeout);
             } catch (error) {
                 console.error("WebSocket connection error:", error);
+                currentSocket = null;
+                socket = null;
                 scheduleReconnect();
-                return;
             }
-
-            const ws = currentSocket;
-            socket = ws;
         }
 
-        socket = new WebSocket(`${protocol}//${location.host}/api/websocket?fileID=${encodeURIComponent(fileID)}`);
-        const ws = socket;
-
-        ws.addEventListener("open", () => {
-            connected = true;
-            ws.send(JSON.stringify({ type: "open", data: null }));
-
-            if (disposed || currentSocket !== ws) return;
-
+        retryConnection = () => {
+            if (retryTimer !== undefined) {
+                clearTimeout(retryTimer);
+                retryTimer = undefined;
+            }
+            retryScheduled = false;
             retryCount = 0;
-        });
-
-        // Handle incoming messages from the WebSocket
-        ws.addEventListener("message", (event) => {
-            if (disposed || currentSocket !== ws) return;
-            console.debug("Received message:", event.data);
-
-            let raw: unknown;
-            try {
-                raw = JSON.parse(event.data);
-            } catch (error) {
-                console.error("Error parsing packet, malformed JSON:", error);
-                return;
-            }
-
-            const result = packetSchema.safeParse(raw);
-            if (!result.success) {
-                console.error("Received invalid packet: ", result.error);
-                return;
-            }
-
-            const packet = result.data;
-
-            // Handle the packet based on its type
-            switch (packet.type) {
-                // handle updated user list
-                case "updateUsers":
-                    console.debug("Update users packet received:", packet.data);
-                    userList = packet.data.userList.length;
-                    break;
-                // handle updated file content
-                case "updateFile":
-                    console.log("Update file packet received:", packet.data);
-                    filecontent = packet.data.file;
-                    documentLoaded = true;
-                    break;
-                // display error if unknown type
-                default:
-                    console.warn("Unknown packet type received:", packet.type);
-            }
-        });
-
-        // Handle WebSocket close and error events
-        ws.addEventListener("close", () => {
-            if (disposed || currentSocket !== ws) return;
-            currentSocket = null;
-            socket = null;
-            connected = false;
-            documentLoaded = false;
-            console.log("WebSocket connection closed. Attempting reconnect...");
-            scheduleReconnect();
-        });
-
-        // Handle WebSocket error events
-        ws.addEventListener("error", (event) => {
-            if (disposed || currentSocket !== ws) return;
-            console.error("WebSocket error:", event);
-        });
+            canManuallyRetry = false;
+            connect();
+        };
 
         connect();
 
-        // Cleanup function to close the WebSocket when the component is destroyed
         return () => {
             disposed = true;
             if (retryTimer !== undefined) {
                 clearTimeout(retryTimer);
             }
+            if (connectionTimer !== undefined) {
+                clearTimeout(connectionTimer);
+            }
             retryTimer = undefined;
+            connectionTimer = undefined;
+            retryScheduled = false;
+            retryConnection = () => {};
+            canManuallyRetry = false;
 
             const ws = currentSocket;
             currentSocket = null;
@@ -167,6 +201,11 @@
             <span class="text-green-500">Connected</span>
         {:else}
             <span class="text-red-500">Disconnected</span>
+        {/if}
+        {#if !socket && !retryScheduled && canManuallyRetry}
+            <button
+                class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                onclick={retryConnection}>Retry connection</button>
         {/if}
     </div>
 

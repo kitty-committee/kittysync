@@ -9,6 +9,7 @@ vi.mock("$app/state", () => ({ page: route }));
 
 class MockWebSocket extends EventTarget {
     static instances: MockWebSocket[] = [];
+    static CONNECTING = 0;
 
     readyState = 0;
     onopen: ((event: Event) => void) | null = null;
@@ -58,6 +59,7 @@ describe("document page", () => {
     });
 
     afterEach(() => {
+        vi.useRealTimers();
         vi.unstubAllGlobals();
     });
 
@@ -65,6 +67,7 @@ describe("document page", () => {
         render(DocumentPage);
         const socket = MockWebSocket.instances[0];
         expect(socket).toBeDefined();
+        await expect.element(page.getByRole("button", { name: "Retry connection" })).not.toBeInTheDocument();
         const protocol = location.protocol === "https:" ? "wss" : "ws";
         expect(socket?.url).toBe(`${protocol}://${location.host}/api/websocket?fileID=notes.md`);
         await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
@@ -83,6 +86,7 @@ describe("document page", () => {
         socket?.close();
 
         await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
+        await expect.element(page.getByRole("button", { name: "Retry connection" })).not.toBeInTheDocument();
         await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
     });
 
@@ -100,9 +104,51 @@ describe("document page", () => {
         currentSocket?.receive({ type: "updateFile", data: { file: "Recovered document" } });
 
         await expect.element(page.getByText("Recovered document")).toBeInTheDocument();
+        expect(MockWebSocket.instances).toHaveLength(2);
         staleSocket?.receive({ type: "updateFile", data: { file: "Stale document" } });
         await expect.element(page.getByText("Recovered document")).toBeInTheDocument();
         await expect.element(page.getByText("Stale document")).not.toBeInTheDocument();
+    });
+
+    it("allows a manual retry after automatic retries are exhausted", async () => {
+        vi.useFakeTimers();
+        render(DocumentPage);
+
+        let socket = MockWebSocket.instances[0];
+        const retryDelays = [1000, 2000, 4000, 8000, 16000];
+
+        for (const [index, delay] of retryDelays.entries()) {
+            socket?.close();
+            await vi.advanceTimersByTimeAsync(delay);
+            expect(MockWebSocket.instances).toHaveLength(index + 2);
+            socket = MockWebSocket.instances[index + 1];
+        }
+
+        socket?.close();
+        vi.useRealTimers();
+        await expect.element(page.getByRole("button", { name: "Retry connection" })).toBeInTheDocument();
+
+        await page.getByRole("button", { name: "Retry connection" }).click();
+
+        expect(MockWebSocket.instances).toHaveLength(7);
+        await expect.element(page.getByRole("button", { name: "Retry connection" })).not.toBeInTheDocument();
+    });
+
+    it("automatically retries a connection that times out without duplicating sockets", async () => {
+        vi.useFakeTimers();
+        render(DocumentPage);
+
+        await vi.advanceTimersByTimeAsync(10000);
+        expect(MockWebSocket.instances).toHaveLength(1);
+        await expect.element(page.getByRole("button", { name: "Retry connection" })).not.toBeInTheDocument();
+
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(MockWebSocket.instances).toHaveLength(2);
+
+        const socket = MockWebSocket.instances[1];
+        socket?.open();
+        await vi.advanceTimersByTimeAsync(60000);
+        expect(MockWebSocket.instances).toHaveLength(2);
     });
 
     it("renders incoming document and user updates", async () => {
