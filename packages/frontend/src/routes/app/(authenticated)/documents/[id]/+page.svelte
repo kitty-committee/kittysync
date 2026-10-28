@@ -11,7 +11,7 @@
     let userList = $state(0);
     let filecontent = $state("");
     let inEditMode = $state(false);
-    let debounceTimout: ReturnType<typeof setTimeout>;
+    let debounceTimeout: ReturnType<typeof setTimeout>;
 
     onMount(() => {
         const fileID = page.params["id"];
@@ -105,23 +105,23 @@
         };
     });
 
-    // Function to save content with debounce
-    function saveContent(event: Event) {
-        const target = event.currentTarget;
+    function saveContent(content = filecontent) {
+        clearTimeout(debounceTimeout);
+        if (socket && connected) {
+            socket.send(
+                JSON.stringify({
+                    type: "saveFile",
+                    data: { file: content },
+                }),
+            );
+        }
+    }
 
+    function handleContentInput(event: Event) {
+        const target = event.currentTarget;
         if (target instanceof HTMLTextAreaElement) {
-            //clears the timeout if it exists, so the socket only has information sent after the user has stopped typing for the given time
-            clearTimeout(debounceTimout);
-            debounceTimout = setTimeout(() => {
-                if (socket && connected) {
-                    socket.send(
-                        JSON.stringify({
-                            type: "saveFile",
-                            data: { file: target.value },
-                        }),
-                    );
-                }
-            }, 100);
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => saveContent(target.value), 100);
         }
     }
 </script>
@@ -156,8 +156,15 @@
     }}>Change View</button>
 {#if inEditMode}
     <main class="p-4">
-        <textarea class="w-full h-96 p-2 border border-gray-300 rounded" bind:value={filecontent} oninput={saveContent}>
+        <textarea
+            class="w-full h-96 p-2 border border-gray-300 rounded"
+            bind:value={filecontent}
+            oninput={handleContentInput}>
         </textarea>
+        <button
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            onclick={() => saveContent()}
+            disabled={!connected}>Save</button>
     </main>
 {:else}
     <div><SvelteMarkdown source={filecontent} /></div>
