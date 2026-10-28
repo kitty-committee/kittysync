@@ -69,7 +69,7 @@ describe("document page", () => {
         expect(socket).toBeDefined();
         await expect.element(page.getByRole("button", { name: "Retry connection" })).not.toBeInTheDocument();
         const protocol = location.protocol === "https:" ? "wss" : "ws";
-        expect(socket?.url).toBe(`${protocol}://${location.host}/api/websocket?fileID=notes.md`);
+        expect(socket?.url).toBe(`${protocol}://${location.host}/api/document/notes.md/websocket`);
         await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
         await expect.element(page.getByText("Users: 0")).toBeInTheDocument();
         await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
@@ -77,7 +77,7 @@ describe("document page", () => {
         socket?.open();
 
         await expect.element(page.getByText("Connected")).toBeInTheDocument();
-        expect(socket?.sent).toContain(JSON.stringify({ type: "open", data: null }));
+        expect(socket?.sent).toHaveLength(0);
         await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
 
         socket?.receive({ type: "updateFile", data: { file: "Initial document" } });

@@ -14,7 +14,7 @@ export const clientboundPacketSchema = z.discriminatedUnion("type", [
     z.object({
         type: z.literal("updateUsers"),
         data: z.object({ userList: z.array(z.string()) }),
-    })
+    }),
 ]);
 
 export const serverboundPacketSchema = z.discriminatedUnion("type", [

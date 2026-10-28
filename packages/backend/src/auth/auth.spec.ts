@@ -67,6 +67,7 @@ test("Create new session", async () => {
     const setCookies = response.headers.getSetCookie();
     expect(setCookies.length).toBe(1);
     expect(setCookies[0]).toMatch(/session=(.*)/);
+    expect(setCookies[0]).not.toMatch(/;\s*domain=/i);
     expect(response.status).toBe(200);
 });
 

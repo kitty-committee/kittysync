@@ -1,8 +1,8 @@
-import { parseWebsocketPacket } from "./websocket.handler.ts";
+import { clientboundPacketSchema, type ClientboundPacket } from "@kittysync/common";
 import { expect, test, beforeEach, afterEach } from "vitest";
 import { mockSession } from "../auth/test-utils.ts";
-import { type WsPacket } from "@kittysync/common";
 import { createApp } from "../app.ts";
+import type { RawData } from "ws";
 
 let app: Awaited<ReturnType<typeof createApp>>;
 
@@ -53,26 +53,31 @@ export async function createMockDocument() {
     return createdDocument.id;
 }
 
+function parseClientboundPacket(data: RawData): ClientboundPacket {
+    let buffer: Buffer;
+    if (Array.isArray(data)) buffer = Buffer.concat(data);
+    else if (Buffer.isBuffer(data)) buffer = data;
+    else buffer = Buffer.from(data);
+    return clientboundPacketSchema.parse(JSON.parse(buffer.toString("utf8")));
+}
+
 test("connect to websocket", async () => {
     await app.ready();
 
-    const ws = await app.injectWS(`/api/websocket?fileID=${id}`, { headers: await mockSession(port!) });
+    const ws = await app.injectWS(`/api/document/${id}/websocket`, { headers: await mockSession(port!) });
 
-    let fileResolve: (value: WsPacket | PromiseLike<WsPacket>) => void;
-    const filePromise = new Promise<WsPacket>((r) => {
+    let fileResolve: (value: ClientboundPacket | PromiseLike<ClientboundPacket>) => void;
+    const filePromise = new Promise<ClientboundPacket>((r) => {
         fileResolve = r;
     });
 
-    let userResolve: (value: WsPacket | PromiseLike<WsPacket>) => void;
-    const userPromise = new Promise<WsPacket>((r) => {
+    let userResolve: (value: ClientboundPacket | PromiseLike<ClientboundPacket>) => void;
+    const userPromise = new Promise<ClientboundPacket>((r) => {
         userResolve = r;
     });
 
-    const packet: WsPacket = { type: "open", data: null };
-    ws.send(JSON.stringify(packet));
-
     ws.on("message", (data) => {
-        const packetData = parseWebsocketPacket(data);
+        const packetData = parseClientboundPacket(data);
         switch (packetData.type) {
             case "updateFile":
                 fileResolve(packetData);
@@ -94,8 +99,7 @@ test("connect to websocket", async () => {
 test("connect two users to websocket", async () => {
     await app.ready();
 
-    const ws1 = await app.injectWS(`/api/websocket?fileID=${id}`, { headers: await mockSession(port!) });
-    const ws2 = await app.injectWS(`/api/websocket?fileID=${id}`, { headers: await mockSession(port!) });
+    const ws1 = await app.injectWS(`/api/document/${id}/websocket`, { headers: await mockSession(port!) });
 
     let ws1UserCountResolve: (value: number | PromiseLike<number>) => void;
     const ws1UserCountPromise = new Promise<number>((r) => {
@@ -108,7 +112,7 @@ test("connect two users to websocket", async () => {
     });
 
     ws1.on("message", (data) => {
-        const packetData = parseWebsocketPacket(data);
+        const packetData = parseClientboundPacket(data);
         switch (packetData.type) {
             case "updateFile":
                 break;
@@ -120,8 +124,11 @@ test("connect two users to websocket", async () => {
         }
     });
 
+    const usercount1 = await ws1UserCountPromise;
+
+    const ws2 = await app.injectWS(`/api/document/${id}/websocket`, { headers: await mockSession(port!) });
     ws2.on("message", (data) => {
-        const packetData = parseWebsocketPacket(data);
+        const packetData = parseClientboundPacket(data);
         switch (packetData.type) {
             case "updateFile":
                 break;
@@ -133,11 +140,6 @@ test("connect two users to websocket", async () => {
         }
     });
 
-    const packet: WsPacket = { type: "open", data: null };
-    ws1.send(JSON.stringify(packet));
-    const usercount1 = await ws1UserCountPromise;
-
-    ws2.send(JSON.stringify(packet));
     const usercount2 = await ws2UserCountPromise;
 
     ws1.terminate();
