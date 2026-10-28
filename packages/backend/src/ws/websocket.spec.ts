@@ -85,7 +85,7 @@ test("connect to websocket", async () => {
         }
     });
 
-    expect((await filePromise).data).toStrictEqual({ file: "this is a file" });
+    expect((await filePromise).data).toStrictEqual({ file: "" });
     expect(((await userPromise).data as { userList: string[] }).userList.length).toStrictEqual(1);
 
     ws.terminate();

@@ -8,10 +8,10 @@
 
     let socket = $state<WebSocket | null>(null);
     let connected = $state(false);
+    let documentLoaded = $state(false);
     let userList = $state(0);
     let filecontent = $state("");
     let inEditMode = $state(false);
-    let debounceTimeout: ReturnType<typeof setTimeout>;
 
     onMount(() => {
         const fileID = page.params["id"];
@@ -25,7 +25,7 @@
 
         // Handle incoming messages from the WebSocket
         ws.addEventListener("message", (event) => {
-            console.log("Received message:", event.data);
+            console.debug("Received message:", event.data);
 
             let raw: unknown;
             try {
@@ -42,25 +42,19 @@
             }
 
             const packet = result.data;
-            console.log("Valid packet:", packet);
 
             // Handle the packet based on its type
             switch (packet.type) {
                 // handle updated user list
                 case "updateUsers":
                     console.log("Update users packet received:", packet.data);
-                    if (packet.data !== null && "userList" in packet.data && Array.isArray(packet.data.userList)) {
-                        userList = new Set(packet.data.userList.map((s) => s.split(":")[0])).size;
-                    }
+                    userList = new Set(packet.data.userList.map((s) => s.split(":")[0])).size;
                     break;
                 // handle updated file content
                 case "updateFile":
                     console.log("Update file packet received:", packet.data);
-                    if (typeof packet.data === "object" && packet.data !== null && "file" in packet.data) {
-                        filecontent = packet.data.file;
-                    } else {
-                        filecontent = "";
-                    }
+                    filecontent = packet.data.file;
+                    documentLoaded = true;
                     break;
                 // display error if unknown type
                 default:
@@ -71,6 +65,7 @@
         // Handle WebSocket close and error events
         ws.addEventListener("close", () => {
             connected = false;
+            documentLoaded = false;
             console.log("WebSocket connection closed.");
         });
 
@@ -85,28 +80,18 @@
                 socket.close();
                 socket = null;
                 connected = false;
-                console.log(connected);
             }
         };
     });
 
     function saveContent(content = filecontent) {
-        clearTimeout(debounceTimeout);
-        if (socket && connected) {
+        if (socket && connected && documentLoaded) {
             socket.send(
                 JSON.stringify({
                     type: "saveFile",
                     data: { file: content },
                 }),
             );
-        }
-    }
-
-    function handleContentInput(event: Event) {
-        const target = event.currentTarget;
-        if (target instanceof HTMLTextAreaElement) {
-            clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(() => saveContent(target.value), 100);
         }
     }
 </script>
@@ -138,18 +123,18 @@
     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     onclick={() => {
         inEditMode = !inEditMode;
-    }}>Change View</button>
+    }}
+    disabled={!connected || !documentLoaded}>Change View</button>
 {#if inEditMode}
     <main class="p-4">
         <textarea
             class="w-full h-96 p-2 border border-gray-300 rounded"
             bind:value={filecontent}
-            oninput={handleContentInput}>
-        </textarea>
+            disabled={!connected || !documentLoaded}></textarea>
         <button
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             onclick={() => saveContent()}
-            disabled={!connected}>Save</button>
+            disabled={!connected || !documentLoaded}>Save</button>
     </main>
 {:else}
     <div><SvelteMarkdown source={filecontent} /></div>

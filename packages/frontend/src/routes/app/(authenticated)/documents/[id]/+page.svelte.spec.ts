@@ -69,18 +69,24 @@ describe("document page", () => {
         expect(socket?.url).toBe(`${protocol}://${location.host}/api/websocket?fileID=notes.md`);
         await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
         await expect.element(page.getByText("Users: 0")).toBeInTheDocument();
+        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
 
         socket?.open();
 
         await expect.element(page.getByText("Connected")).toBeInTheDocument();
         expect(socket?.sent).toContain(JSON.stringify({ type: "open", data: null }));
+        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
+
+        socket?.receive({ type: "updateFile", data: { file: "Initial document" } });
+        await expect.element(page.getByRole("button", { name: "Change View" })).toBeEnabled();
 
         socket?.close();
 
         await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
+        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
     });
 
-    it("renders incoming document and user updates and sends edits while connected", async () => {
+    it("renders incoming document and user updates", async () => {
         render(DocumentPage);
 
         const socket = MockWebSocket.instances[0];
@@ -91,29 +97,24 @@ describe("document page", () => {
         await expect.element(page.getByRole("heading", { level: 1, name: "Shared notes" })).toBeInTheDocument();
         await expect.element(page.getByText("Latest update")).toBeInTheDocument();
         await expect.element(page.getByText("Users: 2")).toBeInTheDocument();
-
-        await page.getByRole("button", { name: "Change View" }).click();
-        const editor = page.getByRole("textbox");
-        await expect.element(editor).toHaveValue("# Shared notes\n\nLatest update");
-
-        await editor.fill("# Edited notes");
-
-        await expect
-            .poll(() => socket?.sent)
-            .toContain(JSON.stringify({ type: "saveFile", data: { file: "# Edited notes" } }));
     });
 
-    it("saves the current document when the Save button is clicked", async () => {
+    it("does not save edits until the Save button is clicked", async () => {
         render(DocumentPage);
 
         const socket = MockWebSocket.instances[0];
         socket?.open();
+        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
+        socket?.receive({ type: "updateFile", data: { file: "Original document" } });
 
         await page.getByRole("button", { name: "Change View" }).click();
-        await page.getByRole("textbox").fill("Saved from the button");
+        const editor = page.getByRole("textbox");
+        await expect.element(editor).toHaveValue("Original document");
+        await editor.fill("Saved from the button");
 
-        // Ignore the automatic input save so this assertion covers the button action.
-        socket!.sent = [];
+        expect(socket?.sent).not.toContain(
+            JSON.stringify({ type: "saveFile", data: { file: "Saved from the button" } }),
+        );
 
         await page.getByRole("button", { name: "Save" }).click();
 
