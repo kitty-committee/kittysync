@@ -8,8 +8,8 @@ import {
 } from "./websocket.files.ts";
 import { wsRedisPacketSchema, type WsRedisPacket } from "./ws-redis-packet.ts";
 import { packetSchema, type WsPacket } from "@kittysync/common";
-import { type WebSocket } from "@fastify/websocket";
 import { authenticationHook, updateDocument } from "../util.ts";
+import { type WebSocket } from "@fastify/websocket";
 import { redis } from "../app.ts";
 import type { RawData } from "ws";
 import Fastify from "fastify";
@@ -48,7 +48,7 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
                     removeUserFromFileMap(messageData.data.fileID, messageData.data.userID);
                     break;
                 case "saveFile":
-                    void updateDocument(messageData.data.fileID, undefined, messageData.data.fileData)
+                    void updateDocument(messageData.data.fileID, undefined, messageData.data.fileData);
                     updateFileForAllUsers(messageData.data.fileID, messageData.data.fileData);
                     break;
             }
@@ -73,7 +73,7 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
                             void addNewUserToFile(fileID, socket, req.user?.username ?? "unknownUser");
                             break;
                         case "saveFile":
-                            redisPacket = { command: "saveFile", data: { fileID: fileID, fileData: packet.data.file } }
+                            redisPacket = { command: "saveFile", data: { fileID: fileID, fileData: packet.data.file } };
                             void redis.publish("ws-channel", JSON.stringify(redisPacket));
                             break;
                         case "error":

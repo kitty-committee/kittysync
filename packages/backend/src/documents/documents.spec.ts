@@ -1,5 +1,5 @@
-import { mockSession } from "../auth/test-utils.ts";
 import { expect, test, beforeEach, afterEach } from "vitest";
+import { mockSession } from "../auth/test-utils.ts";
 import { createApp } from "../app.ts";
 
 let app: Awaited<ReturnType<typeof createApp>>;
