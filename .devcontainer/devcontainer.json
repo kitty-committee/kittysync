@@ -1,0 +1,10 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
+{
+    "name": "kittysync",
+    "forwardPorts": [5173, 3000, 5432, 6379],
+    "build": { "dockerfile": "Dockerfile" },
+    "workspaceFolder": "/home/node/kittysync",
+    "onCreateCommand": "bash /.devcontainer/startup.sh",
+    "postStartCommand": "bash /.devcontainer/startup.sh"
+}

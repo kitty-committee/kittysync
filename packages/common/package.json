@@ -1,0 +1,17 @@
+{
+    "name": "@kittysync/common",
+    "main": "src/index.ts",
+    "type": "module",
+    "scripts": {
+        "check:type": "tsc --noEmit",
+        "check:test": "vitest run"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.1",
+        "typescript": "^6.0.3",
+        "vitest": "^5.0.3"
+    },
+    "dependencies": {
+        "zod": "^4.6.7"
+    }
+}

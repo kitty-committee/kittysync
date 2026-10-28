@@ -1,0 +1,43 @@
+name: Pull request checks
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened, edited]
+        branches: [main]
+
+permissions:
+    contents: read
+
+jobs:
+    checks:
+        name: ${{ matrix.script }}
+        runs-on: ubuntu-latest
+        concurrency:
+            group: ${{ github.workflow }}-${{ matrix.script }}-${{ github.event.pull_request.number }}
+            cancel-in-progress: true
+        strategy:
+            fail-fast: false
+            matrix:
+                script: [check:lint, check:format, check:type, check:test, frontend build]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+            - name: Set up pnpm and NodeJS
+              uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4
+              with:
+                  node-version-file: .nvmrc
+                  install: true
+                  cache: true
+
+            - name: Install Playwright dependencies
+              if: matrix.script == 'check:test'
+              run: pnpm frontend playwright install --with-deps
+
+            - name: Start compose stack
+              if: matrix.script == 'check:test'
+              run: pnpm stack up --wait
+
+            - name: Run check
+              run: set -a; source .env.example; set +a; pnpm ${{ matrix.script }}
