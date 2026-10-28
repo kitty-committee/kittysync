@@ -4,49 +4,44 @@ Date: 13/10/2026
 
 ## What we need
 
-- way to connect and disconnect from server
-- way to specifiy which file editing when connecting
-- authenticate user before sending them the file
-- update users editing files
-- save file message
+- Way to connect and disconnect from server
+- Way to specifiy which file editing when connecting
+- Authenticate user before sending them the file
+- Update users editing files
+- Save file message
 
 ## How to do
 
 ### Connect and disconnect
 
 - Connect and disconect via websocket protocol
-- Send filename in the connection url
-
-### authenticate user (come back to)
-
-- First message authentiction
-- client sends auth message with JWT that server can verify
+- Send filename in the connection url, the route then reads the fileID query parameter
 
 ### send file
 
-- used for updating all files(for now)
-- sent by server to client with the md file
-- when sent after a save command send to all users
+- Used for updating all files(for now)
+- Sent by server to client with the md file
+- When sent after a save command send to all users
 
 ### save file
 
-- sent by clients
-- sends the current copy of the file to the server
-- server saves and then sends the above packet to all users with the newly saved file
+- Sent by clients
+- Sends the current copy of the file to the server
+- Server saves and then sends the above packet to all users with the newly saved file
 
 ### update users
 
-- sent by server
-- sends list of usernames(for now)
+- Sent by server
+- Sends list of usernames(for now)
 
 ### error handling
 
-- sent by either
-- for now just contains error message
+- Sent by either
+- For now just contains error message
 
 ### ws open
 
-- sent by client to let server know its ready to recive data
+- Sent by client to let server know its ready to recive data
 
 ## Implementation
 
@@ -107,7 +102,7 @@ Date: 13/10/2026
 
 ```ts
 {
-    "type": "open"
+    "type": "open",
     "data": null
 }
 ```

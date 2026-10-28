@@ -45,7 +45,7 @@ userID may become a UUID
 }
 ```
 
-### Remove User from file
+### Save file
 
 Packet sent to save a file on all servers
 
