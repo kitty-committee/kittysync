@@ -1,8 +1,8 @@
+import { TOKEN_PROVIDER } from "../auth/session/session-tokens.ts";
+import { type WsPacket, type UserDb } from "@kittysync/common";
 import { parseWebsocketPacket } from "./websocket.handler.ts";
 import { expect, test, beforeEach, afterEach } from "vitest";
-import { type WsPacket, type UserDb } from "@kittysync/common";
 import { createApp } from "../app.ts";
-import { TOKEN_PROVIDER } from "../auth/session/session-tokens.ts"
 
 let app: Awaited<ReturnType<typeof createApp>>;
 
@@ -29,7 +29,7 @@ export async function mockSession(user: UserDb = { username: "test-user", id: cr
 test("connect to websocket", async () => {
     await app.ready();
 
-    const ws = await app.injectWS('/api/websocket?fileID=abc.txt', { headers: await mockSession() });
+    const ws = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
 
     let fileResolve: (value: WsPacket | PromiseLike<WsPacket>) => void;
     const filePromise = new Promise<WsPacket>((r) => {

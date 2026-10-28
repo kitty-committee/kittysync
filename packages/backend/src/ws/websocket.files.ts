@@ -1,8 +1,8 @@
+import { getDocuments } from "../documents/get.handler.ts";
 import { type WsRedisPacket } from "./ws-redis-packet.ts";
 import { type WebSocket } from "@fastify/websocket";
 import { type WsPacket } from "@kittysync/common";
 import { redis } from "../app.ts";
-import { getDocuments } from "../documents/get.handler.ts";
 
 const fileUsersMap = new Map<string, string[]>();
 const fileSocketsMap = new Map<string, WebSocket[]>();
@@ -22,24 +22,24 @@ export function clearMaps() {
  * @param userID the user connecting
  */
 export async function addNewUserToFile(fileID: string, socket: WebSocket, userID: string) {
-
-
     let packet: WsPacket;
-    let file: {
-        id: string
-        title: string
-        content: string
-        authorId: string
-    } | undefined
+    let file:
+        | {
+              id: string;
+              title: string;
+              content: string;
+              authorId: string;
+          }
+        | undefined;
 
     if (fileID === "abc.txt") {
-        file = { id: "abc.txt", title: "abc", content: "this is a file", authorId: "test-user" }
+        file = { id: "abc.txt", title: "abc", content: "this is a file", authorId: "test-user" };
     } else {
-        file = (await getDocuments(fileID)).at(0)
+        file = (await getDocuments(fileID)).at(0);
     }
 
     if (file === undefined) {
-        packet = { type: "error", data: { message: "404 File not found" } }
+        packet = { type: "error", data: { message: "404 File not found" } };
     } else {
         packet = { type: "updateFile", data: { file: file.content } };
 
@@ -53,12 +53,11 @@ export async function addNewUserToFile(fileID: string, socket: WebSocket, userID
     }
 
     socket.send(JSON.stringify(packet));
-
 }
 
 /**
  * adds a new user to the file map and then lets all users connected to that file know
- * @param fileID file to add the user to 
+ * @param fileID file to add the user to
  * @param userID the user to add
  */
 export function addNewUserToFileMap(fileID: string, userID: string) {
@@ -72,7 +71,7 @@ export function addNewUserToFileMap(fileID: string, userID: string) {
 
 /**
  * sends the userlist for a specific file to all connections to that file on this server
- * @param fileID the file send the user list for 
+ * @param fileID the file send the user list for
  */
 function updateAllUserListsOnFile(fileID: string) {
     const packet: WsPacket = { type: "updateUsers", data: { userList: fileUsersMap.get(fileID) ?? [] } };
@@ -112,7 +111,7 @@ export function removeUserFromFile(fileID: string, socket: WebSocket, userID: st
 
 /**
  * removes a user from a file and then updates the connections on that file
- * @param fileID the file to remove the user from 
+ * @param fileID the file to remove the user from
  * @param userID the user to remove
  */
 export function removeUserFromFileMap(fileID: string, userID: string) {
