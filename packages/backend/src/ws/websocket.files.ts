@@ -23,20 +23,8 @@ export function clearMaps() {
  */
 export async function addNewUserToFile(fileID: string, socket: WebSocket, userID: string) {
     let packet: WsPacket;
-    let file:
-        | {
-              id: string;
-              title: string;
-              content: string;
-              authorId: string;
-          }
-        | undefined;
+    const file = (await getDocuments(fileID)).at(0);
 
-    if (fileID === "abc.txt") {
-        file = { id: "abc.txt", title: "abc", content: "this is a file", authorId: "test-user" };
-    } else {
-        file = (await getDocuments(fileID)).at(0);
-    }
 
     if (file === undefined) {
         packet = { type: "error", data: { message: "404 File not found" } };

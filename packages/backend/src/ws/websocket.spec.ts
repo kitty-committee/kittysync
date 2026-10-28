@@ -1,14 +1,22 @@
-import { TOKEN_PROVIDER } from "../auth/session/session-tokens.ts";
-import { type WsPacket, type UserDb } from "@kittysync/common";
+import { type WsPacket } from "@kittysync/common";
 import { parseWebsocketPacket } from "./websocket.handler.ts";
 import { expect, test, beforeEach, afterEach } from "vitest";
 import { createApp } from "../app.ts";
+import { mockSession } from "../auth/test-utils.ts";
+
 
 let app: Awaited<ReturnType<typeof createApp>>;
 
+let id = ""
+
+let address = undefined
+let port: string | number | undefined = undefined
 beforeEach(async () => {
     app = await createApp();
     await app.listen();
+    address = app.server.address();
+    port = typeof address === "string" ? address : address?.port;
+    id = await createMockDocument()
 });
 
 afterEach(async () => {
@@ -20,16 +28,38 @@ afterEach(async () => {
  * @param user
  * @returns
  */
-export async function mockSession(user: UserDb = { username: "test-user", id: crypto.randomUUID() }) {
-    return {
-        cookie: `session=${await TOKEN_PROVIDER.new(user)}`,
+
+export async function createMockDocument() {
+    await app.ready();
+    const createResponse = await fetch(`http://localhost:${port}/api/documents`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...(await mockSession(port!)),
+        },
+        body: JSON.stringify({
+            title: "abc.txt",
+        }),
+    });
+
+    expect(createResponse.status).toBe(201);
+
+    const createdDocument = (await createResponse.json()) as {
+        id: string;
+        title: string;
+        content: string;
+        authorId: string;
     };
+
+    return createdDocument.id;
 }
+
+
 
 test("connect to websocket", async () => {
     await app.ready();
 
-    const ws = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
+    const ws = await app.injectWS(`/api/websocket?fileID=${id}`, { headers: await mockSession(port!) });
 
     let fileResolve: (value: WsPacket | PromiseLike<WsPacket>) => void;
     const filePromise = new Promise<WsPacket>((r) => {
@@ -67,8 +97,9 @@ test("connect to websocket", async () => {
 test("connect two users to websocket", async () => {
     await app.ready();
 
-    const ws1 = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
-    const ws2 = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
+
+    const ws1 = await app.injectWS(`/api/websocket?fileID=${id}`, { headers: await mockSession(port!) });
+    const ws2 = await app.injectWS(`/api/websocket?fileID=${id}`, { headers: await mockSession(port!) });
 
     let ws1UserCountResolve: (value: number | PromiseLike<number>) => void;
     const ws1UserCountPromise = new Promise<number>((r) => {

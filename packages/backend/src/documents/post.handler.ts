@@ -12,8 +12,9 @@ import "dotenv/config";
 */
 export async function insertDocument(title: string, authorId: string) {
     try {
-        await db.insert(documentsTable).values({ title, authorId });
+        const document = await db.insert(documentsTable).values({ title, authorId }).returning();
         console.log("Document inserted successfully");
+        return document
     } catch (error) {
         console.error("Error inserting document:", error);
         throw error;
@@ -56,9 +57,9 @@ export async function postDocumentHandler(request: FastifyRequest, reply: Fastif
     }
 
     try {
-        await insertDocument(title, authorId);
+        const [document] = await insertDocument(title, authorId);
         reply.statusCode = 201;
-        reply.send({ message: "Document created successfully" });
+        reply.send(document)
     } catch (error) {
         console.error("Error creating document:", error);
         reply.statusCode = 500;

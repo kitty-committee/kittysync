@@ -58,7 +58,7 @@ export async function registerWebsocketRoutes(app: Fastify.FastifyInstance) {
 
     redis.on("message", onRedisMessage);
 
-    app.addHook("onClose", async () => {
+    app.addHook("onClose", () => {
         redis.off("message", onRedisMessage);
     });
 
