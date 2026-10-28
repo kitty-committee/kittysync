@@ -65,7 +65,8 @@ describe("document page", () => {
         render(DocumentPage);
         const socket = MockWebSocket.instances[0];
         expect(socket).toBeDefined();
-        expect(socket?.url).toBe("ws://localhost:3000/api/websocket?fileID=notes.md");
+        const protocol = location.protocol === "https:" ? "wss" : "ws";
+        expect(socket?.url).toBe(`${protocol}://${location.host}/api/websocket?fileID=notes.md`);
         await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
         await expect.element(page.getByText("Users: 0")).toBeInTheDocument();
 

@@ -1,8 +1,8 @@
 <script lang="ts">
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
     import { packetSchema } from "@kittysync/common";
-    //import { goto } from "$app/navigation";
-    //import { resolve } from "$app/paths";
+    import { goto } from "$app/navigation";
+    import { resolve } from "$app/paths";
     import { page } from "$app/state";
     import { onMount } from "svelte";
 
@@ -19,7 +19,8 @@
             return;
         }
         console.log("File ID:", fileID);
-        const url = new URL("ws://localhost:3000/api/websocket");
+        const protocol = location.protocol === "https:" ? "wss" : "ws";
+        const url = new URL(`${protocol}://${location.host}/api/websocket`);
         url.searchParams.set("fileID", fileID);
 
         socket = new WebSocket(url.toString());
@@ -111,7 +112,7 @@
     <button
         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         onclick={() => {
-            //goto(resolve("/app/(authenticated)/documents"));
+            goto(resolve("/app/(authenticated)/documents"));
         }}>Back</button>
 
     <h1 class="text-xl font-bold">Document Editor</h1>

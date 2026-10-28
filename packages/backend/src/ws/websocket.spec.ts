@@ -64,60 +64,60 @@ test("connect to websocket", async () => {
     ws.terminate();
 });
 
-// test("connect two users to websocket", async () => {
-//     await app.ready();
+test("connect two users to websocket", async () => {
+    await app.ready();
 
-//     const ws1 = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
-//     const ws2 = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
+    const ws1 = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
+    const ws2 = await app.injectWS("/api/websocket?fileID=abc.txt", { headers: await mockSession() });
 
-//     let ws1UserCountResolve: (value: number | PromiseLike<number>) => void;
-//     const ws1UserCountPromise = new Promise<number>((r) => {
-//         ws1UserCountResolve = r;
-//     });
+    let ws1UserCountResolve: (value: number | PromiseLike<number>) => void;
+    const ws1UserCountPromise = new Promise<number>((r) => {
+        ws1UserCountResolve = r;
+    });
 
-//     let ws2UserCountResolve: (value: number | PromiseLike<number>) => void;
-//     const ws2UserCountPromise = new Promise<number>((r) => {
-//         ws2UserCountResolve = r;
-//     });
+    let ws2UserCountResolve: (value: number | PromiseLike<number>) => void;
+    const ws2UserCountPromise = new Promise<number>((r) => {
+        ws2UserCountResolve = r;
+    });
 
-//     ws1.on("message", (data) => {
-//         const packetData = parseWebsocketPacket(data);
-//         switch (packetData.type) {
-//             case "updateFile":
-//                 break;
-//             case "updateUsers":
-//                 ws1UserCountResolve(packetData.data.userList.length);
-//                 break;
-//             default:
-//                 break;
-//         }
-//     });
+    ws1.on("message", (data) => {
+        const packetData = parseWebsocketPacket(data);
+        switch (packetData.type) {
+            case "updateFile":
+                break;
+            case "updateUsers":
+                ws1UserCountResolve(packetData.data.userList.length);
+                break;
+            default:
+                break;
+        }
+    });
 
-//     ws2.on("message", (data) => {
-//         const packetData = parseWebsocketPacket(data);
-//         switch (packetData.type) {
-//             case "updateFile":
-//                 break;
-//             case "updateUsers":
-//                 ws2UserCountResolve(packetData.data.userList.length);
-//                 break;
-//             default:
-//                 break;
-//         }
-//     });
+    ws2.on("message", (data) => {
+        const packetData = parseWebsocketPacket(data);
+        switch (packetData.type) {
+            case "updateFile":
+                break;
+            case "updateUsers":
+                ws2UserCountResolve(packetData.data.userList.length);
+                break;
+            default:
+                break;
+        }
+    });
 
-//     const packet: WsPacket = { type: "open", data: null };
-//     ws1.send(JSON.stringify(packet));
+    const packet: WsPacket = { type: "open", data: null };
+    ws1.send(JSON.stringify(packet));
 
-//     ws2.send(JSON.stringify(packet));
+    ws2.send(JSON.stringify(packet));
 
-//     const usercount1 = await ws1UserCountPromise;
-//     const usercount2 = await ws2UserCountPromise;
+    const usercount1 = await ws1UserCountPromise;
+    const usercount2 = await ws2UserCountPromise;
 
-//     ws2.terminate();
+    ws2.terminate();
 
-//     ws1.terminate();
+    ws1.terminate();
 
-//     expect(usercount1).toBe(1);
-//     expect(usercount2).toBe(2);
-// });
+    expect(usercount1).toBe(1);
+    expect(usercount2).toBe(2);
+});
