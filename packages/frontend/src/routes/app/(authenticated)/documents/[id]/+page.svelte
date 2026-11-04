@@ -1,17 +1,18 @@
 <script lang="ts">
-    import { clientboundPacketSchema } from "@kittysync/common";
+    import { HocuspocusProvider } from "@hocuspocus/provider";
+    import * as Y from "yjs";
+
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
     import { page } from "$app/state";
     import { onMount } from "svelte";
 
-    let socket = $state<WebSocket | null>(null);
     let connected = $state(false);
     let documentLoaded = $state(false);
-    let userList = $state(0);
     let filecontent = $state("");
     let inEditMode = $state(false);
+    let sharedText: Y.Text | null = null;
 
     onMount(() => {
         const fileID = page.params["id"];
@@ -20,83 +21,61 @@
             return;
         }
 
-        socket = new WebSocket(`/api/document/${fileID}/websocket`);
-        const ws = socket;
+        const ydoc = new Y.Doc();
+        const text = ydoc.getText("markdown");
+        sharedText = text;
+        const updateFromYjs = () => {
+            filecontent = text.toString();
+        };
 
-        // Handle incoming messages from the WebSocket
-        ws.addEventListener("message", (event) => {
-            console.debug("Received message:", event.data);
+        text.observe(updateFromYjs);
 
-            let raw: unknown;
-            try {
-                raw = JSON.parse(event.data);
-            } catch (error) {
-                console.error("Error parsing packet, malformed JSON:", error);
-                return;
-            }
-
-            const result = clientboundPacketSchema.safeParse(raw);
-            if (!result.success) {
-                console.error("Received invalid packet: ", result.error);
-                return;
-            }
-
-            const packet = result.data;
-
-            // Handle the packet based on its type
-            switch (packet.type) {
-                // handle updated user list
-                case "updateUsers":
-                    console.log("Update users packet received:", packet.data);
-                    userList = new Set(packet.data.userList.map((s) => s.split(":")[0])).size;
-                    break;
-                // handle updated file content
-                case "updateFile":
-                    console.log("Update file packet received:", packet.data);
-                    filecontent = packet.data.file;
-                    documentLoaded = true;
-                    break;
-                // display error if unknown type
-                default:
-                    console.warn("Unknown packet type received:", packet.type);
-            }
+        const provider = new HocuspocusProvider({
+            url: "ws://localhost:1234",
+            name: fileID,
+            document: ydoc,
+            onStatus: ({ status }) => {
+                connected = status === "connected";
+            },
+            onSynced: () => {
+                updateFromYjs();
+                documentLoaded = true;
+            },
         });
 
-        ws.addEventListener("open", () => {
-            connected = true;
-            console.log("WebSocket connection established.");
-        });
-
-        // Handle WebSocket close and error events
-        ws.addEventListener("close", () => {
+        return () => {
+            text.unobserve(updateFromYjs);
+            provider.destroy();
+            ydoc.destroy();
             connected = false;
             documentLoaded = false;
-            console.log("WebSocket connection closed.");
-        });
-
-        // Handle WebSocket error events
-        ws.addEventListener("error", (event) => {
-            console.error("WebSocket error:", event);
-        });
-
-        // Cleanup function to close the WebSocket when the component is destroyed
-        return () => {
-            if (socket) {
-                socket.close();
-                socket = null;
-                connected = false;
-            }
         };
     });
 
-    function saveContent(content = filecontent) {
-        if (socket && connected && documentLoaded) {
-            socket.send(
-                JSON.stringify({
-                    type: "saveFile",
-                    data: { file: content },
-                }),
-            );
+    function updateText(next: string) {
+        //implement PROPERLY !!! NOT NOT NOT NOT FINAL!!!!
+        const text = sharedText;
+        if (!text) return;
+        const current = text.toString();
+        if (current === next) return;
+
+        let start = 0;
+        while (start < current.length && start < next.length && current[start] === next[start]) {
+            start++;
+        }
+
+        let currentEnd = current.length;
+        let nextEnd = next.length;
+        while (currentEnd > start && nextEnd > start && current[currentEnd - 1] === next[nextEnd - 1]) {
+            currentEnd--;
+            nextEnd--;
+        }
+
+        if (currentEnd > start) {
+            text.delete(start, currentEnd - start);
+        }
+        if (nextEnd > start) {
+            text.insert(start, next.slice(start, nextEnd));
         }
     }
 </script>
@@ -117,10 +96,6 @@
             <span class="text-red-500">Disconnected</span>
         {/if}
     </div>
-
-    <div>
-        <span class="mr-4">Users: {userList}</span>
-    </div>
 </nav>
 
 <!-- button to toggle edit mode. text area contains file content, which can be edited. -->
@@ -134,12 +109,11 @@
     <main class="p-4">
         <textarea
             class="w-full h-96 p-2 border border-gray-300 rounded"
-            bind:value={filecontent}
+            value={filecontent}
+            oninput={(e) => {
+                updateText(e.currentTarget.value);
+            }}
             disabled={!connected || !documentLoaded}></textarea>
-        <button
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onclick={() => saveContent()}
-            disabled={!connected || !documentLoaded}>Save</button>
     </main>
 {:else}
     <div><SvelteMarkdown source={filecontent} /></div>
