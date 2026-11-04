@@ -33,6 +33,11 @@
     },
     "dependencies": {
         "@hocuspocus/provider": "^4.8.0",
+        "@tiptap/core": "^3.32.2",
+        "@tiptap/extension-collaboration": "^3.32.2",
+        "@tiptap/markdown": "^3.32.2",
+        "@tiptap/pm": "^3.32.2",
+        "@tiptap/starter-kit": "^3.32.2",
         "yjs": "^13.6.33"
     }
 }

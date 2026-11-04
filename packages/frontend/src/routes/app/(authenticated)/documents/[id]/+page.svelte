@@ -1,5 +1,9 @@
 <script lang="ts">
+    import { Collaboration } from "@tiptap/extension-collaboration";
     import { HocuspocusProvider } from "@hocuspocus/provider";
+    import StarterKit from "@tiptap/starter-kit";
+    import { Markdown } from "@tiptap/markdown";
+    import { Editor } from "@tiptap/core";
     import * as Y from "yjs";
 
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
@@ -10,11 +14,14 @@
 
     let connected = $state(false);
     let documentLoaded = $state(false);
-    let filecontent = $state("");
     let inEditMode = $state(false);
-    let sharedText: Y.Text | null = null;
+    let editorElement = $state<HTMLDivElement | undefined>(undefined);
+    let editor: Editor | null = null;
+    let markdownContent = $state("");
 
     onMount(() => {
+        console.log("document page mounted", performance.now());
+
         const fileID = page.params["id"];
         if (!fileID) {
             console.error("File ID is missing.");
@@ -22,63 +29,57 @@
         }
 
         const ydoc = new Y.Doc();
-        const text = ydoc.getText("markdown");
-        sharedText = text;
-        const updateFromYjs = () => {
-            filecontent = text.toString();
-        };
 
-        text.observe(updateFromYjs);
-
+        console.log("creating provider", performance.now());
         const provider = new HocuspocusProvider({
             url: "ws://localhost:1234",
             name: fileID,
             document: ydoc,
             onStatus: ({ status }) => {
+                console.log("Hocuspocus status", status, performance.now());
                 connected = status === "connected";
             },
+            onOpen: () => {
+                console.log("WS opened", performance.now());
+            },
+
             onSynced: () => {
-                updateFromYjs();
+                if (editor) return;
+                if (!editorElement) {
+                    console.error("Tiptap editor element is not available.");
+                    return;
+                }
+
+                editor = new Editor({
+                    element: editorElement,
+                    extensions: [
+                        StarterKit.configure({ undoRedo: false }),
+                        Collaboration.configure({ document: ydoc, field: "content" }),
+                        Markdown,
+                    ],
+                    editable: inEditMode,
+
+                    onUpdate: ({ editor }) => {
+                        markdownContent = editor.getMarkdown();
+                    },
+                });
+                markdownContent = editor.getMarkdown();
                 documentLoaded = true;
             },
         });
 
         return () => {
-            text.unobserve(updateFromYjs);
+            editor?.destroy();
+            editor = null;
             provider.destroy();
             ydoc.destroy();
             connected = false;
             documentLoaded = false;
         };
     });
-
-    function updateText(next: string) {
-        //implement PROPERLY !!! NOT NOT NOT NOT FINAL!!!!
-        const text = sharedText;
-        if (!text) return;
-        const current = text.toString();
-        if (current === next) return;
-
-        let start = 0;
-        while (start < current.length && start < next.length && current[start] === next[start]) {
-            start++;
-        }
-
-        let currentEnd = current.length;
-        let nextEnd = next.length;
-        while (currentEnd > start && nextEnd > start && current[currentEnd - 1] === next[nextEnd - 1]) {
-            currentEnd--;
-            nextEnd--;
-        }
-
-        if (currentEnd > start) {
-            text.delete(start, currentEnd - start);
-        }
-        if (nextEnd > start) {
-            text.insert(start, next.slice(start, nextEnd));
-        }
-    }
 </script>
+
+<!-- tiptap editor initialisation -->
 
 <!-- navigation bar -->
 <nav class="flex items-center justify-between p-4 bg-gray-800 text-white">
@@ -103,18 +104,11 @@
     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     onclick={() => {
         inEditMode = !inEditMode;
+        editor?.setEditable(inEditMode);
     }}
     disabled={!connected || !documentLoaded}>Change View</button>
-{#if inEditMode}
-    <main class="p-4">
-        <textarea
-            class="w-full h-96 p-2 border border-gray-300 rounded"
-            value={filecontent}
-            oninput={(e) => {
-                updateText(e.currentTarget.value);
-            }}
-            disabled={!connected || !documentLoaded}></textarea>
-    </main>
-{:else}
-    <div><SvelteMarkdown source={filecontent} /></div>
+
+<div bind:this={editorElement} hidden={!inEditMode} class="min-h-96 border border-gray-300 rounded p-2"></div>
+{#if !inEditMode}
+    <div><SvelteMarkdown source={markdownContent} /></div>
 {/if}
