@@ -79,8 +79,6 @@
     });
 </script>
 
-<!-- tiptap editor initialisation -->
-
 <!-- navigation bar -->
 <nav class="flex items-center justify-between p-4 bg-gray-800 text-white">
     <button
@@ -107,8 +105,13 @@
         editor?.setEditable(inEditMode);
     }}
     disabled={!connected || !documentLoaded}>Change View</button>
+<div
+    bind:this={editorElement}
+    aria-hidden={!inEditMode}
+    style:display={inEditMode ? "block" : "none"}
+    class="min-h-96 border border-gray-300 rounded p-2">
+</div>
 
-<div bind:this={editorElement} hidden={!inEditMode} class="min-h-96 border border-gray-300 rounded p-2"></div>
 {#if !inEditMode}
     <div><SvelteMarkdown source={markdownContent} /></div>
 {/if}
