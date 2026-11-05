@@ -12,3 +12,9 @@ export class DocumentNotFound extends Error {
         super("The specified document does not exist!");
     }
 }
+
+export class DocumentIdConflict extends Error {
+    constructor() {
+        super("Conflict between document ID's!");
+    }
+}

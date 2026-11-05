@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, bytea } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: uuid().primaryKey().notNull().defaultRandom(),
@@ -21,6 +21,7 @@ export const documentsTable = pgTable("documents", {
     authorId: uuid()
         .notNull()
         .references(() => usersTable.id, { onDelete: "cascade" }),
+    yDocState: bytea(),
 });
 
 export type InsertUser = typeof usersTable.$inferInsert;

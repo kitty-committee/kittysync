@@ -3,7 +3,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 
-import type { UserDb } from "@kittysync/common";
+import { YJS_SHARED_TEXT, type UserDb } from "@kittysync/common";
 import staticFastify from "@fastify/static";
 import { join } from "node:path";
 
@@ -12,17 +12,20 @@ import { register as registerDocuments } from "./documents/documents.routes.ts";
 import { register as registerHocus } from "./collaboration/collaboration.ts";
 import { register as registerAuth } from "./auth/auth.routes.ts";
 
-import { NotAuthenticated, DocumentNotFound } from "./collaboration/errors.ts";
+import { NotAuthenticated, DocumentNotFound, DocumentIdConflict } from "./collaboration/errors.ts";
 import { Redis as HocusRedis } from "@hocuspocus/extension-redis";
+import { Database } from "@hocuspocus/extension-database";
 import { getDocuments } from "./documents/get.handler.ts";
 import { Logger } from "@hocuspocus/extension-logger";
 import { Hocuspocus } from "@hocuspocus/server";
+import { updateDocumentState } from "./util.ts";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
 import * as z from "zod";
+import * as Y from "yjs";
 
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
@@ -41,6 +44,46 @@ export const hocuspocus = new Hocuspocus({
         new HocusRedis({
             host: configuration.redisHost,
             port: 6379,
+        }),
+        new Database({
+            fetch: async ({ documentName }) => {
+                let docs = await getDocuments(documentName, true);
+
+                if (docs.length !== 1) {
+                    throw new DocumentIdConflict();
+                }
+
+                const state = docs[0].yDocState;
+                if (state !== null) return state;
+
+                const newDoc = new Y.Doc();
+                const newDocText = newDoc.getText(YJS_SHARED_TEXT);
+                newDocText.insert(0, docs[0].content);
+
+                updateDocumentState(documentName, newDoc);
+
+                docs = await getDocuments(documentName, true);
+
+                if (docs.length !== 1) {
+                    throw new DocumentIdConflict();
+                }
+
+                return docs[0].yDocState;
+            },
+
+            store: async ({ documentName, state }) => {
+                const docs = await getDocuments(documentName, true, true);
+
+                if (docs.length !== 1) {
+                    throw new DocumentIdConflict();
+                }
+
+                const newState = Y.mergeUpdates([docs[0].yDocState!!, state]);
+                const yDoc = new Y.Doc();
+                Y.applyUpdate(yDoc, newState);
+
+                await updateDocumentState(documentName, yDoc);
+            },
         }),
     ],
 
