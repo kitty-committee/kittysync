@@ -20,7 +20,7 @@ test("Create user", async () => {
     const address = app.server.address();
     const port = typeof address === "string" ? address : address?.port;
 
-    let response = await fetch(`http://localhost:${port}/api/auth/user`, {
+    const response = await fetch(`http://localhost:${port}/api/auth/user`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
