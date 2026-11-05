@@ -3,7 +3,13 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 
-import { GLOBAL_PRESENCE_DOCUMENT, YJS_SHARED_TEXT, type UserDb } from "@kittysync/common";
+import {
+    awarenessStateSchema,
+    GLOBAL_PRESENCE_DOCUMENT,
+    YJS_SHARED_TEXT,
+    type AwarenessState,
+    type UserDb,
+} from "@kittysync/common";
 import staticFastify from "@fastify/static";
 import { join } from "node:path";
 
@@ -122,8 +128,21 @@ export const hocuspocus = new Hocuspocus({
             throw new NotAuthenticated();
         }
 
-        for (const state of states.values()) {
-            state["user"] = context.user;
+        // states contains the new states being pushed to the document's awareness by a
+        // single client. Here, we verify that all of the pushed states are valid against the
+        // expected schema, and replace the user value with the server-supplied context, rather
+        // than trusting the client.
+        for (const k of states.keys()) {
+            let state: AwarenessState;
+            try {
+                state = awarenessStateSchema.parse(states.get(k));
+            } catch (error) {
+                states.delete(k);
+                continue;
+            }
+
+            state.user = context.user;
+            states.set(k, state);
         }
     },
 });
