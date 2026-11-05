@@ -18,7 +18,7 @@ import { register as registerDocuments } from "./documents/documents.routes.ts";
 import { register as registerHocus } from "./collaboration/collaboration.ts";
 import { register as registerAuth } from "./auth/auth.routes.ts";
 
-import { NotAuthenticated, DocumentNotFound, DocumentIdConflict } from "./collaboration/errors.ts";
+import { NotAuthenticated, DocumentNotFound, DocumentIdConflict, UpdateForbidden } from "./collaboration/errors.ts";
 import { Redis as HocusRedis } from "@hocuspocus/extension-redis";
 import { Database } from "@hocuspocus/extension-database";
 import { getDocuments } from "./documents/get.handler.ts";
@@ -123,7 +123,7 @@ export const hocuspocus = new Hocuspocus({
         }
     },
 
-    async beforeHandleAwareness({ context, states }) {
+    async beforeHandleAwareness({ context, states, awareness, removedClients }) {
         if (context.user === undefined) {
             throw new NotAuthenticated();
         }
@@ -143,6 +143,22 @@ export const hocuspocus = new Hocuspocus({
 
             state.user = context.user;
             states.set(k, state);
+
+            // Ensure that the current user is consistent with the current state.
+            // Prevents client ID's from being hijacked.
+            const currentState = awareness.getStates().get(k) as AwarenessState;
+            if (currentState.user.id !== context.user.id) {
+                states.delete(k);
+            }
+        }
+
+        // Check if the update attempts to remove any clients which are not owned
+        // by the current user.
+        for (const id of removedClients) {
+            const state = awareness.getStates().get(id) as AwarenessState;
+            if (state.user.id !== context.user.id) {
+                throw new UpdateForbidden();
+            }
         }
     },
 });

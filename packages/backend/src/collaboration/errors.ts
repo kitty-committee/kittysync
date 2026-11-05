@@ -18,3 +18,9 @@ export class DocumentIdConflict extends Error {
         super("Conflict between document ID's!");
     }
 }
+
+export class UpdateForbidden extends Error {
+    constructor() {
+        super("The update attempted to modify data the specified user does not have access to!");
+    }
+}
