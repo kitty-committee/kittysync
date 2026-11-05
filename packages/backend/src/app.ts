@@ -3,7 +3,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 
-import { YJS_SHARED_TEXT, type UserDb } from "@kittysync/common";
+import { GLOBAL_PRESENCE_DOCUMENT, YJS_SHARED_TEXT, type UserDb } from "@kittysync/common";
 import staticFastify from "@fastify/static";
 import { join } from "node:path";
 
@@ -47,6 +47,11 @@ export const hocuspocus = new Hocuspocus({
         }),
         new Database({
             fetch: async ({ documentName }) => {
+                // Global presence document has no state
+                if (documentName === GLOBAL_PRESENCE_DOCUMENT) {
+                    return null;
+                }
+
                 let docs = await getDocuments(documentName, true);
 
                 if (docs.length !== 1) {
@@ -72,6 +77,11 @@ export const hocuspocus = new Hocuspocus({
             },
 
             store: async ({ documentName, state }) => {
+                // Global presence document has no state
+                if (documentName === GLOBAL_PRESENCE_DOCUMENT) {
+                    return;
+                }
+
                 const docs = await getDocuments(documentName, true, true);
 
                 if (docs.length !== 1) {
@@ -88,16 +98,32 @@ export const hocuspocus = new Hocuspocus({
     ],
 
     async onAuthenticate({ context, documentName }) {
+        // This shouldn't  necessarily need to  be verified, since it should have been verified by
+        // the authentication hook on the endpoint to open the websocket connection
         if (context.user === undefined) {
             throw new NotAuthenticated();
         }
 
-        // If this fails, a ZodError is thrown, and exposed to hocuspocus,
-        // which does not proceed once an error is received.
-        const docId = z.uuid().parse(documentName);
-        const docs = await getDocuments(docId);
-        if (docs.length === 0) {
-            throw new DocumentNotFound();
+        // If the document name is the global presence document, this should be handled
+        // separately, since the document does not actually exist on the database
+        if (documentName !== GLOBAL_PRESENCE_DOCUMENT) {
+            // If this fails, a ZodError is thrown, and exposed to hocuspocus,
+            // which does not proceed once an error is received.
+            const docId = z.uuid().parse(documentName);
+            const docs = await getDocuments(docId);
+            if (docs.length === 0) {
+                throw new DocumentNotFound();
+            }
+        }
+    },
+
+    async beforeHandleAwareness({ context, states }) {
+        if (context.user === undefined) {
+            throw new NotAuthenticated();
+        }
+
+        for (const state of states.values()) {
+            state["user"] = context.user;
         }
     },
 });
