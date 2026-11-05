@@ -36,6 +36,7 @@
         "typescript-eslint": "^8.71.1"
     },
     "dependencies": {
-        "@fastify/websocket": "^11.3.4"
+        "@fastify/websocket": "^11.3.4",
+        "@tiptap/extension-collaboration-caret": "^3.32.2"
     }
 }
