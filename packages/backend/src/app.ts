@@ -4,18 +4,25 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 
 import type { UserDb } from "@kittysync/common";
-import { join } from "node:path";
 import staticFastify from "@fastify/static";
+import { join } from "node:path";
 
 //split the registers of auth and document to keep a consistent naming convetion
 import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { register as registerHocus } from "./collaboration/collaboration.ts";
 import { register as registerAuth } from "./auth/auth.routes.ts";
 
+import { NotAuthenticated, DocumentNotFound } from "./collaboration/errors.ts";
+import { Redis as HocusRedis } from "@hocuspocus/extension-redis";
+import { getDocuments } from "./documents/get.handler.ts";
+import { Logger } from "@hocuspocus/extension-logger";
+import { Hocuspocus } from "@hocuspocus/server";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
+import * as z from "zod";
 
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
@@ -27,6 +34,30 @@ export function createRedis() {
 
 /** The global redis client, not to be used with subscriptions */
 export const redis = createRedis();
+
+export const hocuspocus = new Hocuspocus({
+    extensions: [
+        new Logger(),
+        new HocusRedis({
+            host: configuration.redisHost,
+            port: 6379,
+        }),
+    ],
+
+    async onAuthenticate({ context, documentName }) {
+        if (context.user === undefined) {
+            throw new NotAuthenticated();
+        }
+
+        // If this fails, a ZodError is thrown, and exposed to hocuspocus,
+        // which does not proceed once an error is received.
+        const docId = z.uuid().parse(documentName);
+        const docs = await getDocuments(docId);
+        if (docs.length === 0) {
+            throw new DocumentNotFound();
+        }
+    },
+});
 
 declare module "fastify" {
     interface FastifyRequest {
@@ -61,7 +92,16 @@ export async function createApp() {
     // Register auth routes
     registerAuth(app);
     registerDocuments(app);
-    registerWebsocketRoutes(app);
+    // Deprecated from hocuspocus integration
+    // registerWebsocketRoutes(app);
+    registerHocus(app);
+
+    app.addHook("onClose", (instance, done) => {
+        hocuspocus.closeConnections();
+        hocuspocus.flushPendingStores();
+
+        done();
+    });
 
     // return the app instance
     return app;
