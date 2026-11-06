@@ -7,7 +7,7 @@
     let hocusSocket: HocuspocusProviderWebsocket;
 
     let { children }: LayoutProps = $props();
-
+    /*
     onMount(() => {
         console.log("Initialising collaboration websocket");
         hocusSocket = createWebsocket();
@@ -17,7 +17,7 @@
     onDestroy(() => {
         console.log("Destroying collaboration websocket");
         hocusSocket.destroy();
-    });
+    });*/
 </script>
 
 {@render children()}

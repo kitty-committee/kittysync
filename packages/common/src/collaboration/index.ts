@@ -12,7 +12,7 @@ export const awarenessEditorStateSchema = z.object({
 
 export const awarenessStateSchema = z.object({
     user: userDbSchema,
-    editor: awarenessEditorStateSchema,
+    editor: awarenessEditorStateSchema.optional(),
 });
 
 export type AwarenessState = z.infer<typeof awarenessStateSchema>;

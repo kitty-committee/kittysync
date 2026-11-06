@@ -33,9 +33,9 @@
     );
 
     onMount(() => {
-        const socket = getContext("collaboration-ws") as HocuspocusProviderWebsocket;
+        //const socket = getContext("collaboration-ws") as HocuspocusProviderWebsocket;
         provider = new HocuspocusProvider({
-            websocketProvider: socket,
+            url: "/api/collaboration",
             name: fileID!!,
             document: doc,
 
@@ -57,6 +57,7 @@
 
                 console.log(getProvider().configuration.websocketProvider.status);
 
+                userList = getProvider().awareness === null ? -1 : getProvider().awareness!.states.size;
                 // Probably do something with cursor positions here?
             },
         });
