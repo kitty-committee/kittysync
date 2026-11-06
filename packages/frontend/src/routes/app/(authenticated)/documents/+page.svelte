@@ -1,8 +1,12 @@
 <script lang="ts">
+    import { GLOBAL_PRESENCE_DOCUMENT } from "@kittysync/common";
+    import { HocuspocusProvider } from "@hocuspocus/provider";
     import { invalidate } from "$app/navigation";
+    import { onDestroy, onMount } from "svelte";
     import { resolve } from "$app/paths";
     let props = $props();
     let data = $derived(props.data);
+    let user = $derived(props.data.user);
     let error = $state<string | null>(null);
 
     /**
@@ -39,9 +43,37 @@
             error = "Error creating document" + String(err);
         }
     }
+
+    let userCount = $state(0);
+
+    onMount(() => {
+        const provider = new HocuspocusProvider({
+            url: "/api/collaboration",
+            name: GLOBAL_PRESENCE_DOCUMENT,
+
+            onAwarenessUpdate({ states }) {
+                userCount = provider.awareness === null ? -1 : provider.awareness.states.size;
+                console.log(provider.awareness!.states);
+                console.log(states);
+            },
+
+            onDisconnect() {
+                userCount = -1;
+            },
+        });
+
+        provider.attach();
+        provider.setAwarenessField("user", user);
+
+        onDestroy(() => {
+            provider.destroy();
+        });
+    });
 </script>
 
 <h1>Available Documents</h1>
+
+<p>Online users: {userCount === -1 ? "???" : userCount}</p>
 
 <form method="POST" onsubmit={createDocument}>
     <input type="text" name="title" placeholder="Document Title" required />

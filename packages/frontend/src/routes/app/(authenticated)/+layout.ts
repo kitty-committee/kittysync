@@ -1,3 +1,4 @@
+import { userDbSchema } from "@kittysync/common";
 import type { LayoutLoad } from "./$types";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
@@ -20,7 +21,8 @@ export const load: LayoutLoad = async ({ url }) => {
         return;
     }
 
-    return { api };
+    const user = userDbSchema.parse(await api.json());
+    return { user };
 };
 
 async function loginRedirect(url: string) {
