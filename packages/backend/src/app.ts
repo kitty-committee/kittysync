@@ -147,7 +147,7 @@ export const hocuspocus = new Hocuspocus({
             // Ensure that the current user is consistent with the current state.
             // Prevents client ID's from being hijacked.
             const currentState = awareness.getStates().get(k) as AwarenessState;
-            if (currentState.user.id !== context.user.id) {
+            if (currentState !== undefined && currentState.user.id !== context.user.id) {
                 states.delete(k);
             }
         }
@@ -156,6 +156,7 @@ export const hocuspocus = new Hocuspocus({
         // by the current user.
         for (const id of removedClients) {
             const state = awareness.getStates().get(id) as AwarenessState;
+            if (state === undefined) continue;
             if (state.user.id !== context.user.id) {
                 throw new UpdateForbidden();
             }
@@ -177,10 +178,10 @@ export async function createApp() {
         logger: true,
     });
 
-    app.register(fastifyCookie);
-    app.register(websocket);
+    await app.register(fastifyCookie);
+    await app.register(websocket);
 
-    app.register(staticFastify, {
+    await app.register(staticFastify, {
         root: join(process.cwd(), "./public"),
         index: "404.html",
     });
@@ -194,11 +195,11 @@ export async function createApp() {
     app.decorateRequest("user", null);
 
     // Register auth routes
-    registerAuth(app);
-    registerDocuments(app);
+    await app.register(registerAuth);
+    await app.register(registerDocuments);
     // Deprecated from hocuspocus integration
     // registerWebsocketRoutes(app);
-    registerHocus(app);
+    await app.register(registerHocus);
 
     app.addHook("onClose", (instance, done) => {
         hocuspocus.closeConnections();
