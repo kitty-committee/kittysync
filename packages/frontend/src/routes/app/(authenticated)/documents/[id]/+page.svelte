@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { HocuspocusProvider, HocuspocusProviderWebsocket, WebSocketStatus } from "@hocuspocus/provider";
-    import { clientboundPacketSchema, YJS_SHARED_TEXT, type AwarenessEditorState } from "@kittysync/common";
+    import { YJS_SHARED_TEXT, type AwarenessEditorState } from "@kittysync/common";
+    import { HocuspocusProvider, WebSocketStatus } from "@hocuspocus/provider";
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
-    import { getContext, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { PageProps } from "./$types";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
@@ -11,7 +11,7 @@
 
     let { data }: PageProps = $props();
     let documentSummary = $derived(data.document);
-    let user = $derived(data.user!!);
+    let user = $derived(data.user!);
 
     let documentLoaded = $state(false);
     let inEditMode = $state(false);
@@ -21,7 +21,7 @@
     let filecontent = $derived(doc.getText(YJS_SHARED_TEXT));
     let provider = $state<HocuspocusProvider | null>(null);
     // :(
-    const getProvider = () => provider!!;
+    const getProvider = () => provider!;
     let userList = $derived(provider === null || provider.awareness === null ? -1 : provider.awareness.states.size);
 
     if (!getFileID()) {
@@ -36,7 +36,7 @@
         //const socket = getContext("collaboration-ws") as HocuspocusProviderWebsocket;
         provider = new HocuspocusProvider({
             url: "/api/collaboration",
-            name: fileID!!,
+            name: fileID!,
             document: doc,
 
             onSynced() {

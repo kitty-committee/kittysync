@@ -1,6 +1,5 @@
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import { documentsTable } from "../db/schema.ts";
-import { debugPort } from "process";
 import { eq } from "drizzle-orm";
 import { db } from "../app.ts";
 import * as z from "zod/v3";

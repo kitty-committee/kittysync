@@ -1,4 +1,3 @@
-import { registerWebsocketRoutes } from "./ws/websocket.handler.ts";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
@@ -14,8 +13,8 @@ import staticFastify from "@fastify/static";
 import { join } from "node:path";
 
 //split the registers of auth and document to keep a consistent naming convetion
+import { register as registerHocus, contextSchema } from "./collaboration/collaboration.ts";
 import { register as registerDocuments } from "./documents/documents.routes.ts";
-import { register as registerHocus } from "./collaboration/collaboration.ts";
 import { register as registerAuth } from "./auth/auth.routes.ts";
 
 import { NotAuthenticated, DocumentNotFound, DocumentIdConflict, UpdateForbidden } from "./collaboration/errors.ts";
@@ -71,7 +70,7 @@ export const hocuspocus = new Hocuspocus({
                 const newDocText = newDoc.getText(YJS_SHARED_TEXT);
                 newDocText.insert(0, docs[0].content);
 
-                updateDocumentState(documentName, newDoc);
+                await updateDocumentState(documentName, newDoc);
 
                 docs = await getDocuments(documentName, true);
 
@@ -94,7 +93,7 @@ export const hocuspocus = new Hocuspocus({
                     throw new DocumentIdConflict();
                 }
 
-                const newState = Y.mergeUpdates([docs[0].yDocState!!, state]);
+                const newState = Y.mergeUpdates([docs[0].yDocState!, state]);
                 const yDoc = new Y.Doc();
                 Y.applyUpdate(yDoc, newState);
 
@@ -104,9 +103,10 @@ export const hocuspocus = new Hocuspocus({
     ],
 
     async onAuthenticate({ context, documentName }) {
+        const c = contextSchema.parse(context);
         // This shouldn't  necessarily need to  be verified, since it should have been verified by
         // the authentication hook on the endpoint to open the websocket connection
-        if (context.user === undefined) {
+        if (c.user === undefined) {
             throw new NotAuthenticated();
         }
 
@@ -123,8 +123,11 @@ export const hocuspocus = new Hocuspocus({
         }
     },
 
+    // This function must be async, but eslint complains there is no await!
+    // eslint-disable-next-line
     async beforeHandleAwareness({ context, states, awareness, removedClients }) {
-        if (context.user === undefined) {
+        const c = contextSchema.parse(context);
+        if (c.user === undefined) {
             throw new NotAuthenticated();
         }
 
@@ -136,18 +139,18 @@ export const hocuspocus = new Hocuspocus({
             let state: AwarenessState;
             try {
                 state = awarenessStateSchema.parse(states.get(k));
-            } catch (error) {
+            } catch {
                 states.delete(k);
                 continue;
             }
 
-            state.user = context.user;
+            state.user = c.user;
             states.set(k, state);
 
             // Ensure that the current user is consistent with the current state.
             // Prevents client ID's from being hijacked.
             const currentState = awareness.getStates().get(k) as AwarenessState;
-            if (currentState !== undefined && currentState.user.id !== context.user.id) {
+            if (currentState !== undefined && currentState.user.id !== c.user.id) {
                 states.delete(k);
             }
         }
@@ -157,7 +160,7 @@ export const hocuspocus = new Hocuspocus({
         for (const id of removedClients) {
             const state = awareness.getStates().get(id) as AwarenessState;
             if (state === undefined) continue;
-            if (state.user.id !== context.user.id) {
+            if (state.user.id !== c.user.id) {
                 throw new UpdateForbidden();
             }
         }
@@ -201,7 +204,7 @@ export async function createApp() {
     // registerWebsocketRoutes(app);
     await app.register(registerHocus);
 
-    app.addHook("onClose", (instance, done) => {
+    app.addHook("onClose", (_instance, done) => {
         hocuspocus.closeConnections();
         hocuspocus.flushPendingStores();
 

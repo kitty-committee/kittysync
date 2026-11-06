@@ -1,10 +1,11 @@
-import { SOCKET_ERROR_UNBOUND_CONNECTION, SOCKET_ERROR_UNSUPPORTED_MESSAGE } from "@kittysync/common";
+import { SOCKET_ERROR_UNBOUND_CONNECTION, SOCKET_ERROR_UNSUPPORTED_MESSAGE, userDbSchema } from "@kittysync/common";
 import type { Hocuspocus } from "@hocuspocus/server";
 import { configuration } from "../configuration.ts";
 import { type WebSocket } from "@fastify/websocket";
 import { authenticationHook } from "../util.ts";
 import { hocuspocus } from "../app.ts";
 import Fastify from "fastify";
+import * as z from "zod";
 
 // Grrrrrrr
 // Had to do this to get around some annoying type problems in @hocuspocus/server
@@ -15,6 +16,10 @@ type ClientConnection = ReturnType<Hocuspocus["handleConnection"]>;
 
 /** Maps sockets to client connections */
 const clientConnections: Map<WebSocket, ClientConnection> = new Map<WebSocket, ClientConnection>();
+
+export const contextSchema = z.object({
+    user: userDbSchema,
+});
 
 /**
  * Register collaboration plugin
@@ -30,7 +35,7 @@ export function register(app: Fastify.FastifyInstance) {
 
             // Convert the fastify request to a base request type accepted by Hocuspocus,
             // making sure to include vital information (URL, headers, cookies, etc...)
-            let request: Request = {
+            const request: Request = {
                 url: `http://localhost:${configuration.backendPort}/api/collaboration`,
                 headers: { ...req.headers },
                 method: req.method,
