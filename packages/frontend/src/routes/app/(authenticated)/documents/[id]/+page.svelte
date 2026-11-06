@@ -8,10 +8,12 @@
     import * as Y from "yjs";
 
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
+    import type { UserDb } from "@kittysync/common";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
     import { page } from "$app/state";
     import { onMount } from "svelte";
+    import { fetchApi } from "#lib";
 
     let connected = $state(false);
     let documentLoaded = $state(false);
@@ -59,9 +61,23 @@
             console.error("File ID is missing.");
             return;
         }
+        let username = "John Doe";
+
+        //fetch username from backend using auth token. there might be a better implementation of this i havent considered.
+        async function fetchUsername() {
+            const response = await fetchApi("auth/session?session");
+            if (!response.ok) {
+                console.error("Failed to fetch username:", response.statusText);
+                return;
+            }
+            const user: UserDb = await response.json();
+            username = user.username;
+        }
+
+        fetchUsername();
+
         const ydoc = new Y.Doc();
         //replace with actual username from auth context when frontend helper is made.
-        let username = "John Doe";
         const provider = new HocuspocusProvider({
             url: "ws://localhost:1234",
             name: fileID,
