@@ -4,8 +4,8 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 
 import type { UserDb } from "@kittysync/common";
-import { join } from "node:path";
 import staticFastify from "@fastify/static";
+import { join } from "node:path";
 
 //split the registers of auth and document to keep a consistent naming convetion
 import { register as registerDocuments } from "./documents/documents.routes.ts";
