@@ -22,6 +22,13 @@
     let editor: Editor | null = null;
     let markdownContent = $state("");
 
+    type ConnectedUser = {
+        clientId: number;
+        name: string;
+    };
+
+    let connectedUsers = $state<ConnectedUser[]>([]);
+
     const HIGHLIGHT_COLOURS = [
         "#FDE68A", // soft yellow
         "#A7F3D0", // mint green
@@ -65,13 +72,23 @@
 
         //fetch username from backend using auth token. there might be a better implementation of this i havent considered.
         async function fetchUsername() {
-            const response = await fetchApi("auth/session?session");
-            if (!response.ok) {
-                console.error("Failed to fetch username:", response.statusText);
+            try {
+                const response = await fetchApi("auth/session?session");
+                if (!response.ok) {
+                    console.error("Failed to fetch username:", response.statusText);
+                    return;
+                }
+
+                const user: UserDb = await response.json();
+                username = user.username;
+                editor?.commands.updateUser({
+                    name: username,
+                    color: getrandomhighlightcolour(username),
+                });
+            } catch (error) {
+                console.error("Error fetching username:", error);
                 return;
             }
-            const user: UserDb = await response.json();
-            username = user.username;
         }
 
         fetchUsername();
@@ -116,9 +133,32 @@
             },
         });
 
+        const updateConnectedUsers = () => {
+            if (provider.awareness == null) {
+                console.error("Provider awareness is not available.");
+                return;
+            }
+            const users: ConnectedUser[] = [];
+            for (const [clientId, state] of provider.awareness.getStates()) {
+                const user = state["user"];
+
+                if (typeof user !== "object" || user === null || !("name" in user) || typeof user.name !== "string") {
+                    continue;
+                }
+
+                users.push({ clientId, name: user.name });
+            }
+
+            connectedUsers = users;
+        };
+
+        provider.on("awarenessChange", updateConnectedUsers);
+        updateConnectedUsers();
+
         return () => {
             editor?.destroy();
             editor = null;
+            provider.off("awarenessChange", updateConnectedUsers);
             provider.destroy();
             ydoc.destroy();
             connected = false;
@@ -151,6 +191,14 @@
             <span class="text-red-500">Disconnected</span>
         {/if}
     </div>
+    <div>
+        <span>{connectedUsers.length} connected user{connectedUsers.length === 1 ? "" : "s"}</span>
+        <ul>
+            {#each connectedUsers as user (user.clientId)}
+                <li>{user.name}</li>
+            {/each}
+        </ul>
+    </div>
 </nav>
 
 <!-- button to toggle edit mode. text area contains file content, which can be edited. -->
@@ -180,7 +228,13 @@
 
     /* Give a remote user a caret */
     :global(.collaboration-carets__caret) {
+        border-left: 1px solid #0d0d0d;
+        border-right: 1px solid #0d0d0d;
+        margin-left: -1px;
+        margin-right: -1px;
+        pointer-events: none;
         position: relative;
+        word-break: normal;
     }
 
     /* Render the username above the caret */
