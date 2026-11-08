@@ -8,7 +8,7 @@ import type { UserDb } from "@kittysync/common";
  */
 export async function mockSession(
     port: string | number,
-    user: UserDb = { name: "mock-user", id: crypto.randomUUID() },
+    user: UserDb = { name: "mock-user", id: crypto.randomUUID(), color: "#000000" },
 ) {
     const password = "hello-world";
 
