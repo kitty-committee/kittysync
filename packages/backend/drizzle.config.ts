@@ -1,4 +1,4 @@
-import { configuration } from "./src/configuration";
+import { configuration } from "@kittysync/common";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
