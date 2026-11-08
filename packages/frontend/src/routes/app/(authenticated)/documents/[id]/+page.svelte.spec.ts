@@ -8,6 +8,7 @@ type ProviderOptions = {
     name: string;
     document: unknown;
     onStatus: (event: { status: string }) => void;
+    onAuthenticationFailed: (event: { reason: string }) => void;
     onSynced: () => void;
 };
 
@@ -182,6 +183,24 @@ describe("document page", () => {
         await expect.element(changeViewButton).toBeEnabled();
         expect(mocks.editors).toHaveLength(1);
         expect(getEditor().editable).toBe(false);
+    });
+
+    it("shows a specific alert when authentication fails because the document was not found", async () => {
+        const provider = renderDocumentPage();
+
+        provider.options.onAuthenticationFailed({ reason: "document-not-found" });
+
+        await expect.element(page.getByRole("alert")).toHaveTextContent("This document could not be found.");
+    });
+
+    it("shows a generic safe alert for other authentication failures", async () => {
+        const provider = renderDocumentPage();
+
+        provider.options.onAuthenticationFailed({ reason: "permission-denied" });
+
+        await expect
+            .element(page.getByRole("alert"))
+            .toHaveTextContent("Unable to connect or authenticate. Please try again.");
     });
 
     it("displays users from provider awareness updates", async () => {

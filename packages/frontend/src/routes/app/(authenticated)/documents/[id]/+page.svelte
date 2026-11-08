@@ -15,6 +15,7 @@
     let connected = $state(false);
     let documentLoaded = $state(false);
     let inEditMode = $state(false);
+    let authenticationError = $state("");
     let editorElement = $state<HTMLDivElement | undefined>(undefined);
     let editor: Editor | null = null;
     let markdownContent = $state("");
@@ -28,6 +29,13 @@
 
     let connectedUsers = $state<ConnectedUser[]>([]);
 
+    function attachEditorElement(element: HTMLDivElement) {
+        editorElement = element;
+        return () => {
+            editorElement = undefined;
+        };
+    }
+
     onMount(() => {
         const ydoc = new Y.Doc();
         //replace with actual username from auth context when frontend helper is made.
@@ -37,6 +45,12 @@
             document: ydoc,
             onStatus: ({ status }) => {
                 connected = status === "connected";
+            },
+            onAuthenticationFailed: ({ reason }) => {
+                authenticationError =
+                    reason === "document-not-found"
+                        ? "This document could not be found."
+                        : "Unable to connect or authenticate. Please try again.";
             },
             onSynced: () => {
                 if (editor) return;
@@ -130,6 +144,10 @@
     </div>
 </nav>
 
+{#if authenticationError}
+    <p role="alert">{authenticationError}</p>
+{/if}
+
 <!-- button to toggle edit mode. text area contains file content, which can be edited. -->
 <button
     onclick={() => {
@@ -139,7 +157,7 @@
     disabled={!connected || !documentLoaded}>Change View</button>
 
 <div style:display={inEditMode ? "block" : "none"}>
-    <div bind:this={editorElement} aria-hidden={!inEditMode} class="editorelement"></div>
+    <div {@attach attachEditorElement} aria-hidden={!inEditMode} class="editorelement"></div>
 </div>
 
 {#if !inEditMode}

@@ -8,6 +8,8 @@ export class NotAuthenticated extends Error {
 }
 
 export class DocumentNotFound extends Error {
+    readonly reason = "document-not-found";
+
     constructor() {
         super("The specified document does not exist!");
     }
