@@ -1,9 +1,10 @@
-import { pgTable, uuid, varchar, text } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, bytea, char } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: uuid().primaryKey().notNull().defaultRandom(),
-    username: varchar({ length: 255 }).notNull().unique(),
+    name: varchar({ length: 255 }).notNull().unique(),
     password: varchar({ length: 60 }).notNull(),
+    color: char({ length: 7 }).notNull(),
 });
 
 /**
@@ -21,6 +22,7 @@ export const documentsTable = pgTable("documents", {
     authorId: uuid()
         .notNull()
         .references(() => usersTable.id, { onDelete: "cascade" }),
+    yDocState: bytea(),
 });
 
 export type InsertUser = typeof usersTable.$inferInsert;

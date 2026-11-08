@@ -120,7 +120,7 @@ test("Get / Validate session data", async () => {
 
     expect(response.status).toBe(200);
     const body: UserDb = (await response.json()) as UserDb;
-    expect(body.username).toBe("mock-user");
+    expect(body.name).toBe("mock-user");
 });
 
 test("Search user data", async () => {

@@ -25,13 +25,7 @@
         "vite": "^8.3.0",
         "vitest": "^4.1.8",
         "vitest-browser-svelte": "^2.1.1",
-        "zod": "^4.6.7"
-    },
-    "imports": {
-        "#lib": "./src/lib/index.js",
-        "#lib/*": "./src/lib/*"
-    },
-    "dependencies": {
+        "zod": "^4.6.7",
         "@hocuspocus/provider": "^4.8.0",
         "@tiptap/core": "^3.32.2",
         "@tiptap/extension-collaboration": "^3.32.2",
@@ -39,5 +33,9 @@
         "@tiptap/pm": "^3.32.2",
         "@tiptap/starter-kit": "^3.32.2",
         "yjs": "^13.6.33"
+    },
+    "imports": {
+        "#lib": "./src/lib/index.js",
+        "#lib/*": "./src/lib/*"
     }
 }

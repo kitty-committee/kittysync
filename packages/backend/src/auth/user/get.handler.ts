@@ -22,9 +22,9 @@ export async function getUserHandler(request: FastifyRequest, reply: FastifyRepl
     }
 
     const result = await db
-        .select({ id: usersTable.id, username: usersTable.username })
+        .select({ id: usersTable.id, username: usersTable.name })
         .from(usersTable)
-        .where(like(usersTable.username, query.username));
+        .where(like(usersTable.name, query.username));
 
     const parsedResults: UserDb[] = [];
 

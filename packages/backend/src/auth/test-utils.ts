@@ -8,7 +8,7 @@ import type { UserDb } from "@kittysync/common";
  */
 export async function mockSession(
     port: string | number,
-    user: UserDb = { username: "mock-user", id: crypto.randomUUID() },
+    user: UserDb = { name: "mock-user", id: crypto.randomUUID() },
 ) {
     const password = "hello-world";
 
@@ -16,7 +16,7 @@ export async function mockSession(
     const newUserResponse = await fetch(`http:localhost:${port}/api/auth/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: user.username, password: password }),
+        body: JSON.stringify({ username: user.name, password: password }),
     });
 
     if (newUserResponse.status === 500) {
@@ -30,7 +30,7 @@ export async function mockSession(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            username: user.username,
+            username: user.name,
             password: password,
         }),
     });

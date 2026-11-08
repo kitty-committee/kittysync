@@ -1,6 +1,6 @@
 import { createSigner, createVerifier } from "fast-jwt";
 import { configuration } from "../../configuration.ts";
-import type { UserDb } from "@kittysync/common";
+import { userDbSchema, type UserDb } from "@kittysync/common";
 import { redis } from "../../app.ts";
 
 /**
@@ -48,10 +48,7 @@ export class UuidTokenProvider implements TokenProvider {
             configuration.tokenLifetime,
             "FIELDS",
             2,
-            "id",
-            user.id,
-            "username",
-            user.username,
+            ...Object.entries(user).flatMap(([k, v]) => [k, v.toString()]),
         );
         return token;
     }
@@ -76,8 +73,8 @@ export class UuidTokenProvider implements TokenProvider {
         if (!(await this.verify(token))) return null;
         else {
             const r = await redis.hgetall(`user_${token}`);
-            if (r["username"] === undefined || r["id"] === undefined) return null;
-            else return { id: r["id"], username: r["username"] };
+            const parse = userDbSchema.safeParse(r);
+            return parse.success ? parse.data : null;
         }
     }
 }
@@ -109,10 +106,8 @@ export class JwtTokenProvider implements TokenProvider {
     decode(token: string): Promise<UserDb | null> {
         try {
             const decoded = this.verifier(token) as UserDb;
-            return Promise.resolve({
-                username: decoded.username,
-                id: decoded.id,
-            });
+            const parse = userDbSchema.safeParse(decoded);
+            return parse.success ? Promise.resolve(parse.data) : Promise.resolve(null);
         } catch {
             return Promise.resolve(null);
         }
