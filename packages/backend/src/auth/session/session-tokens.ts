@@ -1,5 +1,5 @@
 import { createSigner, createVerifier } from "fast-jwt";
-import { configuration } from "../../configuration.ts";
+import { configuration } from "@kittysync/common";
 import type { UserDb } from "@kittysync/common";
 import { redis } from "../../app.ts";
 

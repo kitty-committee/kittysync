@@ -250,7 +250,7 @@ importers:
         version: 6.0.0
       dotenv:
         specifier: ^18.0.7
-        version: 18.0.7
+        version: 18.0.9
       drizzle-orm:
         specifier: ^1.0.0-rc.4
         version: 1.0.0-rc.5-ab785fc(@types/pg@8.23.1)(pg@8.23.1)(zod@4.6.7)
@@ -260,9 +260,6 @@ importers:
       fastify:
         specifier: ^5.12.5
         version: 5.12.7
-      find-config:
-        specifier: ^1.0.0
-        version: 1.0.0
       ioredis:
         specifier: ^6.0.0
         version: 6.0.0
@@ -309,6 +306,15 @@ importers:
 
   packages/common:
     dependencies:
+      '@types/find-config':
+        specifier: ^1.0.4
+        version: 1.0.4
+      dotenv:
+        specifier: ^18.0.9
+        version: 18.0.9
+      find-config:
+        specifier: ^1.0.0
+        version: 1.0.0
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1468,8 +1474,8 @@ packages:
     resolution: {integrity: sha512-qI4JLRKnSzqFqr7hAlS5xQDusBCjKSEG4t4+7aNrIQMHBcsC2TGEhuyABJdYkgSewL57PNLYEiibY2iPKhKpaA==}
     engines: {node: '>=20.19.0'}
 
-  dotenv@18.0.7:
-    resolution: {integrity: sha512-QEvMEF8ca3GNZJJnAbOgxpj5ULhBvnMcURp+XKrtvqFNPgjBvYoswQ0Jl2cO7JzCjxZjJhr9ZuIEhlrRxMft/Q==}
+  dotenv@18.0.9:
+    resolution: {integrity: sha512-3fVOW4cB02R066PUSwn8O4TJyz9NckQl7F81blIbaq9jKBm2tSmOKky7ZHIXzGvkVPXCSn6jkpziBPZdGFs8Tw==}
     engines: {node: '>=12'}
     hasBin: true
 
@@ -3866,7 +3872,7 @@ snapshots:
       domelementtype: 3.0.0
       domhandler: 6.0.1
 
-  dotenv@18.0.7: {}
+  dotenv@18.0.9: {}
 
   drizzle-kit@1.0.0-rc.5-ab785fc:
     dependencies:

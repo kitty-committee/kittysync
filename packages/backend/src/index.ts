@@ -1,4 +1,4 @@
-import { configuration } from "./configuration.ts";
+import { configuration } from "@kittysync/common";
 import { createApp } from "./app.ts";
 
 async function start() {

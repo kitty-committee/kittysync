@@ -1,6 +1,6 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { configuration } from "./configuration.ts";
+import { configuration } from "@kittysync/common";
 
 import {
     awarenessStateSchema,
@@ -66,6 +66,9 @@ export const hocuspocus = new Hocuspocus({
                 const state = docs[0].yDocState;
                 if (state !== null) return state;
 
+                // Re-select the document, locing it for update
+                docs = await getDocuments(documentName, true, true);
+
                 const newDoc = new Y.Doc();
                 const newDocText = newDoc.getText(YJS_SHARED_TEXT);
                 newDocText.insert(0, docs[0].content);
@@ -124,7 +127,7 @@ export const hocuspocus = new Hocuspocus({
     },
 
     // This function must be async, but eslint complains there is no await!
-    // eslint-disable-next-line
+    // eslint-disable-next-line @typescript-eslint/require-await
     async beforeHandleAwareness({ context, states, awareness, removedClients }) {
         const c = contextSchema.parse(context);
         if (c.user === undefined) {
