@@ -3,121 +3,224 @@ import { render } from "vitest-browser-svelte";
 import DocumentPage from "./+page.svelte";
 import { page } from "vitest/browser";
 
-const route = vi.hoisted(() => ({ params: { id: "notes.md" } }));
+type ProviderOptions = {
+    url: string;
+    name: string;
+    document: unknown;
+    onStatus: (event: { status: string }) => void;
+    onSynced: () => void;
+};
 
-vi.mock("$app/state", () => ({ page: route }));
+type Awareness = {
+    states: Map<number, unknown>;
+    getStates: () => Map<number, unknown>;
+};
 
-class MockWebSocket extends EventTarget {
-    static instances: MockWebSocket[] = [];
+type ProviderHarness = {
+    options: ProviderOptions;
+    awareness: Awareness | null;
+    listeners: Map<string, Set<() => void>>;
+    on: (event: string, handler: () => void) => void;
+    off: (event: string, handler: () => void) => void;
+    emit: (event: string) => void;
+    destroy: ReturnType<typeof vi.fn>;
+};
 
-    readyState = 0;
-    onopen: ((event: Event) => void) | null = null;
-    onmessage: ((event: MessageEvent) => void) | null = null;
-    onclose: ((event: Event) => void) | null = null;
-    sent: string[] = [];
+type EditorHarness = {
+    options: {
+        element: HTMLElement;
+        editable: boolean;
+    };
+    editable: boolean;
+    setEditable: (editable: boolean) => void;
+    getMarkdown: () => string;
+    destroy: ReturnType<typeof vi.fn>;
+};
 
-    constructor(public url: string) {
-        super();
-        MockWebSocket.instances.push(this);
+const mocks = vi.hoisted(() => ({
+    providers: [] as ProviderHarness[],
+    editors: [] as EditorHarness[],
+    goto: vi.fn(),
+    resolve: vi.fn((path: string) => path),
+}));
+
+vi.mock("@hocuspocus/provider", () => ({
+    HocuspocusProvider: class {
+        options: ProviderOptions;
+        awareness: Awareness | null = {
+            states: new Map(),
+            getStates() {
+                return this.states;
+            },
+        };
+        listeners = new Map<string, Set<() => void>>();
+        destroy = vi.fn();
+
+        constructor(options: ProviderOptions) {
+            this.options = options;
+            mocks.providers.push(this);
+        }
+
+        on(event: string, handler: () => void) {
+            const handlers = this.listeners.get(event) ?? new Set();
+            handlers.add(handler);
+            this.listeners.set(event, handlers);
+        }
+
+        off(event: string, handler: () => void) {
+            this.listeners.get(event)?.delete(handler);
+        }
+
+        emit(event: string) {
+            this.listeners.get(event)?.forEach((handler) => handler());
+        }
+    },
+}));
+
+vi.mock("@tiptap/core", () => ({
+    Editor: class {
+        options: EditorHarness["options"];
+        editable: boolean;
+        destroy = vi.fn();
+
+        constructor(options: EditorHarness["options"]) {
+            this.options = options;
+            this.editable = options.editable;
+            mocks.editors.push(this);
+        }
+
+        setEditable(editable: boolean) {
+            this.editable = editable;
+        }
+
+        getMarkdown() {
+            return "";
+        }
+    },
+}));
+
+vi.mock("@tiptap/extension-collaboration", () => ({
+    Collaboration: { configure: vi.fn(() => ({})) },
+}));
+
+vi.mock("@tiptap/extension-collaboration-caret", () => ({
+    CollaborationCaret: { configure: vi.fn(() => ({})) },
+}));
+
+vi.mock("@tiptap/starter-kit", () => ({
+    default: { configure: vi.fn(() => ({})) },
+}));
+
+vi.mock("@tiptap/markdown", () => ({
+    Markdown: {},
+}));
+
+vi.mock("$app/navigation", () => ({
+    goto: mocks.goto,
+}));
+
+vi.mock("$app/paths", () => ({
+    resolve: mocks.resolve,
+}));
+
+const documentData = {
+    documentId: "notes.md",
+    user: {
+        id: "00000000-0000-4000-8000-000000000001",
+        name: "test-user",
+        color: "#123456",
+    },
+};
+
+function renderDocumentPage() {
+    render(DocumentPage, { data: documentData });
+
+    const provider = mocks.providers[0];
+    if (!provider) {
+        throw new Error("The document page did not create a Hocuspocus provider.");
     }
 
-    send(data: string) {
-        this.sent.push(data);
+    return provider;
+}
+
+function getEditor() {
+    const editor = mocks.editors[0];
+    if (!editor) {
+        throw new Error("The document page did not create a Tiptap editor.");
     }
 
-    close() {
-        this.readyState = 3;
-        this.dispatchEvent(new Event("close"));
-    }
-
-    open() {
-        this.readyState = 1;
-        this.dispatchEvent(new Event("open"));
-    }
-
-    receive(packet: unknown) {
-        this.dispatchEvent(new MessageEvent("message", { data: JSON.stringify(packet) }));
-    }
-
-    override dispatchEvent(event: Event) {
-        const dispatched = super.dispatchEvent(event);
-
-        if (event.type === "open") this.onopen?.(event);
-        if (event.type === "close") this.onclose?.(event);
-        if (event.type === "message") this.onmessage?.(event as MessageEvent);
-
-        return dispatched;
-    }
+    return editor;
 }
 
 describe("document page", () => {
     beforeEach(() => {
-        route.params.id = "notes.md";
-        MockWebSocket.instances = [];
-        vi.stubGlobal("WebSocket", MockWebSocket);
+        mocks.providers = [];
+        mocks.editors = [];
+        mocks.goto.mockClear();
+        mocks.resolve.mockClear();
     });
 
     afterEach(() => {
-        vi.unstubAllGlobals();
+        vi.clearAllMocks();
     });
 
-    it("connects for the route document and displays the connection state", async () => {
-        render(DocumentPage);
-        const socket = MockWebSocket.instances[0];
-        expect(socket).toBeDefined();
-        expect(socket?.url).toBe("/api/document/notes.md/websocket");
+    it("enables editing only after the collaboration provider connects and syncs", async () => {
+        const provider = renderDocumentPage();
+        const changeViewButton = page.getByRole("button", { name: "Change View" });
+
+        expect(provider.options.url).toBe("/api/collaboration");
+        expect(provider.options.name).toBe("notes.md");
         await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
-        await expect.element(page.getByText("Users: 0")).toBeInTheDocument();
-        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
+        await expect.element(page.getByText("0 connected users")).toBeInTheDocument();
+        await expect.element(changeViewButton).toBeDisabled();
 
-        socket?.open();
+        provider.options.onStatus({ status: "connected" });
+        await expect.element(page.getByText("Connected", { exact: true })).toBeInTheDocument();
+        await expect.element(changeViewButton).toBeDisabled();
 
-        await expect.element(page.getByText("Connected")).toBeInTheDocument();
-        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
-
-        socket?.receive({ type: "updateFile", data: { file: "Initial document" } });
-        await expect.element(page.getByRole("button", { name: "Change View" })).toBeEnabled();
-
-        socket?.close();
-
-        await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
-        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
+        provider.options.onSynced();
+        await expect.element(changeViewButton).toBeEnabled();
+        expect(mocks.editors).toHaveLength(1);
+        expect(getEditor().editable).toBe(false);
     });
 
-    it("renders incoming document and user updates", async () => {
-        render(DocumentPage);
+    it("displays users from provider awareness updates", async () => {
+        const provider = renderDocumentPage();
 
-        const socket = MockWebSocket.instances[0];
-        socket?.open();
-        socket?.receive({ type: "updateFile", data: { file: "# Shared notes\n\nLatest update" } });
-        socket?.receive({ type: "updateUsers", data: { userList: ["alice", "bob"] } });
+        provider.awareness?.states.set(101, {
+            user: { ...documentData.user, name: "alice" },
+        });
+        provider.awareness?.states.set(102, {
+            user: { ...documentData.user, name: "bobby" },
+        });
+        provider.emit("awarenessChange");
 
-        await expect.element(page.getByRole("heading", { level: 1, name: "Shared notes" })).toBeInTheDocument();
-        await expect.element(page.getByText("Latest update")).toBeInTheDocument();
-        await expect.element(page.getByText("Users: 2")).toBeInTheDocument();
+        await expect.element(page.getByText("2 connected users")).toBeInTheDocument();
+        await expect.element(page.getByRole("listitem").nth(0)).toHaveTextContent("alice");
+        await expect.element(page.getByRole("listitem").nth(1)).toHaveTextContent("bobby");
     });
 
-    it("does not save edits until the Save button is clicked", async () => {
-        render(DocumentPage);
+    it("toggles the synced editor between view and edit mode", async () => {
+        const provider = renderDocumentPage();
+        provider.options.onStatus({ status: "connected" });
+        provider.options.onSynced();
 
-        const socket = MockWebSocket.instances[0];
-        socket?.open();
-        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
-        socket?.receive({ type: "updateFile", data: { file: "Original document" } });
+        const changeViewButton = page.getByRole("button", { name: "Change View" });
+        const editor = getEditor();
 
-        await page.getByRole("button", { name: "Change View" }).click();
-        const editor = page.getByRole("textbox");
-        await expect.element(editor).toHaveValue("Original document");
-        await editor.fill("Saved from the button");
+        await changeViewButton.click();
+        expect(editor.editable).toBe(true);
 
-        expect(socket?.sent).not.toContain(
-            JSON.stringify({ type: "saveFile", data: { file: "Saved from the button" } }),
-        );
+        await changeViewButton.click();
+        expect(editor.editable).toBe(false);
+    });
 
-        await page.getByRole("button", { name: "Save" }).click();
+    it("navigates back to the documents list", async () => {
+        renderDocumentPage();
 
-        await expect
-            .poll(() => socket?.sent)
-            .toContain(JSON.stringify({ type: "saveFile", data: { file: "Saved from the button" } }));
+        await page.getByRole("button", { name: "Back" }).click();
+
+        expect(mocks.resolve).toHaveBeenCalledWith("/app/(authenticated)/documents");
+        expect(mocks.goto).toHaveBeenCalledWith("/app/(authenticated)/documents");
     });
 });
