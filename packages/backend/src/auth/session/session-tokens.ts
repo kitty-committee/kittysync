@@ -1,6 +1,6 @@
+import { userDbSchema, type UserDb } from "@kittysync/common";
 import { createSigner, createVerifier } from "fast-jwt";
 import { configuration } from "../../configuration.ts";
-import { userDbSchema, type UserDb } from "@kittysync/common";
 import { redis } from "../../app.ts";
 
 /**

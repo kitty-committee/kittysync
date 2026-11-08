@@ -1,8 +1,8 @@
 import { userDbSchema } from "@kittysync/common";
 import type { LayoutLoad } from "./$types";
 import { goto } from "$app/navigation";
-import { resolve } from "$app/paths";
 import { error } from "@sveltejs/kit";
+import { resolve } from "$app/paths";
 import { fetchApi } from "#lib";
 
 // replace with code for redirecting to the login page if the user is not authenticated
