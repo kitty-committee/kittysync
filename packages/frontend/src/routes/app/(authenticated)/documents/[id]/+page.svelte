@@ -176,19 +176,18 @@
 </script>
 
 <!-- navigation bar -->
-<nav class="flex items-center justify-between p-4 bg-gray-800 text-white">
+<nav>
     <button
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         onclick={() => {
             goto(resolve("/app/(authenticated)/documents"));
         }}>Back</button>
 
-    <h1 class="text-xl font-bold">Document Editor</h1>
+    <h1>Document Editor</h1>
     <div>
         {#if connected}
-            <span class="text-green-500">Connected</span>
+            <span>Connected</span>
         {:else}
-            <span class="text-red-500">Disconnected</span>
+            <span>Disconnected</span>
         {/if}
     </div>
     <div>
@@ -203,13 +202,12 @@
 
 <!-- button to toggle edit mode. text area contains file content, which can be edited. -->
 <button
-    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     onclick={() => {
         inEditMode = !inEditMode;
         editor?.setEditable(inEditMode);
     }}
     disabled={!connected || !documentLoaded}>Change View</button>
-<div style:display={inEditMode ? "block" : "none"} class="rounded border border-blue-400 bg-blue-50 p-2">
+<div style:display={inEditMode ? "block" : "none"}>
     <div bind:this={editorElement} aria-hidden={!inEditMode} class="editorelement"></div>
 </div>
 
