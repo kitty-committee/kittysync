@@ -8,12 +8,10 @@
     import * as Y from "yjs";
 
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
-    import type { UserDb } from "@kittysync/common";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
     import { page } from "$app/state";
     import { onMount } from "svelte";
-    import { fetchApi } from "#lib";
 
     let connected = $state(false);
     let documentLoaded = $state(false);
@@ -26,6 +24,8 @@
         clientId: number;
         name: string;
     };
+
+    let { data } = $props();
 
     let connectedUsers = $state<ConnectedUser[]>([]);
 
@@ -68,30 +68,6 @@
             console.error("File ID is missing.");
             return;
         }
-        let username = "John Doe";
-
-        //fetch username from backend using auth token. there might be a better implementation of this i havent considered.
-        async function fetchUsername() {
-            try {
-                const response = await fetchApi("auth/session?session");
-                if (!response.ok) {
-                    console.error("Failed to fetch username:", response.statusText);
-                    return;
-                }
-
-                const user: UserDb = await response.json();
-                username = user.username;
-                editor?.commands.updateUser({
-                    name: username,
-                    color: getrandomhighlightcolour(username),
-                });
-            } catch (error) {
-                console.error("Error fetching username:", error);
-                return;
-            }
-        }
-
-        fetchUsername();
 
         const ydoc = new Y.Doc();
         //replace with actual username from auth context when frontend helper is made.
@@ -117,8 +93,8 @@
                         CollaborationCaret.configure({
                             provider,
                             user: {
-                                name: username,
-                                color: getrandomhighlightcolour(username),
+                                name: data.user.username,
+                                color: getrandomhighlightcolour(data.user.username),
                             },
                         }),
                     ],
@@ -207,6 +183,7 @@
         editor?.setEditable(inEditMode);
     }}
     disabled={!connected || !documentLoaded}>Change View</button>
+
 <div style:display={inEditMode ? "block" : "none"}>
     <div bind:this={editorElement} aria-hidden={!inEditMode} class="editorelement"></div>
 </div>

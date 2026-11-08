@@ -2,13 +2,15 @@ import type { LayoutLoad } from "./$types";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { fetchApi } from "#lib";
+import { userDbSchema } from "@kittysync/common";
+import { error } from "@sveltejs/kit";
 
 // replace with code for redirecting to the login page if the user is not authenticated
 export const load: LayoutLoad = async ({ url }) => {
     // If statement to redirect loggedout users
     if (window.cookieStore?.get && (await window.cookieStore.get("session")) === null) {
         await loginRedirect(url.pathname);
-        return;
+        error(401, "User not authenticated");
     }
 
     // userData defined
@@ -17,10 +19,12 @@ export const load: LayoutLoad = async ({ url }) => {
     // If statement to redirect loggedout users
     if (!api.ok) {
         await loginRedirect(url.pathname);
-        return;
+        error(401, "User not authenticated");
     }
 
-    return { api };
+    const user = userDbSchema.parse(await api.json());
+
+    return { user };
 };
 
 async function loginRedirect(url: string) {
