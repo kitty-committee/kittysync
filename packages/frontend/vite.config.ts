@@ -1,5 +1,4 @@
 import { playwright } from "@vitest/browser-playwright";
-import { configuration } from "@kittysync/common";
 import adapter from "@sveltejs/adapter-static";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vitest/config";
@@ -11,7 +10,7 @@ export default defineConfig({
         port: 5173,
         proxy: {
             "/api": {
-                target: `http://127.0.0.1:${configuration.backendPort}`,
+                target: `http://127.0.0.1:3000`,
                 changeOrigin: true,
                 ws: true,
             },

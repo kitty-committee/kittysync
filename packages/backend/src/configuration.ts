@@ -43,6 +43,4 @@ export const configuration = {
         host: env.KITTYSYNC_DB_HOST,
         user: env.KITTYSYNC_DB_USER,
     },
-    /// The port on which the backend server is to listen
-    backendPort: env.KITTYSYNC_BACKEND_PORT,
 };

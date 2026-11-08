@@ -1,7 +1,7 @@
 import { userCredentialsSchema, type UserCredentials } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
+import { configuration } from "../../configuration.ts";
 import { TOKEN_PROVIDER } from "./session-tokens.ts";
-import { configuration } from "@kittysync/common";
 import { usersTable } from "../../db/schema.ts";
 import { db } from "../../app.ts";
 import { eq } from "drizzle-orm";

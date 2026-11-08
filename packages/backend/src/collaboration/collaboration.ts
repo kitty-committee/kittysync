@@ -38,6 +38,7 @@ export function register(app: Fastify.FastifyInstance) {
                 if (typeof value === "string") headers.set(name, value);
                 else if (Array.isArray(value)) headers.set(name, value.join(", "));
             }
+
             const request = new Request(new URL(req.url, `http://${req.headers.host ?? "localhost"}`), {
                 method: req.method,
                 headers,

@@ -1,4 +1,4 @@
-import { configuration } from "@kittysync/common";
+import { configuration } from "./src/configuration";
 import { Client } from "pg";
 
 export async function setup() {

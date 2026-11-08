@@ -1,7 +1,3 @@
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { configuration } from "@kittysync/common";
-
 import {
     awarenessStateSchema,
     GLOBAL_PRESENCE_DOCUMENT,
@@ -9,23 +5,23 @@ import {
     type AwarenessState,
     type UserDb,
 } from "@kittysync/common";
-import staticFastify from "@fastify/static";
-import { join } from "node:path";
-
-//split the registers of auth and document to keep a consistent naming convetion
+import { NotAuthenticated, DocumentNotFound, DocumentIdConflict, UpdateForbidden } from "./collaboration/errors.ts";
 import { register as registerHocus, contextSchema } from "./collaboration/collaboration.ts";
 import { register as registerDocuments } from "./documents/documents.routes.ts";
-import { register as registerAuth } from "./auth/auth.routes.ts";
-
-import { NotAuthenticated, DocumentNotFound, DocumentIdConflict, UpdateForbidden } from "./collaboration/errors.ts";
 import { Redis as HocusRedis } from "@hocuspocus/extension-redis";
+import { register as registerAuth } from "./auth/auth.routes.ts";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Database } from "@hocuspocus/extension-database";
 import { getDocuments } from "./documents/get.handler.ts";
 import { Logger } from "@hocuspocus/extension-logger";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { configuration } from "./configuration.ts";
 import { Hocuspocus } from "@hocuspocus/server";
 import { updateDocumentState } from "./util.ts";
+import staticFastify from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
+import { join } from "node:path";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
