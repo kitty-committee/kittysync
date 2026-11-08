@@ -16,7 +16,7 @@ export async function mockSession(
     const newUserResponse = await fetch(`http:localhost:${port}/api/auth/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: user.name, password: password }),
+        body: JSON.stringify({ name: user.name, password: password }),
     });
 
     if (newUserResponse.status === 500) {
@@ -30,7 +30,7 @@ export async function mockSession(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            username: user.name,
+            name: user.name,
             password: password,
         }),
     });

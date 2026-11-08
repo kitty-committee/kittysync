@@ -26,7 +26,7 @@ test("Create user", async () => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            username: `test-user_${new Date().getTime()}`,
+            name: `test-user_${new Date().getTime()}`,
             password: "hello-world",
         }),
     });
@@ -46,7 +46,7 @@ test("Create user - Bad request", async () => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            username: "t",
+            name: "t",
             password: "hello-world",
         }),
     });
@@ -77,7 +77,7 @@ test("Create new session - Bad request", async () => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            username: "t",
+            name: "t",
             password: "hello-world",
         }),
     });
@@ -97,7 +97,7 @@ test("Create new session - Invalid credentials", async () => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            username: "test-user",
+            name: "test-user",
             password: "hello",
         }),
     });
