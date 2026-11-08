@@ -167,6 +167,10 @@
         word-break: normal;
     }
 
+    :global(.editorelement > .ProseMirror) {
+        min-height: 300px;
+    }
+
     /* Render the username above the caret */
     :global(.collaboration-carets__label) {
         border-radius: 3px 3px 3px 0;
