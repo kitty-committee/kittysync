@@ -13,6 +13,7 @@
         "frontend": "pnpm --filter frontend",
         "backend": "pnpm --filter backend",
         "common": "pnpm --filter common",
+        "chaos": "pnpm --filter @kittysync/chaos",
         "stack": "docker compose -f compose.dev.yml"
     },
     "workspaces": [
