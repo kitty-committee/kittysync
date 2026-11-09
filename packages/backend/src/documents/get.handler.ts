@@ -14,12 +14,7 @@ export async function getDocuments(
     id: string,
 ): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title" | "content" | "authorId">[]>;
 export async function getDocuments(id: string, binary: boolean): Promise<(typeof documentsTable.$inferSelect)[]>;
-export async function getDocuments(
-    id: string,
-    binary: boolean,
-    lock: boolean,
-): Promise<(typeof documentsTable.$inferSelect)[]>;
-export async function getDocuments(id?: string, binary?: boolean, lock?: boolean) {
+export async function getDocuments(id?: string, binary?: boolean) {
     if (id !== undefined) {
         try {
             let columns;
@@ -40,13 +35,7 @@ export async function getDocuments(id?: string, binary?: boolean, lock?: boolean
                 };
             }
 
-            let result;
-            if (lock === true) {
-                result = await db.select(columns).from(documentsTable).where(eq(documentsTable.id, id)).for("update");
-            } else {
-                result = await db.select(columns).from(documentsTable).where(eq(documentsTable.id, id));
-            }
-            return result;
+            return await db.select(columns).from(documentsTable).where(eq(documentsTable.id, id));
         } catch (error) {
             console.error("Error fetching document by ID:", error);
             throw error;

@@ -17,10 +17,12 @@ import { Logger } from "@hocuspocus/extension-logger";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 import { Hocuspocus } from "@hocuspocus/server";
+import { documentsTable } from "./db/schema.ts";
 import { updateDocumentState } from "./util.ts";
 import staticFastify from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
+import { eq } from "drizzle-orm";
 import { join } from "node:path";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
@@ -52,32 +54,35 @@ export const hocuspocus = new Hocuspocus({
                 if (documentName === GLOBAL_PRESENCE_DOCUMENT) {
                     return null;
                 }
+                return await db.transaction(async (tx) => {
+                    let docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName));
 
-                let docs = await getDocuments(documentName, true);
+                    if (docs.length !== 1) throw new DocumentIdConflict();
 
-                if (docs.length !== 1) {
-                    throw new DocumentIdConflict();
-                }
+                    const state = docs[0].yDocState;
+                    if (state !== null) return state;
 
-                const state = docs[0].yDocState;
-                if (state !== null) return state;
+                    const newDoc = new Y.Doc();
+                    const newDocText = newDoc.getText(YJS_SHARED_TEXT);
+                    newDocText.insert(0, docs[0].content);
 
-                // Re-select the document, locing it for update
-                docs = await getDocuments(documentName, true, true);
+                    await tx
+                        .update(documentsTable)
+                        .set({
+                            yDocState: Buffer.from(Y.encodeStateAsUpdate(newDoc)),
+                            // YJS does not explicitly expose the definition of toString in their types in such a way that satisfies eslint,
+                            // but an implementation will exist in runtime. I can't see a way around this annoyingly.
+                            // eslint-disable-next-line
+                            content: newDocText.toString(),
+                        })
+                        .where(eq(documentsTable.id, documentName));
 
-                const newDoc = new Y.Doc();
-                const newDocText = newDoc.getText(YJS_SHARED_TEXT);
-                newDocText.insert(0, docs[0].content);
+                    docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName));
 
-                await updateDocumentState(documentName, newDoc);
+                    if (docs.length !== 1) throw new DocumentIdConflict();
 
-                docs = await getDocuments(documentName, true);
-
-                if (docs.length !== 1) {
-                    throw new DocumentIdConflict();
-                }
-
-                return docs[0].yDocState;
+                    return docs[0].yDocState;
+                });
             },
 
             store: async ({ documentName, state }) => {
@@ -86,17 +91,26 @@ export const hocuspocus = new Hocuspocus({
                     return;
                 }
 
-                const docs = await getDocuments(documentName, true, true);
+                await db.transaction(async (tx) => {
+                    const docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName));
 
-                if (docs.length !== 1) {
-                    throw new DocumentIdConflict();
-                }
+                    if (docs.length !== 1) throw new DocumentIdConflict();
 
-                const newState = Y.mergeUpdates([docs[0].yDocState!, state]);
-                const yDoc = new Y.Doc();
-                Y.applyUpdate(yDoc, newState);
+                    const newState = Y.mergeUpdates([docs[0].yDocState!, state]);
+                    const yDoc = new Y.Doc();
+                    Y.applyUpdate(yDoc, newState);
 
-                await updateDocumentState(documentName, yDoc);
+                    await tx
+                        .update(documentsTable)
+                        .set({
+                            yDocState: Buffer.from(Y.encodeStateAsUpdate(yDoc)),
+                            // YJS does not explicitly expose the definition of toString in their types in such a way that satisfies eslint,
+                            // but an implementation will exist in runtime. I can't see a way around this annoyingly.
+                            // eslint-disable-next-line
+                            content: yDoc.getText(YJS_SHARED_TEXT).toString(),
+                        })
+                        .where(eq(documentsTable.id, documentName));
+                });
             },
         }),
     ],
