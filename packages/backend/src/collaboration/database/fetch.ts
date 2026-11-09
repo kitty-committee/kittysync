@@ -1,4 +1,4 @@
-import { GLOBAL_PRESENCE_DOCUMENT, YJS_SHARED_TEXT } from "@kittysync/common";
+import { GLOBAL_PRESENCE_DOCUMENT, YJS_SHARED_TEXT, type UserDb } from "@kittysync/common";
 import type { fetchPayload } from "@hocuspocus/server";
 import { documentsTable } from "../../db/schema.ts";
 import { DocumentIdConflict } from "../errors.ts";
@@ -6,7 +6,7 @@ import { db } from "../../app.ts";
 import { eq } from "drizzle-orm";
 import * as Y from "yjs";
 
-export async function fetch({ documentName }: fetchPayload<any>) {
+export async function fetch({ documentName }: fetchPayload<{ user: UserDb }>) {
     // Global presence document has no state
     if (documentName === GLOBAL_PRESENCE_DOCUMENT) {
         return null;

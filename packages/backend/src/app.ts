@@ -1,13 +1,7 @@
-import {
-    awarenessStateSchema,
-    GLOBAL_PRESENCE_DOCUMENT,
-    YJS_SHARED_TEXT,
-    type AwarenessState,
-    type UserDb,
-} from "@kittysync/common";
-import { NotAuthenticated, DocumentNotFound, DocumentIdConflict, UpdateForbidden } from "./collaboration/errors.ts";
-import { register as registerHocus, contextSchema } from "./collaboration/collaboration.ts";
+import { awarenessStateSchema, GLOBAL_PRESENCE_DOCUMENT, type AwarenessState, type UserDb } from "@kittysync/common";
+import { NotAuthenticated, DocumentNotFound, UpdateForbidden } from "./collaboration/errors.ts";
 import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { register as registerHocus } from "./collaboration/collaboration.ts";
 import { store as dbStore } from "./collaboration/database/store.ts";
 import { fetch as dbFetch } from "./collaboration/database/fetch.ts";
 import { Redis as HocusRedis } from "@hocuspocus/extension-redis";
@@ -19,17 +13,14 @@ import { Logger } from "@hocuspocus/extension-logger";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 import { Hocuspocus } from "@hocuspocus/server";
-import { documentsTable } from "./db/schema.ts";
 import staticFastify from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
-import { eq } from "drizzle-orm";
 import { join } from "node:path";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
 import * as z from "zod";
-import * as Y from "yjs";
 
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
@@ -163,7 +154,7 @@ export async function createApp() {
     // registerWebsocketRoutes(app);
     await app.register(registerHocus);
 
-    app.addHook("onClose", (instance, done) => {
+    app.addHook("onClose", (_instance, done) => {
         hocuspocus.closeConnections();
         hocuspocus.flushPendingStores();
 

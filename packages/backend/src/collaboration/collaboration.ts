@@ -85,7 +85,7 @@ export function register(app: Fastify.FastifyInstance) {
             // Pass the raw request to hocuspocus to handle
 
             const clientConnection: ClientConnection = hocuspocus.handleConnection(socket, request, {
-                user: req.user,
+                user: req.user!,
             });
             clientConnections.set(socket, clientConnection);
 
