@@ -42,7 +42,7 @@ export function createRedis() {
 /** The global redis client, not to be used with subscriptions */
 export const redis = createRedis();
 
-export const hocuspocus = new Hocuspocus({
+export const hocuspocus = new Hocuspocus<{ user: UserDb }>({
     extensions: [
         new Logger(),
         new HocusRedis({
@@ -56,10 +56,9 @@ export const hocuspocus = new Hocuspocus({
     ],
 
     async onAuthenticate({ context, documentName }) {
-        const c = contextSchema.parse(context);
         // This shouldn't  necessarily need to  be verified, since it should have been verified by
         // the authentication hook on the endpoint to open the websocket connection
-        if (c.user === undefined) {
+        if (context.user === undefined) {
             throw new NotAuthenticated();
         }
 
@@ -78,9 +77,16 @@ export const hocuspocus = new Hocuspocus({
 
     // This function must be async, but eslint complains there is no await!
     // eslint-disable-next-line @typescript-eslint/require-await
-    async beforeHandleAwareness({ context, states, awareness, removedClients }) {
-        const c = contextSchema.parse(context);
-        if (c.user === undefined) {
+    async beforeHandleAwareness({ context, states, awareness, removedClients, connection }) {
+        // If this state update came from a server rather than straight from a client, we can skip validation!
+        // This removes the possiblity that context is undefined, since it will always be defined on client connections.
+        // We can skip the validation when this update comes from a server because the originating server will have performed the
+        // validation with the required client context present, so we can trust it is valid.
+        if (connection === undefined) {
+            return;
+        }
+
+        if (context!.user === undefined) {
             throw new NotAuthenticated();
         }
 
@@ -97,13 +103,13 @@ export const hocuspocus = new Hocuspocus({
                 continue;
             }
 
-            state.user = c.user;
+            state.user = context!.user;
             states.set(k, state);
 
             // Ensure that the current user is consistent with the current state.
             // Prevents client ID's from being hijacked.
             const currentState = awareness.getStates().get(k) as AwarenessState;
-            if (currentState !== undefined && currentState.user.id !== c.user.id) {
+            if (currentState !== undefined && currentState.user.id !== context!.user.id) {
                 states.delete(k);
             }
         }
@@ -113,7 +119,7 @@ export const hocuspocus = new Hocuspocus({
         for (const id of removedClients) {
             const state = awareness.getStates().get(id) as AwarenessState;
             if (state === undefined) continue;
-            if (state.user.id !== c.user.id) {
+            if (state.user.id !== context!.user.id) {
                 throw new UpdateForbidden();
             }
         }
