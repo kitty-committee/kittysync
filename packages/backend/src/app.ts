@@ -8,6 +8,8 @@ import {
 import { NotAuthenticated, DocumentNotFound, DocumentIdConflict, UpdateForbidden } from "./collaboration/errors.ts";
 import { register as registerHocus, contextSchema } from "./collaboration/collaboration.ts";
 import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { store as dbStore } from "./collaboration/database/store.ts";
+import { fetch as dbFetch } from "./collaboration/database/fetch.ts";
 import { Redis as HocusRedis } from "@hocuspocus/extension-redis";
 import { register as registerAuth } from "./auth/auth.routes.ts";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -48,69 +50,8 @@ export const hocuspocus = new Hocuspocus({
             port: 6379,
         }),
         new Database({
-            fetch: async ({ documentName }) => {
-                // Global presence document has no state
-                if (documentName === GLOBAL_PRESENCE_DOCUMENT) {
-                    return null;
-                }
-                return await db.transaction(async (tx) => {
-                    let docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName));
-
-                    if (docs.length !== 1) throw new DocumentIdConflict();
-
-                    const state = docs[0].yDocState;
-                    if (state !== null) return state;
-
-                    const newDoc = new Y.Doc();
-                    const newDocText = newDoc.getText(YJS_SHARED_TEXT);
-                    newDocText.insert(0, docs[0].content);
-
-                    await tx
-                        .update(documentsTable)
-                        .set({
-                            yDocState: Buffer.from(Y.encodeStateAsUpdate(newDoc)),
-                            // YJS does not explicitly expose the definition of toString in their types in such a way that satisfies eslint,
-                            // but an implementation will exist in runtime. I can't see a way around this annoyingly.
-                            // eslint-disable-next-line
-                            content: newDocText.toString(),
-                        })
-                        .where(eq(documentsTable.id, documentName));
-
-                    docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName));
-
-                    if (docs.length !== 1) throw new DocumentIdConflict();
-
-                    return docs[0].yDocState;
-                });
-            },
-
-            store: async ({ documentName, state }) => {
-                // Global presence document has no state
-                if (documentName === GLOBAL_PRESENCE_DOCUMENT) {
-                    return;
-                }
-
-                await db.transaction(async (tx) => {
-                    const docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName));
-
-                    if (docs.length !== 1) throw new DocumentIdConflict();
-
-                    const newState = Y.mergeUpdates([docs[0].yDocState!, state]);
-                    const yDoc = new Y.Doc();
-                    Y.applyUpdate(yDoc, newState);
-
-                    await tx
-                        .update(documentsTable)
-                        .set({
-                            yDocState: Buffer.from(Y.encodeStateAsUpdate(yDoc)),
-                            // YJS does not explicitly expose the definition of toString in their types in such a way that satisfies eslint,
-                            // but an implementation will exist in runtime. I can't see a way around this annoyingly.
-                            // eslint-disable-next-line
-                            content: yDoc.getText(YJS_SHARED_TEXT).toString(),
-                        })
-                        .where(eq(documentsTable.id, documentName));
-                });
-            },
+            fetch: dbFetch,
+            store: dbStore,
         }),
     ],
 
@@ -216,7 +157,7 @@ export async function createApp() {
     // registerWebsocketRoutes(app);
     await app.register(registerHocus);
 
-    app.addHook("onClose", (_instance, done) => {
+    app.addHook("onClose", (instance, done) => {
         hocuspocus.closeConnections();
         hocuspocus.flushPendingStores();
 
