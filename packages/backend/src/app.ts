@@ -18,7 +18,6 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 import { Hocuspocus } from "@hocuspocus/server";
 import { documentsTable } from "./db/schema.ts";
-import { updateDocumentState } from "./util.ts";
 import staticFastify from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
