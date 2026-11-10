@@ -74,10 +74,10 @@ export class SimulatedNetwork {
         if (packetIndex === -1) return;
 
         const [packet] = this.packets.splice(packetIndex, 1);
-        if (this.clock > packet.dueAt) {
+        this.clock = Math.max(this.clock, packet.dueAt);
+        if (this.clock > packet.sentAt) {
             this.stats.delayed += 1;
         }
-        this.clock = Math.max(this.clock, packet.dueAt);
 
         const key = `${packet.from}:${packet.to}`;
         const lastDelivered = this.deliveredSequence.get(key);

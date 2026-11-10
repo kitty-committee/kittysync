@@ -1,5 +1,5 @@
 function parseIntegerEnvironment(name: string, value: string | undefined, defaultValue: number): number {
-    if (value === undefined || value.trim() === "") return defaultValue;
+    if (value === undefined) return defaultValue;
 
     const parsed = Number(value);
     if (!Number.isSafeInteger(parsed)) {
