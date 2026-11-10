@@ -57,8 +57,8 @@
 
             <p>Did you mean to sign-up instead? Click <a href={resolve("/app/signup")}>here!</a></p>
 
-            <label for="username">Username</label>
-            <input type="text" placeholder="Enter Username" name="username" id="username" required /><br />
+            <label for="name">Username</label>
+            <input type="text" placeholder="Enter Username" name="name" id="name" required /><br />
 
             <label for="password">Password</label>
             <input type="password" placeholder="Enter Password" name="password" id="password" required /><br />

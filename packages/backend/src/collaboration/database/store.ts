@@ -1,4 +1,4 @@
-import { GLOBAL_PRESENCE_DOCUMENT, YJS_SHARED_TEXT, type UserDb } from "@kittysync/common";
+import { GLOBAL_PRESENCE_DOCUMENT, type UserDb } from "@kittysync/common";
 import type { storePayload } from "@hocuspocus/server";
 import { documentsTable } from "../../db/schema.ts";
 import { DocumentIdConflict } from "../errors.ts";
@@ -25,10 +25,6 @@ export async function store({ documentName, state }: storePayload<{ user: UserDb
             .update(documentsTable)
             .set({
                 yDocState: Buffer.from(Y.encodeStateAsUpdate(yDoc)),
-                // YJS does not explicitly expose the definition of toString in their types in such a way that satisfies eslint,
-                // but an implementation will exist in runtime. I can't see a way around this annoyingly.
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                content: yDoc.getText(YJS_SHARED_TEXT).toString(),
             })
             .where(eq(documentsTable.id, documentName));
     });

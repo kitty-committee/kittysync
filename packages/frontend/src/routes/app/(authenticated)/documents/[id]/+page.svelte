@@ -1,126 +1,220 @@
 <script lang="ts">
-    import { YJS_SHARED_TEXT, type AwarenessEditorState } from "@kittysync/common";
-    import { HocuspocusProvider, WebSocketStatus } from "@hocuspocus/provider";
+    import {
+        SOCKET_ERROR_UNBOUND_CONNECTION,
+        SOCKET_ERROR_UNSUPPORTED_MESSAGE,
+        awarenessStateSchema,
+        type AwarenessState,
+        type UserDb,
+    } from "@kittysync/common";
+    import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
+    import { Collaboration } from "@tiptap/extension-collaboration";
+    import { HocuspocusProvider } from "@hocuspocus/provider";
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
-    import { onDestroy, onMount } from "svelte";
-    import type { PageProps } from "./$types";
+    import StarterKit from "@tiptap/starter-kit";
+    import { Markdown } from "@tiptap/markdown";
     import { goto } from "$app/navigation";
+    import { Editor } from "@tiptap/core";
     import { resolve } from "$app/paths";
-    import { page } from "$app/state";
+    import { onMount } from "svelte";
     import * as Y from "yjs";
 
-    let { data }: PageProps = $props();
-    let documentSummary = $derived(data.document);
-    let user = $derived(data.user!);
-
+    let connected = $state(false);
     let documentLoaded = $state(false);
     let inEditMode = $state(false);
-    let fileID = $derived(page.params["id"]);
-    const getFileID = () => fileID;
-    let doc = $state(new Y.Doc());
-    let filecontent = $derived(doc.getText(YJS_SHARED_TEXT));
-    let provider = $state<HocuspocusProvider | null>(null);
-    // :(
-    const getProvider = () => provider!;
-    let userList = $derived(provider === null || provider.awareness === null ? -1 : provider.awareness.states.size);
+    let connectionError = $state("");
+    let editorElement = $state<HTMLDivElement | undefined>(undefined);
+    let editor: Editor | null = null;
+    let markdownContent = $state("");
 
-    if (!getFileID()) {
-        console.error("File ID is missing!");
+    type ConnectedUser = {
+        clientId: number;
+        name: string;
+    };
+
+    let { data } = $props();
+
+    let connectedUsers = $state<ConnectedUser[]>([]);
+
+    function attachEditorElement(element: HTMLDivElement) {
+        editorElement = element;
+        return () => {
+            editorElement = undefined;
+        };
     }
 
-    let connected = $derived(
-        provider === null ? false : provider.configuration.websocketProvider.status === WebSocketStatus.Connected,
-    );
-
     onMount(() => {
-        //const socket = getContext("collaboration-ws") as HocuspocusProviderWebsocket;
-        provider = new HocuspocusProvider({
+        const ydoc = new Y.Doc();
+        //replace with actual username from auth context when frontend helper is made.
+        const provider = new HocuspocusProvider({
             url: "/api/collaboration",
-            name: fileID!,
-            document: doc,
+            name: data.documentId,
+            document: ydoc,
+            onStatus: ({ status }) => {
+                connected = status === "connected";
+                if (connected) {
+                    connectionError = "";
+                }
+            },
+            onAuthenticationFailed: ({ reason }) => {
+                connectionError = reason;
+            },
+            onDisconnect: ({ event }) => {
+                if (event.code === SOCKET_ERROR_UNBOUND_CONNECTION) {
+                    connectionError = "Unable to connect to the document. Please try again.";
+                } else if (event.code === SOCKET_ERROR_UNSUPPORTED_MESSAGE) {
+                    connectionError = "Unable to sync the document. Please try again.";
+                }
+            },
+            onSynced: () => {
+                if (editor) return;
+                if (!editorElement) {
+                    console.error("Tiptap editor element is not available.");
+                    return;
+                }
 
-            onSynced() {
+                editor = new Editor({
+                    element: editorElement,
+                    extensions: [
+                        StarterKit.configure({ undoRedo: false }),
+                        Collaboration.configure({ document: ydoc, field: "content" }),
+                        Markdown,
+                        CollaborationCaret.configure({
+                            provider,
+                            // collaboration caret requires the name and color of the user to display the caret correctly
+                            user: data.user satisfies UserDb & { name: string; color: string },
+                        }),
+                    ],
+                    editable: inEditMode,
+
+                    onUpdate: ({ editor }) => {
+                        markdownContent = editor.getMarkdown();
+                    },
+                });
+                markdownContent = editor.getMarkdown();
                 documentLoaded = true;
-            },
-
-            onConnect() {
-                connected = true;
-            },
-
-            onDisconnect() {
-                connected = false;
-            },
-
-            onAwarenessUpdate({ states }) {
-                console.log("Received awareness update");
-                console.log(states);
-
-                console.log(getProvider().configuration.websocketProvider.status);
-
-                userList = getProvider().awareness === null ? -1 : getProvider().awareness!.states.size;
-                // Probably do something with cursor positions here?
             },
         });
 
-        getProvider().attach();
-        getProvider().setAwarenessField("user", user);
-        getProvider().setAwarenessField("editor", { inEditMode });
-    });
+        const updateConnectedUsers = () => {
+            if (provider.awareness == null) {
+                console.error("Provider awareness is not available.");
+                return;
+            }
 
-    onDestroy(() => {
-        getProvider().destroy();
-    });
+            const users: ConnectedUser[] = [];
+            for (const [clientId, s] of provider.awareness.getStates()) {
+                let state: AwarenessState;
+                try {
+                    state = awarenessStateSchema.parse(s);
+                } catch (error) {
+                    console.error("Failed to parse awareness state:", error);
+                    continue;
+                }
 
-    const editorState = (): AwarenessEditorState => {
-        return { inEditMode };
-    };
+                users.push({ clientId, name: state.user.name });
+            }
+
+            connectedUsers = users;
+        };
+
+        provider.on("awarenessChange", updateConnectedUsers);
+        updateConnectedUsers();
+
+        return () => {
+            editor?.destroy();
+            editor = null;
+            provider.off("awarenessChange", updateConnectedUsers);
+            provider.destroy();
+            ydoc.destroy();
+            connected = false;
+            documentLoaded = false;
+        };
+    });
 </script>
 
-<svelte:head>
-    <title>{documentSummary.title}</title>
-</svelte:head>
-
 <!-- navigation bar -->
-<nav class="flex items-center justify-between p-4 bg-gray-800 text-white">
+<nav>
     <button
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         onclick={() => {
             goto(resolve("/app/(authenticated)/documents"));
         }}>Back</button>
 
-    <h1 class="text-xl font-bold">Document Editor</h1>
+    <h1>Document Editor</h1>
     <div>
         {#if connected}
-            <span class="text-green-500">Connected</span>
+            <span>Connected</span>
         {:else}
-            <span class="text-red-500">Disconnected</span>
+            <span>Disconnected</span>
         {/if}
     </div>
-
     <div>
-        <span class="mr-4">Users: {userList === -1 ? "???" : userList}</span>
+        <span>{connectedUsers.length} connected user{connectedUsers.length === 1 ? "" : "s"}</span>
+        <ul>
+            {#each connectedUsers as user (user.clientId)}
+                <li>{user.name}</li>
+            {/each}
+        </ul>
     </div>
 </nav>
 
+{#if connectionError}
+    <p role="alert">{connectionError}</p>
+{/if}
+
 <!-- button to toggle edit mode. text area contains file content, which can be edited. -->
 <button
-    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     onclick={() => {
         inEditMode = !inEditMode;
-        getProvider().setAwarenessField("editor", editorState());
+        editor?.setEditable(inEditMode);
     }}
     disabled={!connected || !documentLoaded}>Change View</button>
-{#if inEditMode}
-    <main class="p-4">
-        <textarea
-            class="w-full h-96 p-2 border border-gray-300 rounded"
-            bind:value={filecontent}
-            disabled={!connected || !documentLoaded}></textarea>
-        <button
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onclick={() => alert("Deprecated")}
-            disabled={!connected || !documentLoaded}>Save</button>
-    </main>
-{:else}
-    <div><SvelteMarkdown source={filecontent.toString()} /></div>
+
+<div style:display={inEditMode ? "block" : "none"}>
+    <div {@attach attachEditorElement} aria-hidden={!inEditMode} class="editorelement"></div>
+</div>
+
+{#if !inEditMode}
+    <div><SvelteMarkdown source={markdownContent} /></div>
 {/if}
+
+<style>
+    .editorelement {
+        min-height: 300px;
+        border: 1px solid #0f0f0f;
+        padding: 10px;
+        color: white;
+        border-radius: 5px;
+        background-color: #343434;
+    }
+
+    /* Give a remote user a caret */
+    :global(.collaboration-carets__caret) {
+        border-left: 1px solid #0d0d0d;
+        border-right: 1px solid #0d0d0d;
+        margin-left: -1px;
+        margin-right: -1px;
+        pointer-events: none;
+        position: relative;
+        word-break: normal;
+    }
+
+    :global(.editorelement > .ProseMirror) {
+        min-height: 300px;
+    }
+
+    /* Render the username above the caret */
+    :global(.collaboration-carets__label) {
+        border-radius: 3px 3px 3px 0;
+        color: #0d0d0d;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 600;
+        left: -1px;
+        line-height: normal;
+        padding: 0.1rem 0.3rem;
+        position: absolute;
+        top: -1.4em;
+        user-select: none;
+        white-space: nowrap;
+    }
+</style>

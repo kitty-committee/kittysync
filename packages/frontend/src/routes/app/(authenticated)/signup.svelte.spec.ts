@@ -69,7 +69,7 @@ describe("signup form", () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ username: "kitten", password: "cat-password" }),
+                body: JSON.stringify({ name: "kitten", password: "cat-password" }),
             });
             expect(goto).toHaveBeenCalledWith("/app/login");
         });
@@ -82,7 +82,7 @@ describe("signup form", () => {
         await fillSignupCredentials("cat", "pw", "pw");
         await page.getByRole("button", { name: "Sign Up" }).click();
 
-        await expect.element(page.getByText(/^username -/)).toBeInTheDocument();
+        await expect.element(page.getByText(/^name -/)).toBeInTheDocument();
         await expect.element(page.getByText(/^password -/)).toBeInTheDocument();
         expect(fetchApi).not.toHaveBeenCalled();
     });

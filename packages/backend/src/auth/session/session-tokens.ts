@@ -1,7 +1,10 @@
+import { userDbSchema, type UserDb } from "@kittysync/common";
 import { createSigner, createVerifier } from "fast-jwt";
 import { configuration } from "../../configuration.ts";
-import type { UserDb } from "@kittysync/common";
 import { redis } from "../../app.ts";
+
+/// Forces the type of T to be exactly B, no more and no less.
+type Exact<A, B> = A extends B ? (B extends A ? A : never) : never;
 
 /**
  * Base type of session token providers.
@@ -12,7 +15,7 @@ export interface TokenProvider {
      * @param {UserDb} user - The user to create a new token for
      * @returns {Promise<string>} The new token.
      */
-    new: (user: UserDb) => Promise<string>;
+    new: <T>(user: Exact<T, UserDb>) => Promise<string>;
 
     /**
      * Verify whether a session token is valid or not.
@@ -40,6 +43,7 @@ export class UuidTokenProvider implements TokenProvider {
      * @throws Redis exception on failing to push.
      */
     async new(user: UserDb): Promise<string> {
+        const fields = Object.entries(user).flatMap(([k, v]) => [k, String(v)]);
         const token = crypto.randomUUID();
         await redis.hsetex(
             `user_${token}`,
@@ -47,11 +51,8 @@ export class UuidTokenProvider implements TokenProvider {
             "EX",
             configuration.tokenLifetime,
             "FIELDS",
-            2,
-            "id",
-            user.id,
-            "username",
-            user.username,
+            fields.length / 2,
+            ...fields,
         );
         return token;
     }
@@ -76,8 +77,8 @@ export class UuidTokenProvider implements TokenProvider {
         if (!(await this.verify(token))) return null;
         else {
             const r = await redis.hgetall(`user_${token}`);
-            if (r["username"] === undefined || r["id"] === undefined) return null;
-            else return { id: r["id"], username: r["username"] };
+            const parse = userDbSchema.safeParse(r);
+            return parse.success ? parse.data : null;
         }
     }
 }
@@ -109,10 +110,8 @@ export class JwtTokenProvider implements TokenProvider {
     decode(token: string): Promise<UserDb | null> {
         try {
             const decoded = this.verifier(token) as UserDb;
-            return Promise.resolve({
-                username: decoded.username,
-                id: decoded.id,
-            });
+            const parse = userDbSchema.safeParse(decoded);
+            return parse.success ? Promise.resolve(parse.data) : Promise.resolve(null);
         } catch {
             return Promise.resolve(null);
         }

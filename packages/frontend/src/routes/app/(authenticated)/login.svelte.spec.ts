@@ -91,7 +91,7 @@ describe("login form", () => {
             expect(fetchApi).toHaveBeenCalledWith("auth/session", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: "kitten", password: "cat-password" }),
+                body: JSON.stringify({ name: "kitten", password: "cat-password" }),
             });
         });
         await expect.element(page.getByRole("listitem")).not.toBeInTheDocument();
@@ -113,7 +113,7 @@ describe("login form", () => {
         await fillLoginCredentials("cat", "pw");
         await page.getByRole("button", { name: "Login" }).click();
 
-        await expect.element(page.getByText(/^username -/)).toBeInTheDocument();
+        await expect.element(page.getByText(/^name -/)).toBeInTheDocument();
         await expect.element(page.getByText(/^password -/)).toBeInTheDocument();
         expect(fetchApi).not.toHaveBeenCalled();
     });

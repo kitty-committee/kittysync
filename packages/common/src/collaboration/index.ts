@@ -11,8 +11,8 @@ export const awarenessEditorStateSchema = z.object({
 });
 
 export const awarenessStateSchema = z.object({
+    cursor: z.any().optional(), // handled by tiptap
     user: userDbSchema,
-    editor: awarenessEditorStateSchema.optional(),
 });
 
 export type AwarenessState = z.infer<typeof awarenessStateSchema>;

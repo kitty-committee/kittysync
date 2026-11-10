@@ -1,7 +1,7 @@
 {
     "version": "8",
     "dialect": "postgres",
-    "id": "92b5fe82-2091-4b1a-b529-f263b5dab5c7",
+    "id": "1cd61cef-0841-4f9b-bb75-46cec14c5c04",
     "prevIds": ["5a5ee854-da03-45c0-b8d4-c790d88b9a35"],
     "ddl": [
         {
@@ -102,7 +102,7 @@
             "default": null,
             "generated": null,
             "identity": null,
-            "name": "username",
+            "name": "name",
             "entityType": "columns",
             "schema": "public",
             "table": "users"
@@ -116,6 +116,19 @@
             "generated": null,
             "identity": null,
             "name": "password",
+            "entityType": "columns",
+            "schema": "public",
+            "table": "users"
+        },
+        {
+            "type": "char(7)",
+            "typeSchema": null,
+            "notNull": true,
+            "dimensions": 0,
+            "default": null,
+            "generated": null,
+            "identity": null,
+            "name": "color",
             "entityType": "columns",
             "schema": "public",
             "table": "users"
@@ -151,7 +164,7 @@
         },
         {
             "nameExplicit": false,
-            "columns": ["username"],
+            "columns": ["name"],
             "nullsNotDistinct": false,
             "name": "users_username_key",
             "schema": "public",
@@ -159,5 +172,5 @@
             "entityType": "uniques"
         }
     ],
-    "renames": []
+    "renames": ["public.users.username->public.users.name"]
 }
