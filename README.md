@@ -4,7 +4,10 @@ Coursework for our Advanced Software Engineering module.
 
 # Local Execution
 
-To run the application locally you must install Docker and Docker Compose and then run the `docker compose up` command. This will start the application stack and two sharded instances running at http://127.0.0.1:3000 http://127.0.1.0:3001.
+To run the application locally you must install Git, Docker and Docker Compose and then run the `docker compose up` command. This will start the application stack and two sharded instances running at http://127.0.0.1:3000 http://127.0.1.0:3001.
+
+> [!NOTE]
+> GitHub Desktop is not sufficient as Docker requires an actual Git executable for building the image.
 
 # Development
 
