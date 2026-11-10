@@ -20,7 +20,10 @@ export async function setup() {
     process.env["KITTYSYNC_DB_NAME"] = databaseName;
 
     return async () => {
-        await admin.query(`DROP DATABASE "${databaseName}"`);
-        await admin.end();
+        try {
+            await admin.query(`DROP DATABASE "${databaseName}" WITH (FORCE)`);
+        } finally {
+            await admin.end();
+        }
     };
 }

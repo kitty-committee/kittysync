@@ -78,11 +78,33 @@ test("two browser clients converge through latency and offline edits", async ({ 
             await page.routeWebSocket("**/api/collaboration", (webSocket) => {
                 if (index === 0) offlineRoute = webSocket;
                 const server = webSocket.connectToServer();
+                let closed = false;
+                const pendingSends = new Set<ReturnType<typeof setTimeout>>();
+                const closePeer = (peer: WebSocketRoute) => (code: number | undefined, reason: string | undefined) => {
+                    if (closed) return;
+                    closed = true;
+                    for (const timeout of pendingSends) clearTimeout(timeout);
+                    pendingSends.clear();
+                    void peer.close({
+                        ...(code === undefined ? {} : { code }),
+                        ...(reason === undefined ? {} : { reason }),
+                    });
+                };
+                const sendAfterDelay = (send: () => void, delay: number) => {
+                    const timeout = setTimeout(() => {
+                        pendingSends.delete(timeout);
+                        if (!closed) send();
+                    }, delay);
+                    pendingSends.add(timeout);
+                };
+
+                webSocket.onClose(closePeer(server));
+                server.onClose(closePeer(webSocket));
                 webSocket.onMessage((message) => {
-                    setTimeout(() => server.send(message), random.integer(5, 25));
+                    sendAfterDelay(() => server.send(message), random.integer(5, 25));
                 });
                 server.onMessage((message) => {
-                    setTimeout(() => webSocket.send(message), random.integer(5, 25));
+                    sendAfterDelay(() => webSocket.send(message), random.integer(5, 25));
                 });
             });
         }
@@ -119,6 +141,7 @@ test("two browser clients converge through latency and offline edits", async ({ 
             firstEditor.press("End").then(() => firstEditor.pressSequentially(" offline-only")),
             secondEditor.press("End").then(() => secondEditor.pressSequentially(" online-only")),
         ]);
+        await expect(pages[0].locator("nav")).toContainText("Disconnected");
         await firstContext.setOffline(false);
 
         await expect
