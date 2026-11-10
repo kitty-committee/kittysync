@@ -12,8 +12,9 @@ import "dotenv/config";
 export async function getDocuments(): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title">[]>;
 export async function getDocuments(
     id: string,
+    binary?: false,
 ): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title" | "content" | "authorId">[]>;
-export async function getDocuments(id: string, binary: boolean): Promise<(typeof documentsTable.$inferSelect)[]>;
+export async function getDocuments(id: string, binary: true): Promise<(typeof documentsTable.$inferSelect)[]>;
 export async function getDocuments(id?: string, binary?: boolean) {
     if (id !== undefined) {
         try {
