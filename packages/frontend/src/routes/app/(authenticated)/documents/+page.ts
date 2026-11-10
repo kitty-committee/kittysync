@@ -1,6 +1,6 @@
-import { fetchApi } from "#lib";
 import type { PageLoad } from "./$types";
 import { error } from "@sveltejs/kit";
+import { fetchApi } from "#lib";
 
 /**
     data type for the document record

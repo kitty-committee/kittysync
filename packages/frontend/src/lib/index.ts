@@ -11,8 +11,8 @@ export async function fetchApi(
     init?: RequestInit,
 ): Promise<Response> {
     const fetch = typeof fetchOrUrl === "function" ? fetchOrUrl : window.fetch;
-    const url = typeof fetchOrUrl === "string" ? fetchOrUrl : urlOrInit as string;
-    const options = typeof fetchOrUrl === "string" ? urlOrInit as RequestInit | undefined : init;
+    const url = typeof fetchOrUrl === "string" ? fetchOrUrl : (urlOrInit as string);
+    const options = typeof fetchOrUrl === "string" ? (urlOrInit as RequestInit | undefined) : init;
     const api = await fetch(`/api/${url}`, { credentials: "include", ...options });
     if (api.status === 401) goto(resolve("/app/login"));
     return api;

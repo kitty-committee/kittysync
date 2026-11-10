@@ -85,7 +85,7 @@ test("Get document by ID", async () => {
         },
     });
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(404);
 });
 
 test("get all documents", async () => {
