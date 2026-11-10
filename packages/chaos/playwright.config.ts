@@ -9,8 +9,7 @@ export default defineConfig({
     outputDir: "test-results",
     webServer: [
         {
-            command:
-                'cd "$(git rev-parse --show-toplevel)" && set -a && . "$(pwd)/.env.example" && set +a && pnpm backend dev',
+            command: 'cd "$(git rev-parse --show-toplevel)" && pnpm backend dev',
             url: "http://127.0.0.1:3000/api/auth/session",
             reuseExistingServer: true,
         },
