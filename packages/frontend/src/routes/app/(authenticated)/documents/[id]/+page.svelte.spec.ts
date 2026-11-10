@@ -199,9 +199,7 @@ describe("document page", () => {
 
         provider.options.onAuthenticationFailed({ reason: "permission-denied" });
 
-        await expect
-            .element(page.getByRole("alert"))
-            .toHaveTextContent("permission-denied");
+        await expect.element(page.getByRole("alert")).toHaveTextContent("permission-denied");
     });
 
     it("shows a reconnect alert when the provider closes an unbound connection", async () => {
