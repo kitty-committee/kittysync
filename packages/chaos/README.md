@@ -27,7 +27,7 @@ pnpm chaos test:integration
 Layer 3 needs Chromium and the database services. Start the database services, install Chromium once with `pnpm chaos exec playwright install chromium`, then run:
 
 ```sh
-pnpm chaos test:browser
+pnpm chaos exec playwright test
 ```
 
 Run the browser and property-based chaos checks with `pnpm check:chaos`. The browser runner starts the frontend and backend dev servers and shuts them down when it completes.
