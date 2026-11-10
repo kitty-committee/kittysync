@@ -1,8 +1,8 @@
 // place files you want to import through the `#lib` alias in this folder.
 
+import { redirect } from "@sveltejs/kit";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
-import { redirect } from "@sveltejs/kit";
 
 export function fetchApi(fetch: typeof window.fetch, url: string, init?: RequestInit): Promise<Response>;
 export function fetchApi(url: string, init?: RequestInit): Promise<Response>;
