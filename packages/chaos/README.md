@@ -6,7 +6,7 @@ The harness is split into three runners:
 - **Layer 2 (`test:integration`)** starts two real Fastify/Hocuspocus instances using the configured PostgreSQL and Redis services. A seeded `ws` wrapper delays, drops, duplicates, and reorders messages before a reconnect and convergence check.
 - **Layer 3 (`test:browser`)** drives two Chromium contexts against the running frontend/backend. It adds seeded WebSocket latency, performs concurrent edits, then tests offline editing and reconnection.
 
-The PR workflow runs `pnpm chaos check:ci` with `FC_SEED=20261109`, `FC_RUNS=100`, and a 20-minute job limit. There is intentionally no scheduled nightly workflow. Toxiproxy is not included.
+The PR workflow runs `pnpm check:chaos` with `FC_SEED=20261109` and `FC_RUNS=100`. There is intentionally no scheduled nightly workflow. Toxiproxy is not included.
 
 ## Running the layers
 
@@ -24,20 +24,20 @@ set -a; source .env.example; set +a
 pnpm chaos test:integration
 ```
 
-Layer 3 needs Chromium and the frontend/backend dev servers. Start the database services, then run `pnpm backend dev` with `.env.example` loaded and `pnpm frontend dev --host 127.0.0.1` in separate terminals. Install Chromium once with `pnpm chaos exec playwright install chromium`, then run:
+Layer 3 needs Chromium and the database services. Start the database services, install Chromium once with `pnpm chaos exec playwright install chromium`, then run:
 
 ```sh
 pnpm chaos test:browser
 ```
 
-Run all layers with `pnpm chaos check:ci`. This command runs each layer even if an earlier one fails so failures from later layers are not hidden.
+Run the browser and property-based chaos checks with `pnpm check:chaos`. The browser runner starts the frontend and backend dev servers and shuts them down when it completes.
 
 ## Seeds and replay
 
 `FC_SEED` controls fast-check and the deterministic transport PRNG; its default is `20261109`. `FC_RUNS` controls property-test runs (default `100`). On a fast-check failure, the error includes the counterexample path and a replay command:
 
 ```sh
-FC_SEED=20261109 FC_PATH='counterexample-path' FC_RUNS=100 pnpm chaos test:unit:property
+FC_SEED=20261109 FC_PATH='counterexample-path' FC_RUNS=100 pnpm chaos test:property
 ```
 
 For an integration failure, replay the same scenario with:
@@ -58,4 +58,4 @@ With the default integration seed (`20261109`), the real-server test currently d
 
 ## Required status check
 
-The workflow publishes a job named **Chaos suite**. Configure branch protection / repository rulesets in GitHub to require the `Chaos suite` status check (and any existing checks your repository requires). This GitHub setting cannot be enabled from the workflow file.
+Configure branch protection / repository rulesets in GitHub to require the `check:chaos` status check (and any existing checks your repository requires). This GitHub setting cannot be enabled from the workflow file.

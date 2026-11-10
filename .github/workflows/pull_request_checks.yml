@@ -18,7 +18,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                script: [check:lint, check:format, check:type, check:test, frontend build]
+                script: [check:lint, check:format, check:type, check:test, check:chaos, frontend build]
 
         steps:
             - name: Checkout code
@@ -35,74 +35,13 @@ jobs:
               if: matrix.script == 'check:test'
               run: pnpm frontend playwright install --with-deps
 
+            - name: Install Chromium dependencies
+              if: matrix.script == 'check:chaos'
+              run: pnpm chaos exec playwright install --with-deps chromium
+
             - name: Start compose stack
-              if: matrix.script == 'check:test'
+              if: matrix.script == 'check:test' || matrix.script == 'check:chaos'
               run: pnpm stack up --wait
 
             - name: Run check
               run: set -a; source .env.example; set +a; pnpm ${{ matrix.script }}
-
-    chaos:
-        name: Chaos suite
-        runs-on: ubuntu-latest
-        timeout-minutes: 20
-        concurrency:
-            group: ${{ github.workflow }}-chaos-${{ github.event.pull_request.number }}
-            cancel-in-progress: true
-        env:
-            FC_SEED: "20261109"
-            FC_RUNS: "100"
-
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-            - name: Set up pnpm and NodeJS
-              uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e
-              with:
-                  node-version-file: .nvmrc
-                  install: true
-                  cache: true
-
-            - name: Cache Playwright browsers
-              uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-              with:
-                  path: ~/.cache/ms-playwright
-                  key: playwright-${{ runner.os }}-${{ hashFiles('packages/chaos/package.json', 'pnpm-lock.yaml') }}
-
-            - name: Start PostgreSQL and Redis
-              run: pnpm stack up --wait
-
-            - name: Install Chromium
-              run: pnpm chaos exec playwright install --with-deps chromium
-
-            - name: Start application
-              run: |
-                  mkdir -p packages/chaos/.chaos-artifacts
-                  set -a
-                  source .env.example
-                  set +a
-                  pnpm backend dev > packages/chaos/.chaos-artifacts/backend.log 2>&1 &
-                  pnpm frontend dev --host 127.0.0.1 > packages/chaos/.chaos-artifacts/frontend.log 2>&1 &
-                  curl --silent --show-error --retry 60 --retry-delay 1 --retry-connrefused --max-time 2 \
-                      http://127.0.0.1:3000/api/auth/session --output /dev/null --write-out '%{http_code}' |
-                      grep --quiet '^401$'
-                  curl --fail --retry 60 --retry-delay 1 --retry-connrefused --max-time 2 http://127.0.0.1:5173/ --output /dev/null
-
-            - name: Run chaos suite
-              run: |
-                  mkdir -p packages/chaos/.chaos-artifacts
-                  set -o pipefail
-                  pnpm chaos check:ci 2>&1 | tee packages/chaos/.chaos-artifacts/chaos-suite.log
-
-            - name: Upload chaos diagnostics
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-              with:
-                  name: chaos-diagnostics
-                  path: |
-                      packages/chaos/.chaos-artifacts/
-                      packages/chaos/test-results/
-                      packages/chaos/playwright-report/
-                  if-no-files-found: warn
-                  retention-days: 7

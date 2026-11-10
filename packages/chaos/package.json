@@ -5,11 +5,10 @@
     "scripts": {
         "check:type": "tsc --noEmit",
         "test:unit": "vitest run --config vitest.config.ts",
-        "test:unit:property": "vitest run --config vitest.config.ts src/layer-1/convergence.spec.ts",
+        "test:property": "vitest run --config vitest.config.ts src/layer-1/convergence.spec.ts",
         "test:integration": "vitest run --config vitest.integration.config.ts",
         "check:test": "pnpm run test:unit && pnpm run test:integration",
-        "test:browser": "playwright test",
-        "check:ci": "node scripts/run-ci.mjs"
+        "check:chaos": "playwright test && pnpm run test:property"
     },
     "dependencies": {
         "@hocuspocus/provider": "^4.8.0",
