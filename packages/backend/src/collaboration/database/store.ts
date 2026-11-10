@@ -27,7 +27,7 @@ export async function store({ documentName, state }: storePayload<{ user: UserDb
                 yDocState: Buffer.from(Y.encodeStateAsUpdate(yDoc)),
                 // YJS does not explicitly expose the definition of toString in their types in such a way that satisfies eslint,
                 // but an implementation will exist in runtime. I can't see a way around this annoyingly.
-                // eslint-disable-next-line
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
                 content: yDoc.getText(YJS_SHARED_TEXT).toString(),
             })
             .where(eq(documentsTable.id, documentName));
