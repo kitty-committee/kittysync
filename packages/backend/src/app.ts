@@ -21,6 +21,7 @@ import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
 import * as z from "zod";
+import { fileURLToPath } from "node:url";
 
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
@@ -126,7 +127,7 @@ declare module "fastify" {
 
 /** Creates an instance of the KittySync backend application */
 export async function createApp() {
-    await migrate(db, { migrationsFolder: "./drizzle" });
+    await migrate(db, { migrationsFolder: fileURLToPath(new URL("../drizzle", import.meta.url)) });
 
     const app = Fastify({
         logger: true,

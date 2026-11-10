@@ -1,6 +1,10 @@
 {
     "name": "@kittysync/backend",
     "main": "src/index.ts",
+    "files": [
+        "build",
+        "drizzle"
+    ],
     "type": "module",
     "scripts": {
         "check:type": "tsc --noEmit",
