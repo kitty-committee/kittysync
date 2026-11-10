@@ -39,7 +39,6 @@ export function createChaosPolicy(seed: number): ChaosPolicy {
             const action = sequence % 9 === 3 ? "drop" : sequence % 9 === 6 ? "duplicate" : "deliver";
             const delay = sequence % 2 === 0 ? random.integer(20, 35) : random.integer(1, 8);
 
-            if (delay > 0) stats.delayed += 1;
             if (action === "drop") stats.dropped += 1;
             if (action === "duplicate") stats.duplicated += 1;
 
@@ -70,11 +69,18 @@ export function createChaosWebSocket(cookie: string, policy: ChaosPolicy): Chaos
             const sequence = this.outgoingSequence++;
             const plan = policy.plan("outgoing");
             if (plan.action === "drop") return;
+            let delayCounted = false;
 
             const dispatch = () => {
                 if (sequence < this.lastOutgoingSequence) policy.stats.reordered += 1;
                 this.lastOutgoingSequence = Math.max(this.lastOutgoingSequence, sequence);
-                if (this.readyState === WebSocket.OPEN) super.send(data);
+                if (this.readyState === WebSocket.OPEN) {
+                    super.send(data);
+                    if (plan.delay > 0 && !delayCounted) {
+                        policy.stats.delayed += 1;
+                        delayCounted = true;
+                    }
+                }
             };
 
             this.schedule(dispatch, plan.delay);
@@ -89,11 +95,16 @@ export function createChaosWebSocket(cookie: string, policy: ChaosPolicy): Chaos
             const sequence = this.incomingSequence++;
             const plan = policy.plan("incoming");
             if (plan.action === "drop") return true;
+            let delayCounted = false;
 
             const dispatch = () => {
                 if (sequence < this.lastIncomingSequence) policy.stats.reordered += 1;
                 this.lastIncomingSequence = Math.max(this.lastIncomingSequence, sequence);
                 super.emit(eventName, ...args);
+                if (plan.delay > 0 && !delayCounted) {
+                    policy.stats.delayed += 1;
+                    delayCounted = true;
+                }
             };
 
             this.schedule(dispatch, plan.delay);
