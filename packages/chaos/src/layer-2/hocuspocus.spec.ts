@@ -176,10 +176,13 @@ test("real Hocuspocus nodes converge after seeded WebSocket faults and reconnect
 
         await waitUntil(
             () =>
-                clients.some((client) => client.policy.stats.delayed > 0) &&
-                clients.some((client) => client.policy.stats.dropped > 0) &&
-                clients.some((client) => client.policy.stats.duplicated > 0) &&
-                clients.some((client) => client.policy.stats.reordered > 0),
+                clients.every(
+                    (client) =>
+                        client.policy.stats.delayed > 0 &&
+                        client.policy.stats.dropped > 0 &&
+                        client.policy.stats.duplicated > 0 &&
+                        client.policy.stats.reordered > 0,
+                ),
             "seeded latency, drops, duplicates, and out-of-order delivery",
             10_000,
         );
@@ -201,7 +204,7 @@ test("real Hocuspocus nodes converge after seeded WebSocket faults and reconnect
         await waitUntil(
             () => awarenessConverged(clients),
             "all active awareness states to reach every client after reconnection",
-            15_000,
+            20_000,
         );
 
         expect(documentsConverged(clients)).toBe(true);
