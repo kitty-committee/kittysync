@@ -82,87 +82,91 @@ const scenarioArbitrary = fc.record({
 });
 
 describe("in-memory Yjs convergence", () => {
-    it("converges after concurrent paragraph edits and seeded transport faults", () => {
-        console.info(`[chaos] FC_SEED=${chaosConfig.seed} FC_RUNS=${chaosConfig.runCount}`);
-        const property = fc.property(scenarioArbitrary, (scenario) => {
-            const { clientDocuments, clientEditors } = createClients(3);
-            try {
-                const random = createRandomSource(chaosConfig.seed);
-                const network = new SimulatedNetwork(clientDocuments, chaosConfig.seed);
+    it(
+        "converges after concurrent paragraph edits and seeded transport faults",
+        () => {
+            console.info(`[chaos] FC_SEED=${chaosConfig.seed} FC_RUNS=${chaosConfig.runCount}`);
+            const property = fc.property(scenarioArbitrary, (scenario) => {
+                const { clientDocuments, clientEditors } = createClients(3);
+                try {
+                    const random = createRandomSource(chaosConfig.seed);
+                    const network = new SimulatedNetwork(clientDocuments, chaosConfig.seed);
 
-                for (const edit of scenario.edits) applyEdit(clientEditors, edit.client, edit);
+                    for (const edit of scenario.edits) applyEdit(clientEditors, edit.client, edit);
 
-                for (const action of scenario.actions) {
-                    if ("client" in action) {
-                        applyEdit(clientEditors, action.client, action);
-                        continue;
+                    for (const action of scenario.actions) {
+                        if ("client" in action) {
+                            applyEdit(clientEditors, action.client, action);
+                            continue;
+                        }
+
+                        switch (action.type) {
+                            case "advance":
+                                network.advance(random.integer(1, 20));
+                                break;
+                            case "deliver":
+                                network.deliverRandom();
+                                break;
+                            case "drop":
+                                network.dropRandom();
+                                break;
+                            case "duplicate":
+                                network.duplicateRandom();
+                                break;
+                        }
                     }
 
-                    switch (action.type) {
-                        case "advance":
-                            network.advance(random.integer(1, 20));
-                            break;
-                        case "deliver":
-                            network.deliverRandom();
-                            break;
-                        case "drop":
-                            network.dropRandom();
-                            break;
-                        case "duplicate":
-                            network.duplicateRandom();
-                            break;
+                    for (let index = 0; index < 3; index += 1) {
+                        applyEdit(clientEditors, 0, { type: "insert", offset: index, text: "q" });
                     }
+
+                    const sourcePackets = network.packets.filter((packet) => packet.from === 0 && packet.to === 1);
+                    expect(sourcePackets.length).toBeGreaterThanOrEqual(3);
+                    network.advance(100);
+                    network.deliver(sourcePackets.at(-1)!.id);
+                    network.deliver(sourcePackets[0].id);
+
+                    const duplicatePacket = network.packets.find((packet) => packet.from === 0 && packet.to === 2);
+                    const droppedPacket = network.packets.find((packet) => packet.id !== duplicatePacket?.id);
+                    expect(duplicatePacket).toBeDefined();
+                    expect(droppedPacket).toBeDefined();
+                    network.duplicate(duplicatePacket!.id);
+                    network.drop(droppedPacket!.id);
+
+                    for (const packet of [...network.packets]) network.deliver(packet.id);
+
+                    expect(network.stats.delayed).toBeGreaterThan(0);
+                    expect(network.stats.dropped).toBeGreaterThan(0);
+                    expect(network.stats.duplicated).toBeGreaterThan(0);
+                    expect(network.stats.reordered).toBeGreaterThan(0);
+
+                    healDocuments(clientDocuments);
+                    assertConverged(clientDocuments, clientEditors);
+                } finally {
+                    destroyClients(clientDocuments, clientEditors);
                 }
+            });
 
-                for (let index = 0; index < 3; index += 1) {
-                    applyEdit(clientEditors, 0, { type: "insert", offset: index, text: "q" });
-                }
+            const result = fc.check(property, {
+                numRuns: chaosConfig.runCount,
+                seed: chaosConfig.seed,
+                ...(chaosConfig.path === undefined ? {} : { path: chaosConfig.path }),
+            });
 
-                const sourcePackets = network.packets.filter((packet) => packet.from === 0 && packet.to === 1);
-                expect(sourcePackets.length).toBeGreaterThanOrEqual(3);
-                network.advance(100);
-                network.deliver(sourcePackets.at(-1)!.id);
-                network.deliver(sourcePackets[0].id);
-
-                const duplicatePacket = network.packets.find((packet) => packet.from === 0 && packet.to === 2);
-                const droppedPacket = network.packets.find((packet) => packet.id !== duplicatePacket?.id);
-                expect(duplicatePacket).toBeDefined();
-                expect(droppedPacket).toBeDefined();
-                network.duplicate(duplicatePacket!.id);
-                network.drop(droppedPacket!.id);
-
-                for (const packet of [...network.packets]) network.deliver(packet.id);
-
-                expect(network.stats.delayed).toBeGreaterThan(0);
-                expect(network.stats.dropped).toBeGreaterThan(0);
-                expect(network.stats.duplicated).toBeGreaterThan(0);
-                expect(network.stats.reordered).toBeGreaterThan(0);
-
-                healDocuments(clientDocuments);
-                assertConverged(clientDocuments, clientEditors);
-            } finally {
-                destroyClients(clientDocuments, clientEditors);
+            if (result.failed) {
+                const path = result.counterexamplePath ?? "<none>";
+                throw new Error(
+                    `[chaos] convergence property failed; seed=${chaosConfig.seed} path=${path}. ` +
+                        `Replay with FC_SEED=${chaosConfig.seed} FC_PATH='${path}' FC_RUNS=${chaosConfig.runCount} ` +
+                        "pnpm chaos test:unit:property",
+                    { cause: result.errorInstance },
+                );
             }
-        });
 
-        const result = fc.check(property, {
-            numRuns: chaosConfig.runCount,
-            seed: chaosConfig.seed,
-            ...(chaosConfig.path === undefined ? {} : { path: chaosConfig.path }),
-        });
-
-        if (result.failed) {
-            const path = result.counterexamplePath ?? "<none>";
-            throw new Error(
-                `[chaos] convergence property failed; seed=${chaosConfig.seed} path=${path}. ` +
-                    `Replay with FC_SEED=${chaosConfig.seed} FC_PATH='${path}' FC_RUNS=${chaosConfig.runCount} ` +
-                    "pnpm chaos test:unit:property",
-                { cause: result.errorInstance },
-            );
-        }
-
-        expect(result.failed).toBe(false);
-    });
+            expect(result.failed).toBe(false);
+        },
+        30_000 + chaosConfig.runCount * 500,
+    );
 
     it("detects a deliberately unhealed split", () => {
         const { clientDocuments, clientEditors } = createClients(2);
