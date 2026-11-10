@@ -1,4 +1,4 @@
-FROM node:24.21.0-alpine
+FROM node:24.21.0-alpine AS build
 
 WORKDIR /build
 
@@ -8,4 +8,14 @@ COPY . .
 
 RUN pnpm install --frozen-lockfile
 
-CMD ["pnpm", "dev"]
+RUN pnpm run build && pnpm backend deploy --prod ./dist
+
+FROM node:24.21.0-alpine
+
+WORKDIR /app
+
+COPY --from=build /build/dist .
+
+COPY --from=build /build/packages/frontend/build ./public
+
+CMD ["node", "build/index.js"]

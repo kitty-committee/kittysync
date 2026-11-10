@@ -1,8 +1,10 @@
 {
     "name": "kittysync",
     "version": "0.0.0",
+    "private": "true",
     "type": "module",
     "scripts": {
+        "postinstall": "pnpm --filter @kittysync/common build",
         "check": "pnpm run check:lint && pnpm run check:format && pnpm run check:type && pnpm run check:test && pnpm run check:chaos",
         "check:format": "prettier --check .",
         "check:type": "pnpm run -r check:type",
@@ -10,10 +12,11 @@
         "check:chaos": "pnpm chaos check:chaos",
         "check:lint": "eslint .",
         "format": "prettier --write .",
-        "dev": "pnpm run -r --parallel dev",
+        "dev": "pnpm --filter @kittysync/common build && pnpm run -r --parallel dev",
         "frontend": "pnpm --filter frontend",
         "backend": "pnpm --filter backend",
         "common": "pnpm --filter common",
+        "build": "pnpm run -r build",
         "chaos": "pnpm --filter @kittysync/chaos",
         "stack": "docker compose -f compose.dev.yml"
     },

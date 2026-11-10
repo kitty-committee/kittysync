@@ -17,7 +17,6 @@ import staticFastify from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
@@ -137,8 +136,8 @@ export async function createApp() {
     await app.register(websocket);
 
     await app.register(staticFastify, {
-        root: join(process.cwd(), "./public"),
-        index: "404.html",
+        root: fileURLToPath(new URL("../public", import.meta.url)),
+        index: "index.html",
     });
 
     app.setNotFoundHandler((request, reply) => {
