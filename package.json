@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "check": "pnpm run check:lint && pnpm run check:format && pnpm run check:type && pnpm run check:test",
+        "check": "pnpm run check:lint && pnpm run check:format && pnpm run check:type && pnpm run check:test && pnpm run check:chaos",
         "check:format": "prettier --check .",
         "check:type": "pnpm run -r check:type",
         "check:test": "pnpm run -r check:test",

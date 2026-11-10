@@ -34,8 +34,21 @@ export function createRedis() {
 /** The global redis client, not to be used with subscriptions */
 export const redis = createRedis();
 
-export function createHocuspocus() {
-    return new Hocuspocus<{ user: UserDb }>({
+declare module "fastify" {
+    interface FastifyRequest {
+        user: UserDb | null;
+    }
+}
+
+/** Creates an instance of the KittySync backend application */
+export async function createApp() {
+    await migrate(db, { migrationsFolder: fileURLToPath(new URL("../drizzle", import.meta.url)) });
+
+    const app = Fastify({
+        logger: true,
+    });
+
+    const hocuspocus = new Hocuspocus<{ user: UserDb }>({
         extensions: [
             new Logger(),
             new HocusRedis({
@@ -119,23 +132,6 @@ export function createHocuspocus() {
             }
         },
     });
-}
-
-declare module "fastify" {
-    interface FastifyRequest {
-        user: UserDb | null;
-    }
-}
-
-/** Creates an instance of the KittySync backend application */
-export async function createApp() {
-    await migrate(db, { migrationsFolder: fileURLToPath(new URL("../drizzle", import.meta.url)) });
-
-    const app = Fastify({
-        logger: true,
-    });
-
-    const hocuspocus = createHocuspocus();
 
     await app.register(fastifyCookie);
     await app.register(websocket);
