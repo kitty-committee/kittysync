@@ -37,6 +37,13 @@ function createClient(url: string, documentName: string, identity: TestIdentity,
     const provider = new HocuspocusProvider(configuration);
     const socket = provider.configuration.websocketProvider;
     provider.awareness?.setLocalState({ user: identity.user });
+    provider.on("open", () => {
+        const awareness = provider.awareness;
+        const localState = awareness?.getLocalState();
+        if (awareness !== null && localState !== null && localState !== undefined) {
+            awareness.setLocalState(localState);
+        }
+    });
     socket.on("status", ({ status }: { status: string }) => console.info(`[chaos] ${url} websocket ${status}`));
     socket.on("maxAttemptsFailed", ({ error }: { error: unknown }) =>
         console.error(`[chaos] WebSocket retry failed: ${String(error)}`),
@@ -121,6 +128,11 @@ test("real Hocuspocus nodes converge after seeded WebSocket faults and reconnect
         await waitUntil(
             () => clients.every((client) => client.provider.synced),
             "all Hocuspocus clients to complete initial sync",
+            15_000,
+        );
+        await waitUntil(
+            () => awarenessConverged(clients),
+            "all active awareness states to reach every client before injected faults",
             15_000,
         );
 

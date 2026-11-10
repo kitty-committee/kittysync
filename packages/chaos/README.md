@@ -52,9 +52,9 @@ Playwright attaches the seed to the test result and retains traces and screensho
 
 Add in-memory edits and network actions to `src/layer-1/convergence.spec.ts`, using the paragraph editor helpers so generated edits remain valid for the ProseMirror schema. Add real-server transport cases to `src/layer-2/hocuspocus.spec.ts`; use `waitUntil` for state transitions rather than fixed sleeps. Browser scenarios belong under `tests/browser/` and should wait on visible state or `expect.poll`, not fixed delays. Preserve the seed in every new source of chaos and include a useful state snapshot in failure output.
 
-## Current integration finding
+## Reconnection awareness
 
-With the default integration seed (`20261109`), the real-server test currently demonstrates convergence of document state vectors, ProseMirror JSON, and Markdown after the injected faults and reconnect. It fails the separate awareness assertion: each reconnected client observes only its own awareness state rather than all three active clients. The backend also logs `beforeHandleAwareness` Zod errors while processing awareness traffic. This is reported as an application finding; the harness does not suppress the assertion or modify production awareness handling.
+The real-server test checks that all clients see one another's active awareness states both before faults and after reconnect. Hocuspocus removes awareness states when a connection closes; a reconnect must re-publish the local state with an advanced Yjs awareness clock or the server can ignore it as stale. Providers refresh their non-null local state on each `open` event before the reconnect sync begins.
 
 ## Required status check
 

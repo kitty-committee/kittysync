@@ -23,14 +23,14 @@
         "yjs": "^13.6.33"
     },
     "devDependencies": {
-        "@playwright/test": "^1.65.0",
+        "@playwright/test": "1.64.0",
         "@types/jsdom": "^30.0.0",
         "@types/node": "^24.19.2",
         "@types/pg": "^8.23.1",
         "@types/ws": "^8.18.2",
         "fast-check": "^4.10.2",
         "jsdom": "^31.0.0",
-        "playwright": "1.65.0",
+        "playwright": "1.64.0",
         "typescript": "^6.0.3",
         "vitest": "^5.0.4"
     }
