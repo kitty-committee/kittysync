@@ -22,17 +22,11 @@ export async function fetch({ documentName }: fetchPayload<{ user: UserDb }>) {
         docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName)).for("update");
 
         const newDoc = new Y.Doc();
-        const newDocText = newDoc.getText(YJS_SHARED_TEXT);
-        newDocText.insert(0, docs[0].content);
 
         await tx
             .update(documentsTable)
             .set({
                 yDocState: Buffer.from(Y.encodeStateAsUpdate(newDoc)),
-                // YJS does not explicitly expose the definition of toString in their types in such a way that satisfies eslint,
-                // but an implementation will exist in runtime. I can't see a way around this annoyingly.
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                content: newDocText.toString(),
             })
             .where(eq(documentsTable.id, documentName));
 
