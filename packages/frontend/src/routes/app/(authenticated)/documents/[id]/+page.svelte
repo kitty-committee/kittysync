@@ -95,6 +95,16 @@
             },
         });
 
+        provider.on("open", () => {
+            const awareness = provider.awareness;
+            if (awareness != null) {
+                const localState = awareness.getLocalState();
+                if (localState != null && awarenessStateSchema.safeParse(localState).success) {
+                    awareness.setLocalState(localState);
+                }
+            }
+        });
+
         const updateConnectedUsers = () => {
             if (provider.awareness == null) {
                 console.error("Provider awareness is not available.");

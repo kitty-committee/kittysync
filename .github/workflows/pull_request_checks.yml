@@ -18,14 +18,14 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                script: [check:lint, check:format, check:type, check:test, frontend build]
+                script: [check:lint, check:format, check:type, check:test, check:chaos, frontend build]
 
         steps:
             - name: Checkout code
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
             - name: Set up pnpm and NodeJS
-              uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4
+              uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e
               with:
                   node-version-file: .nvmrc
                   install: true
@@ -35,8 +35,12 @@ jobs:
               if: matrix.script == 'check:test'
               run: pnpm frontend playwright install --with-deps
 
+            - name: Install Chromium dependencies
+              if: matrix.script == 'check:chaos'
+              run: pnpm chaos exec playwright install --with-deps chromium
+
             - name: Start compose stack
-              if: matrix.script == 'check:test'
+              if: matrix.script == 'check:test' || matrix.script == 'check:chaos'
               run: pnpm stack up --wait
 
             - name: Run check
