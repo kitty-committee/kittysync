@@ -58,8 +58,9 @@ export const hocuspocus = new Hocuspocus<{ user: UserDb }>({
         if (documentName !== GLOBAL_PRESENCE_DOCUMENT) {
             // If this fails, a ZodError is thrown, and exposed to hocuspocus,
             // which does not proceed once an error is received.
-            const docId = z.uuid().parse(documentName);
-            const docs = await getDocuments(docId);
+            const docId = z.uuid().safeParse(documentName);
+            if (!docId.success) throw new DocumentNotFound();
+            const docs = await getDocuments(docId.data);
             if (docs.length === 0) {
                 throw new DocumentNotFound();
             }
