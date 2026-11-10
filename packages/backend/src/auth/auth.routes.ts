@@ -1,3 +1,4 @@
+import { postGrantHandler } from "./session/grant/post.handler.ts";
 import { postSessionHandler } from "./session/post.handler.ts";
 import { getSessionHandler } from "./session/get.handler.ts";
 import { postUserHandler } from "./user/post.handler.ts";
@@ -11,6 +12,7 @@ function routes(app: Fastify.FastifyInstance) {
 
     app.get("session", { preHandler: authenticationHook }, getSessionHandler);
     app.post("session", postSessionHandler);
+    app.post("session/grant", postGrantHandler);
 }
 
 /**

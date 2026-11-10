@@ -16,7 +16,6 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
     } catch (error) {
         if (error instanceof ZodError) {
             reply.code(400).send(error.issues);
-            return;
         }
 
         throw error;

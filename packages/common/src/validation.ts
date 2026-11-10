@@ -5,7 +5,12 @@ export const userCredentialsSchema = z.object({
     password: z.string().trim().min(5).max(255),
 });
 
+export const authcatGrantCodeSchema = z.object({
+    code: z.string().trim(),
+});
+
 export type UserCredentials = z.infer<typeof userCredentialsSchema>;
+export type AuthGrantCode = z.infer<typeof authcatGrantCodeSchema>;
 
 export const userDbSchema = z.object({
     id: z.uuidv4(),
