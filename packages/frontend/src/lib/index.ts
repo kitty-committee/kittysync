@@ -16,7 +16,7 @@ export async function fetchApi(
     const options = typeof fetchOrUrl === "string" ? (urlOrInit as RequestInit | undefined) : init;
     const api = await fetch(`/api/${url}`, { credentials: "include", ...options });
     if (api.status === 401) {
-        if (fetchOrUrl === "function") redirect(302, resolve("/app/login"));
+        if (typeof fetchOrUrl === "function") redirect(302, resolve("/app/login"));
         else goto(resolve("/app/login"));
     }
 
