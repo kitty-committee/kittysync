@@ -2,7 +2,6 @@ import { SOCKET_ERROR_UNBOUND_CONNECTION, SOCKET_ERROR_UNSUPPORTED_MESSAGE } fro
 import type { Hocuspocus } from "@hocuspocus/server";
 import { type WebSocket } from "@fastify/websocket";
 import { authenticationHook } from "../util.ts";
-import { hocuspocus } from "../app.ts";
 import Fastify from "fastify";
 
 // Grrrrrrr
@@ -19,7 +18,8 @@ const clientConnections: Map<WebSocket, ClientConnection> = new Map<WebSocket, C
  * Register collaboration plugin
  * @param app Fastify instance
  */
-export function register(app: Fastify.FastifyInstance) {
+export function register(app: Fastify.FastifyInstance, options: { hocuspocus: Hocuspocus }) {
+    const { hocuspocus } = options;
     app.get(
         "/api/collaboration",
         { preHandler: authenticationHook, websocket: true },

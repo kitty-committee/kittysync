@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { GLOBAL_PRESENCE_DOCUMENT } from "@kittysync/common";
+    import { awarenessStateSchema, GLOBAL_PRESENCE_DOCUMENT } from "@kittysync/common";
     import { HocuspocusProvider } from "@hocuspocus/provider";
     import { invalidate } from "$app/navigation";
     import { onDestroy, onMount } from "svelte";
@@ -60,6 +60,16 @@
             onDisconnect() {
                 userCount = -1;
             },
+        });
+
+        provider.on("open", () => {
+            const awareness = provider.awareness;
+            if (awareness != null) {
+                const localState = awareness.getLocalState();
+                if (localState != null && awarenessStateSchema.safeParse(localState).success) {
+                    awareness.setLocalState(localState);
+                }
+            }
         });
 
         provider.attach();

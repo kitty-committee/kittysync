@@ -1,0 +1,37 @@
+{
+    "name": "@kittysync/chaos",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "check:type": "tsc --noEmit",
+        "test:unit": "vitest run --config vitest.config.ts",
+        "test:property": "vitest run --config vitest.config.ts src/layer-1/convergence.spec.ts",
+        "test:integration": "vitest run --config vitest.integration.config.ts",
+        "check:test": "pnpm run test:unit && pnpm run test:integration",
+        "check:chaos": "playwright test && pnpm run test:property"
+    },
+    "dependencies": {
+        "@hocuspocus/provider": "^4.8.0",
+        "@kittysync/backend": "workspace:*",
+        "@kittysync/common": "workspace:*",
+        "@tiptap/core": "^3.32.2",
+        "@tiptap/extension-collaboration": "^3.32.2",
+        "@tiptap/markdown": "^3.32.2",
+        "@tiptap/starter-kit": "^3.32.2",
+        "pg": "^8.23.1",
+        "ws": "^8.22.0",
+        "yjs": "^13.6.33"
+    },
+    "devDependencies": {
+        "@playwright/test": "1.64.0",
+        "@types/jsdom": "^30.0.0",
+        "@types/node": "^24.19.2",
+        "@types/pg": "^8.23.1",
+        "@types/ws": "^8.18.2",
+        "fast-check": "^4.10.2",
+        "jsdom": "^31.0.0",
+        "playwright": "1.64.0",
+        "typescript": "^6.0.3",
+        "vitest": "^5.0.4"
+    }
+}

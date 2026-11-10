@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "module": "nodenext",
+        "allowImportingTsExtensions": true,
+        "rewriteRelativeImportExtensions": true,
+        "lib": ["esnext", "dom"],
+        "types": ["node"],
+        "skipLibCheck": true
+    },
+    "include": ["src/**/*.ts", "tests/**/*.ts", "test-setup.ts", "integration-environment.ts", "playwright.config.ts"]
+}
