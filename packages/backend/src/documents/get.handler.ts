@@ -63,7 +63,7 @@ export async function getDocumentHandler(request: FastifyRequest<{ Params: { id?
         try {
             id = z.string().uuid().parse(request.params?.id);
         } catch {
-            reply.code(400).send();
+            reply.code(404).send();
             return;
         }
     }

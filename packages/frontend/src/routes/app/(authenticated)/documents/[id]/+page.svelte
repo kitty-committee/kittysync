@@ -47,10 +47,7 @@
                 connected = status === "connected";
             },
             onAuthenticationFailed: ({ reason }) => {
-                authenticationError =
-                    reason === "document-not-found"
-                        ? "This document could not be found."
-                        : "Unable to connect or authenticate. Please try again.";
+                authenticationError = reason;
             },
             onSynced: () => {
                 if (editor) return;
