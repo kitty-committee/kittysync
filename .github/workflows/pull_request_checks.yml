@@ -84,7 +84,9 @@ jobs:
                   set +a
                   pnpm backend dev > packages/chaos/.chaos-artifacts/backend.log 2>&1 &
                   pnpm frontend dev --host 127.0.0.1 > packages/chaos/.chaos-artifacts/frontend.log 2>&1 &
-                  curl --fail --retry 60 --retry-delay 1 --retry-connrefused --max-time 2 http://127.0.0.1:3000/api/auth/session --output /dev/null
+                  curl --silent --show-error --retry 60 --retry-delay 1 --retry-connrefused --max-time 2 \
+                      http://127.0.0.1:3000/api/auth/session --output /dev/null --write-out '%{http_code}' |
+                      grep --quiet '^401$'
                   curl --fail --retry 60 --retry-delay 1 --retry-connrefused --max-time 2 http://127.0.0.1:5173/ --output /dev/null
 
             - name: Run chaos suite

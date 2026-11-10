@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, bytea, char } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, bytea, char } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: uuid().primaryKey().notNull().defaultRandom(),
@@ -18,7 +18,6 @@ export const usersTable = pgTable("users", {
 export const documentsTable = pgTable("documents", {
     id: uuid().primaryKey().notNull().defaultRandom(),
     title: varchar({ length: 255 }).notNull(),
-    content: text().notNull().default(""),
     authorId: uuid()
         .notNull()
         .references(() => usersTable.id, { onDelete: "cascade" }),

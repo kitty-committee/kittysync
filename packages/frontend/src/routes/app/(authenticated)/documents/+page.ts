@@ -1,5 +1,6 @@
 import type { PageLoad } from "./$types";
 import { error } from "@sveltejs/kit";
+import { fetchApi } from "#lib";
 
 /**
     data type for the document record
@@ -21,7 +22,7 @@ type DocumentRecord = {
     will throw an error if the fetch fails.
 */
 export const load: PageLoad = async ({ fetch }) => {
-    const response = await fetch(`/api/documents`);
+    const response = await fetchApi(fetch, `documents`);
 
     if (!response.ok) {
         throw error(response.status, "Failed to fetch documents");

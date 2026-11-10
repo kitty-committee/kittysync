@@ -88,8 +88,8 @@ test("real Hocuspocus nodes converge after seeded WebSocket faults and reconnect
     const clients: Client[] = [];
 
     try {
-        for (const name of ["chaos-node-one", "chaos-node-two"]) {
-            const app = await createApp({ name });
+        for (let nodeIndex = 0; nodeIndex < 2; nodeIndex += 1) {
+            const app = await createApp();
             await app.listen({ host: "127.0.0.1", port: 0 });
             apps.push(app);
         }

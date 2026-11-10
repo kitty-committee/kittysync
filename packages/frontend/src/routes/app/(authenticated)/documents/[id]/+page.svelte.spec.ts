@@ -9,6 +9,7 @@ type ProviderOptions = {
     document: unknown;
     onStatus: (event: { status: string }) => void;
     onAuthenticationFailed: (event: { reason: string }) => void;
+    onDisconnect: (event: { event: CloseEvent }) => void;
     onSynced: () => void;
 };
 
@@ -190,7 +191,7 @@ describe("document page", () => {
 
         provider.options.onAuthenticationFailed({ reason: "document-not-found" });
 
-        await expect.element(page.getByRole("alert")).toHaveTextContent("This document could not be found.");
+        await expect.element(page.getByRole("alert")).toHaveTextContent("document-not-found");
     });
 
     it("shows a generic safe alert for other authentication failures", async () => {
@@ -198,9 +199,27 @@ describe("document page", () => {
 
         provider.options.onAuthenticationFailed({ reason: "permission-denied" });
 
+        await expect.element(page.getByRole("alert")).toHaveTextContent("permission-denied");
+    });
+
+    it("shows a reconnect alert when the provider closes an unbound connection", async () => {
+        const provider = renderDocumentPage();
+
+        provider.options.onDisconnect({ event: new CloseEvent("close", { code: 4001 }) });
+
         await expect
             .element(page.getByRole("alert"))
-            .toHaveTextContent("Unable to connect or authenticate. Please try again.");
+            .toHaveTextContent("Unable to connect to the document. Please try again.");
+    });
+
+    it("shows a sync alert when the provider closes for an unsupported message", async () => {
+        const provider = renderDocumentPage();
+
+        provider.options.onDisconnect({ event: new CloseEvent("close", { code: 4002 }) });
+
+        await expect
+            .element(page.getByRole("alert"))
+            .toHaveTextContent("Unable to sync the document. Please try again.");
     });
 
     it("displays users from provider awareness updates", async () => {

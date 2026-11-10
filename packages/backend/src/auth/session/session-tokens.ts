@@ -3,6 +3,9 @@ import { createSigner, createVerifier } from "fast-jwt";
 import { configuration } from "../../configuration.ts";
 import { redis } from "../../app.ts";
 
+/// Forces the type of T to be exactly B, no more and no less.
+type Exact<A, B> = A extends B ? (B extends A ? A : never) : never;
+
 /**
  * Base type of session token providers.
  */
@@ -12,7 +15,7 @@ export interface TokenProvider {
      * @param {UserDb} user - The user to create a new token for
      * @returns {Promise<string>} The new token.
      */
-    new: (user: UserDb) => Promise<string>;
+    new: <T>(user: Exact<T, UserDb>) => Promise<string>;
 
     /**
      * Verify whether a session token is valid or not.
@@ -40,6 +43,7 @@ export class UuidTokenProvider implements TokenProvider {
      * @throws Redis exception on failing to push.
      */
     async new(user: UserDb): Promise<string> {
+        const fields = Object.entries(user).flatMap(([k, v]) => [k, String(v)]);
         const token = crypto.randomUUID();
         await redis.hsetex(
             `user_${token}`,
@@ -47,8 +51,8 @@ export class UuidTokenProvider implements TokenProvider {
             "EX",
             configuration.tokenLifetime,
             "FIELDS",
-            2,
-            ...Object.entries(user).flatMap(([k, v]) => [k, v.toString()]),
+            fields.length / 2,
+            ...fields,
         );
         return token;
     }

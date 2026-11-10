@@ -1,4 +1,4 @@
-import { userCredentialsSchema, type UserCredentials } from "@kittysync/common";
+import { userCredentialsSchema, userDbSchema, type UserCredentials } from "@kittysync/common";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import { configuration } from "../../configuration.ts";
 import { TOKEN_PROVIDER } from "./session-tokens.ts";
@@ -34,7 +34,8 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
         reply.code(401).send();
     } else {
         try {
-            const sessionToken = await TOKEN_PROVIDER.new(targetUser);
+            const userDb = userDbSchema.parse(targetUser);
+            const sessionToken = await TOKEN_PROVIDER.new(userDb);
 
             reply.setCookie("session", sessionToken, {
                 maxAge: configuration.tokenLifetime,
@@ -44,10 +45,7 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
                 path: "/",
             });
 
-            reply.code(200).send({
-                id: targetUser.id,
-                username: targetUser.name,
-            });
+            reply.code(200).send(userDb);
         } catch (error) {
             console.error(error);
             reply.code(503).send();

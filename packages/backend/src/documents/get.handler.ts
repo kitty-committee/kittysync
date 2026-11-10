@@ -12,14 +12,10 @@ import "dotenv/config";
 export async function getDocuments(): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title">[]>;
 export async function getDocuments(
     id: string,
-): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title" | "content" | "authorId">[]>;
-export async function getDocuments(id: string, binary: boolean): Promise<(typeof documentsTable.$inferSelect)[]>;
-export async function getDocuments(
-    id: string,
-    binary: boolean,
-    lock: boolean,
-): Promise<(typeof documentsTable.$inferSelect)[]>;
-export async function getDocuments(id?: string, binary?: boolean, lock?: boolean) {
+    binary?: false,
+): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title" | "authorId">[]>;
+export async function getDocuments(id: string, binary: true): Promise<(typeof documentsTable.$inferSelect)[]>;
+export async function getDocuments(id?: string, binary?: boolean) {
     if (id !== undefined) {
         try {
             let columns;
@@ -27,7 +23,6 @@ export async function getDocuments(id?: string, binary?: boolean, lock?: boolean
                 columns = {
                     id: documentsTable.id,
                     title: documentsTable.title,
-                    content: documentsTable.content,
                     authorId: documentsTable.authorId,
                     yDocState: documentsTable.yDocState,
                 };
@@ -35,18 +30,11 @@ export async function getDocuments(id?: string, binary?: boolean, lock?: boolean
                 columns = {
                     id: documentsTable.id,
                     title: documentsTable.title,
-                    content: documentsTable.content,
                     authorId: documentsTable.authorId,
                 };
             }
 
-            let result;
-            if (lock === true) {
-                result = await db.select(columns).from(documentsTable).where(eq(documentsTable.id, id)).for("update");
-            } else {
-                result = await db.select(columns).from(documentsTable).where(eq(documentsTable.id, id));
-            }
-            return result;
+            return await db.select(columns).from(documentsTable).where(eq(documentsTable.id, id));
         } catch (error) {
             console.error("Error fetching document by ID:", error);
             throw error;
@@ -75,7 +63,7 @@ export async function getDocumentHandler(request: FastifyRequest<{ Params: { id?
         try {
             id = z.string().uuid().parse(request.params?.id);
         } catch {
-            reply.code(400).send();
+            reply.code(422).send();
             return;
         }
     }

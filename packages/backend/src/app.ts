@@ -1,13 +1,9 @@
-import {
-    awarenessStateSchema,
-    GLOBAL_PRESENCE_DOCUMENT,
-    YJS_SHARED_TEXT,
-    type AwarenessState,
-    type UserDb,
-} from "@kittysync/common";
-import { NotAuthenticated, DocumentNotFound, DocumentIdConflict, UpdateForbidden } from "./collaboration/errors.ts";
-import { register as registerHocus, contextSchema } from "./collaboration/collaboration.ts";
+import { awarenessStateSchema, GLOBAL_PRESENCE_DOCUMENT, type AwarenessState, type UserDb } from "@kittysync/common";
+import { NotAuthenticated, DocumentNotFound, UpdateForbidden } from "./collaboration/errors.ts";
 import { register as registerDocuments } from "./documents/documents.routes.ts";
+import { register as registerHocus } from "./collaboration/collaboration.ts";
+import { store as dbStore } from "./collaboration/database/store.ts";
+import { fetch as dbFetch } from "./collaboration/database/fetch.ts";
 import { Redis as HocusRedis } from "@hocuspocus/extension-redis";
 import { register as registerAuth } from "./auth/auth.routes.ts";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -17,16 +13,15 @@ import { Logger } from "@hocuspocus/extension-logger";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { configuration } from "./configuration.ts";
 import { Hocuspocus } from "@hocuspocus/server";
-import { updateDocumentState } from "./util.ts";
 import staticFastify from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
+import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { Redis } from "ioredis";
 import Fastify from "fastify";
 import { Pool } from "pg";
 import * as z from "zod";
-import * as Y from "yjs";
 
 const pool = new Pool(configuration.database);
 export const db = drizzle({ client: pool });
@@ -39,9 +34,8 @@ export function createRedis() {
 /** The global redis client, not to be used with subscriptions */
 export const redis = createRedis();
 
-export function createHocuspocus(name?: string) {
-    return new Hocuspocus({
-        name,
+export function createHocuspocus() {
+    return new Hocuspocus<{ user: UserDb }>({
         extensions: [
             new Logger(),
             new HocusRedis({
@@ -49,72 +43,26 @@ export function createHocuspocus(name?: string) {
                 port: 6379,
             }),
             new Database({
-                fetch: async ({ documentName }) => {
-                    // Global presence document has no state
-                    if (documentName === GLOBAL_PRESENCE_DOCUMENT) {
-                        return null;
-                    }
-
-                    let docs = await getDocuments(documentName, true);
-
-                    if (docs.length !== 1) {
-                        throw new DocumentIdConflict();
-                    }
-
-                    const state = docs[0].yDocState;
-                    if (state !== null) return state;
-
-                    // Re-select the document, locking it for update
-                    docs = await getDocuments(documentName, true, true);
-
-                    const newDoc = new Y.Doc();
-                    const newDocText = newDoc.getText(YJS_SHARED_TEXT);
-                    newDocText.insert(0, docs[0].content);
-
-                    await updateDocumentState(documentName, newDoc);
-
-                    docs = await getDocuments(documentName, true);
-
-                    if (docs.length !== 1) {
-                        throw new DocumentIdConflict();
-                    }
-
-                    return docs[0].yDocState;
-                },
-
-                store: async ({ documentName, state }) => {
-                    // Global presence document has no state
-                    if (documentName === GLOBAL_PRESENCE_DOCUMENT) {
-                        return;
-                    }
-
-                    const docs = await getDocuments(documentName, true, true);
-
-                    if (docs.length !== 1) {
-                        throw new DocumentIdConflict();
-                    }
-
-                    const newState = Y.mergeUpdates([docs[0].yDocState!, state]);
-                    const yDoc = new Y.Doc();
-                    Y.applyUpdate(yDoc, newState);
-
-                    await updateDocumentState(documentName, yDoc);
-                },
+                fetch: dbFetch,
+                store: dbStore,
             }),
         ],
 
         async onAuthenticate({ context, documentName }) {
-            const c = contextSchema.parse(context);
-            // This should already be verified by the websocket endpoint authentication hook.
-            if (c.user === undefined) {
+            // This shouldn't  necessarily need to  be verified, since it should have been verified by
+            // the authentication hook on the endpoint to open the websocket connection
+            if (context.user === undefined) {
                 throw new NotAuthenticated();
             }
 
-            // The global presence document is not stored in the database.
+            // If the document name is the global presence document, this should be handled
+            // separately, since the document does not actually exist on the database
             if (documentName !== GLOBAL_PRESENCE_DOCUMENT) {
-                // Invalid document names throw a ZodError, preventing the connection from proceeding.
-                const docId = z.uuid().parse(documentName);
-                const docs = await getDocuments(docId);
+                // If this fails, a ZodError is thrown, and exposed to hocuspocus,
+                // which does not proceed once an error is received.
+                const docId = z.uuid().safeParse(documentName);
+                if (!docId.success) throw new DocumentNotFound();
+                const docs = await getDocuments(docId.data);
                 if (docs.length === 0) {
                     throw new DocumentNotFound();
                 }
@@ -123,13 +71,23 @@ export function createHocuspocus(name?: string) {
 
         // This function must be async, but eslint complains there is no await!
         // eslint-disable-next-line @typescript-eslint/require-await
-        async beforeHandleAwareness({ context, states, awareness, removedClients }) {
-            const c = contextSchema.parse(context);
-            if (c.user === undefined) {
+        async beforeHandleAwareness({ context, states, awareness, removedClients, connection }) {
+            // If this state update came from a server rather than straight from a client, we can skip validation!
+            // This removes the possiblity that context is undefined, since it will always be defined on client connections.
+            // We can skip the validation when this update comes from a server because the originating server will have performed the
+            // validation with the required client context present, so we can trust it is valid.
+            if (connection === undefined) {
+                return;
+            }
+
+            if (context!.user === undefined) {
                 throw new NotAuthenticated();
             }
 
-            // Validate submitted states and replace client-supplied users with the authenticated context.
+            // states contains the new states being pushed to the document's awareness by a
+            // single client. Here, we verify that all of the pushed states are valid against the
+            // expected schema, and replace the user value with the server-supplied context, rather
+            // than trusting the client.
             for (const k of states.keys()) {
                 let state: AwarenessState;
                 try {
@@ -139,21 +97,23 @@ export function createHocuspocus(name?: string) {
                     continue;
                 }
 
-                state.user = c.user;
+                state.user = context!.user;
                 states.set(k, state);
 
-                // Prevent a client from taking over another client's awareness ID.
+                // Ensure that the current user is consistent with the current state.
+                // Prevents client ID's from being hijacked.
                 const currentState = awareness.getStates().get(k) as AwarenessState;
-                if (currentState !== undefined && currentState.user.id !== c.user.id) {
+                if (currentState !== undefined && currentState.user.id !== context!.user.id) {
                     states.delete(k);
                 }
             }
 
-            // A client may only remove awareness states belonging to the authenticated user.
+            // Check if the update attempts to remove any clients which are not owned
+            // by the current user.
             for (const id of removedClients) {
                 const state = awareness.getStates().get(id) as AwarenessState;
                 if (state === undefined) continue;
-                if (state.user.id !== c.user.id) {
+                if (state.user.id !== context!.user.id) {
                     throw new UpdateForbidden();
                 }
             }
@@ -168,13 +128,14 @@ declare module "fastify" {
 }
 
 /** Creates an instance of the KittySync backend application */
-export async function createApp(options: { name?: string } = {}) {
-    await migrate(db, { migrationsFolder: join(import.meta.dirname, "../drizzle") });
+export async function createApp() {
+    await migrate(db, { migrationsFolder: fileURLToPath(new URL("../drizzle", import.meta.url)) });
 
     const app = Fastify({
         logger: true,
     });
-    const hocuspocus = createHocuspocus(options.name);
+
+    const hocuspocus = createHocuspocus();
 
     await app.register(fastifyCookie);
     await app.register(websocket);
@@ -195,14 +156,13 @@ export async function createApp(options: { name?: string } = {}) {
     // Register auth routes
     await app.register(registerAuth);
     await app.register(registerDocuments);
-    // Deprecated from hocuspocus integration
-    // registerWebsocketRoutes(app);
     await app.register(registerHocus, { hocuspocus });
 
-    app.addHook("onClose", async () => {
+    app.addHook("onClose", (_instance, done) => {
         hocuspocus.closeConnections();
         hocuspocus.flushPendingStores();
-        await hocuspocus.hooks("onDestroy", { instance: hocuspocus });
+
+        done();
     });
 
     // return the app instance
