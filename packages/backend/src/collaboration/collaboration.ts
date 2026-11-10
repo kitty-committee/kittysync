@@ -64,6 +64,7 @@ export function register(app: Fastify.FastifyInstance) {
 
                 if (conn !== undefined) {
                     conn.handleClose(event);
+                    clientConnections.delete(event.target);
                 } else {
                     event.target.close(SOCKET_ERROR_UNBOUND_CONNECTION, "Client connection does not exist!");
                     console.error("Client websocket connection could not be linked to a hocuspocus connection!");
@@ -84,7 +85,7 @@ export function register(app: Fastify.FastifyInstance) {
             // Pass the raw request to hocuspocus to handle
 
             const clientConnection: ClientConnection = hocuspocus.handleConnection(socket, request, {
-                user: req.user,
+                user: req.user!,
             });
             clientConnections.set(socket, clientConnection);
 
