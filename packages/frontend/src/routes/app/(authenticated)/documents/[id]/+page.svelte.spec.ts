@@ -191,7 +191,7 @@ describe("document page", () => {
 
         provider.options.onAuthenticationFailed({ reason: "document-not-found" });
 
-        await expect.element(page.getByRole("alert")).toHaveTextContent("This document could not be found.");
+        await expect.element(page.getByRole("alert")).toHaveTextContent("document-not-found");
     });
 
     it("shows a generic safe alert for other authentication failures", async () => {
@@ -201,7 +201,7 @@ describe("document page", () => {
 
         await expect
             .element(page.getByRole("alert"))
-            .toHaveTextContent("Unable to connect or authenticate. Please try again.");
+            .toHaveTextContent("permission-denied");
     });
 
     it("shows a reconnect alert when the provider closes an unbound connection", async () => {
