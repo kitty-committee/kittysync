@@ -16,4 +16,6 @@ WORKDIR /app
 
 COPY --from=build /build/dist .
 
+COPY --from=build /build/packages/frontend/build ./public
+
 CMD ["node", "build/index.js"]

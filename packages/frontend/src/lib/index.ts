@@ -2,6 +2,7 @@
 
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
+import { redirect } from "@sveltejs/kit";
 
 export function fetchApi(fetch: typeof window.fetch, url: string, init?: RequestInit): Promise<Response>;
 export function fetchApi(url: string, init?: RequestInit): Promise<Response>;
@@ -14,6 +15,10 @@ export async function fetchApi(
     const url = typeof fetchOrUrl === "string" ? fetchOrUrl : (urlOrInit as string);
     const options = typeof fetchOrUrl === "string" ? (urlOrInit as RequestInit | undefined) : init;
     const api = await fetch(`/api/${url}`, { credentials: "include", ...options });
-    if (api.status === 401) goto(resolve("/app/login"));
+    if (api.status === 401) {
+        if (fetchOrUrl === "function") redirect(302, resolve("/app/login"));
+        else goto(resolve("/app/login"));
+    }
+
     return api;
 }
