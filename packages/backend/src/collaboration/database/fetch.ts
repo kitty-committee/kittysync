@@ -19,7 +19,9 @@ export async function fetch({ documentName }: fetchPayload<{ user: UserDb }>) {
         const state = docs[0].yDocState;
         if (state !== null) return state;
 
-        await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName)).for("update");
+        const locked = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName)).for("update");
+        if (locked.length !== 1) throw new DocumentIdConflict();
+        if (locked[0].yDocState !== null) return locked[0].yDocState;
 
         const newDoc = new Y.Doc();
 
