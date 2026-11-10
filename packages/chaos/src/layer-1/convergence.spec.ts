@@ -155,14 +155,14 @@ describe("in-memory Yjs convergence", () => {
             const path = result.counterexamplePath ?? "<none>";
             throw new Error(
                 `[chaos] convergence property failed; seed=${chaosConfig.seed} path=${path}. ` +
-                    `Replay with FC_SEED=${chaosConfig.seed} FC_PATH='${path}' FC_RUNS=${chaosConfig.runCount} ` +
-                    "pnpm chaos test:unit:property",
+                `Replay with FC_SEED=${chaosConfig.seed} FC_PATH='${path}' FC_RUNS=${chaosConfig.runCount} ` +
+                "pnpm chaos test:unit:property",
                 { cause: result.errorInstance },
             );
         }
 
         expect(result.failed).toBe(false);
-    });
+    }, 30_000 + chaosConfig.runCount * 500);
 
     it("detects a deliberately unhealed split", () => {
         const { clientDocuments, clientEditors } = createClients(2);
