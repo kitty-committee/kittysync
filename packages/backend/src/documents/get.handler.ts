@@ -10,12 +10,33 @@ import "dotenv/config";
     @returns {Promise<any[]>} A list of documents or a single document if an ID is provided.
 */
 export async function getDocuments(): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title">[]>;
-export async function getDocuments(id: string): Promise<(typeof documentsTable.$inferSelect)[]>;
-export async function getDocuments(id?: string) {
+export async function getDocuments(
+    id: string,
+    binary?: false,
+): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title" | "content" | "authorId">[]>;
+export async function getDocuments(id: string, binary: true): Promise<(typeof documentsTable.$inferSelect)[]>;
+export async function getDocuments(id?: string, binary?: boolean) {
     if (id !== undefined) {
         try {
-            const result = await db.select().from(documentsTable).where(eq(documentsTable.id, id));
-            return result;
+            let columns;
+            if (binary === true) {
+                columns = {
+                    id: documentsTable.id,
+                    title: documentsTable.title,
+                    content: documentsTable.content,
+                    authorId: documentsTable.authorId,
+                    yDocState: documentsTable.yDocState,
+                };
+            } else {
+                columns = {
+                    id: documentsTable.id,
+                    title: documentsTable.title,
+                    content: documentsTable.content,
+                    authorId: documentsTable.authorId,
+                };
+            }
+
+            return await db.select(columns).from(documentsTable).where(eq(documentsTable.id, id));
         } catch (error) {
             console.error("Error fetching document by ID:", error);
             throw error;
