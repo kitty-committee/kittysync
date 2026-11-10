@@ -13,7 +13,7 @@ export async function getDocuments(): Promise<Pick<typeof documentsTable.$inferS
 export async function getDocuments(
     id: string,
     binary?: false,
-): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title" | "content" | "authorId">[]>;
+): Promise<Pick<typeof documentsTable.$inferSelect, "id" | "title" | "authorId">[]>;
 export async function getDocuments(id: string, binary: true): Promise<(typeof documentsTable.$inferSelect)[]>;
 export async function getDocuments(id?: string, binary?: boolean) {
     if (id !== undefined) {
@@ -23,7 +23,6 @@ export async function getDocuments(id?: string, binary?: boolean) {
                 columns = {
                     id: documentsTable.id,
                     title: documentsTable.title,
-                    content: documentsTable.content,
                     authorId: documentsTable.authorId,
                     yDocState: documentsTable.yDocState,
                 };
@@ -31,7 +30,6 @@ export async function getDocuments(id?: string, binary?: boolean) {
                 columns = {
                     id: documentsTable.id,
                     title: documentsTable.title,
-                    content: documentsTable.content,
                     authorId: documentsTable.authorId,
                 };
             }

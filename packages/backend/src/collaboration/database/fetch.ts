@@ -1,4 +1,4 @@
-import { GLOBAL_PRESENCE_DOCUMENT, YJS_SHARED_TEXT, type UserDb } from "@kittysync/common";
+import { GLOBAL_PRESENCE_DOCUMENT, type UserDb } from "@kittysync/common";
 import type { fetchPayload } from "@hocuspocus/server";
 import { documentsTable } from "../../db/schema.ts";
 import { DocumentIdConflict } from "../errors.ts";
@@ -19,7 +19,7 @@ export async function fetch({ documentName }: fetchPayload<{ user: UserDb }>) {
         const state = docs[0].yDocState;
         if (state !== null) return state;
 
-        docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName)).for("update");
+        await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName)).for("update");
 
         const newDoc = new Y.Doc();
 
