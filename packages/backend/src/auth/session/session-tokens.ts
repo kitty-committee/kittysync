@@ -40,6 +40,7 @@ export class UuidTokenProvider implements TokenProvider {
      * @throws Redis exception on failing to push.
      */
     async new(user: UserDb): Promise<string> {
+        const fields = Object.entries(user).flatMap(([k, v]) => [k, String(v)]);
         const token = crypto.randomUUID();
         await redis.hsetex(
             `user_${token}`,
@@ -47,8 +48,8 @@ export class UuidTokenProvider implements TokenProvider {
             "EX",
             configuration.tokenLifetime,
             "FIELDS",
-            2,
-            ...Object.entries(user).flatMap(([k, v]) => [k, v.toString()]),
+            fields.length / 2,
+            ...fields,
         );
         return token;
     }
