@@ -21,7 +21,7 @@
     let connected = $state(false);
     let documentLoaded = $state(false);
     let inEditMode = $state(false);
-    let authenticationError = $state("");
+    let connectionError = $state("");
     let editorElement = $state<HTMLDivElement | undefined>(undefined);
     let editor: Editor | null = null;
     let markdownContent = $state("");
@@ -51,15 +51,18 @@
             document: ydoc,
             onStatus: ({ status }) => {
                 connected = status === "connected";
+                if (connected) {
+                    connectionError = "";
+                }
             },
             onAuthenticationFailed: ({ reason }) => {
-                authenticationError = reason;
+                connectionError = reason;
             },
             onDisconnect: ({ event }) => {
                 if (event.code === SOCKET_ERROR_UNBOUND_CONNECTION) {
-                    authenticationError = "Unable to connect to the document. Please try again.";
+                    connectionError = "Unable to connect to the document. Please try again.";
                 } else if (event.code === SOCKET_ERROR_UNSUPPORTED_MESSAGE) {
-                    authenticationError = "Unable to sync the document. Please try again.";
+                    connectionError = "Unable to sync the document. Please try again.";
                 }
             },
             onSynced: () => {
@@ -154,8 +157,8 @@
     </div>
 </nav>
 
-{#if authenticationError}
-    <p role="alert">{authenticationError}</p>
+{#if connectionError}
+    <p role="alert">{connectionError}</p>
 {/if}
 
 <!-- button to toggle edit mode. text area contains file content, which can be edited. -->
