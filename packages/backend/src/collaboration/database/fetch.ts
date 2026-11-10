@@ -19,6 +19,8 @@ export async function fetch({ documentName }: fetchPayload<{ user: UserDb }>) {
         const state = docs[0].yDocState;
         if (state !== null) return state;
 
+        docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName)).for("update");
+
         const newDoc = new Y.Doc();
         const newDocText = newDoc.getText(YJS_SHARED_TEXT);
         newDocText.insert(0, docs[0].content);

@@ -13,7 +13,7 @@ export async function store({ documentName, state }: storePayload<{ user: UserDb
     }
 
     await db.transaction(async (tx) => {
-        const docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName));
+        const docs = await tx.select().from(documentsTable).where(eq(documentsTable.id, documentName)).for("update");
 
         if (docs.length !== 1) throw new DocumentIdConflict();
 
