@@ -1,5 +1,11 @@
 <script lang="ts">
-    import { awarenessStateSchema, type AwarenessState, type UserDb } from "@kittysync/common";
+    import {
+        SOCKET_ERROR_UNBOUND_CONNECTION,
+        SOCKET_ERROR_UNSUPPORTED_MESSAGE,
+        awarenessStateSchema,
+        type AwarenessState,
+        type UserDb,
+    } from "@kittysync/common";
     import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
     import { Collaboration } from "@tiptap/extension-collaboration";
     import { HocuspocusProvider } from "@hocuspocus/provider";
@@ -48,6 +54,13 @@
             },
             onAuthenticationFailed: ({ reason }) => {
                 authenticationError = reason;
+            },
+            onDisconnect: ({ event }) => {
+                if (event.code === SOCKET_ERROR_UNBOUND_CONNECTION) {
+                    authenticationError = "Unable to connect to the document. Please try again.";
+                } else if (event.code === SOCKET_ERROR_UNSUPPORTED_MESSAGE) {
+                    authenticationError = "Unable to sync the document. Please try again.";
+                }
             },
             onSynced: () => {
                 if (editor) return;
