@@ -8,6 +8,8 @@ export const load: PageLoad = async ({ params, fetch }) => {
             break;
         case 404:
             throw error(404, "Document not found");
+        case 422:
+            throw error(422, "Invalid document ID");
         default:
             throw error(500, "Failed to fetch document");
     }
