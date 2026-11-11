@@ -12,7 +12,6 @@ import { TOKEN_PROVIDER } from "../session-tokens.ts";
 import { usersTable } from "../../../db/schema.ts";
 import { db } from "../../../app.ts";
 import { ZodError } from "zod";
-import { v5 } from "uuid";
 
 type ACResponse = {
     access_token: string;
