@@ -19,6 +19,9 @@ const env = z
         KITTYSYNC_SECRET_KEY: z.string().min(32),
         KITTYSYNC_TOKEN_LIFETIME: z.coerce.number().int().positive().default(86400), // Default to 24 hours if not specified
         KITTYSYNC_BACKEND_PORT: z.coerce.number().int().positive().default(3000),
+        AUTHCAT_CLIENT_ID: z.string(),
+        AUTHCAT_CLIENT_SECRET: z.string(),
+        AUTHCAT_UUID_NAMESPACE: z.uuid(),
     })
     .parse(process.env);
 
@@ -42,5 +45,11 @@ export const configuration = {
         database: env.KITTYSYNC_DB_NAME,
         host: env.KITTYSYNC_DB_HOST,
         user: env.KITTYSYNC_DB_USER,
+    },
+    /// AuthCat OAuth configuration
+    authcat: {
+        client_id: env.AUTHCAT_CLIENT_ID,
+        secret: env.AUTHCAT_CLIENT_SECRET,
+        uuidNamespace: env.AUTHCAT_UUID_NAMESPACE,
     },
 };

@@ -1,18 +1,18 @@
-import { createSigner, createVerifier } from "fast-jwt";
+import { createSigner, createVerifier, type SignerPayload } from "fast-jwt";
+import type { AuthCatAccessToken, UserDb } from "@kittysync/common";
 import { configuration } from "../../configuration.ts";
-import type { UserDb } from "@kittysync/common";
 import { redis } from "../../app.ts";
 
 /**
  * Base type of session token providers.
  */
-export interface TokenProvider {
+export interface TokenProvider<T> {
     /**
      * Create a new session token for the given user.
      * @param {UserDb} user - The user to create a new token for
      * @returns {Promise<string>} The new token.
      */
-    new: (user: UserDb) => Promise<string>;
+    new: (user: T) => Promise<string>;
 
     /**
      * Verify whether a session token is valid or not.
@@ -24,15 +24,15 @@ export interface TokenProvider {
     /**
      * Extract the user associated with the token. May return null if the token is not valid.
      * @param {string} token - The token to decode
-     * @returns {Promise<UserDb | null>} The user associated with the token, or null if the token is not valid.
+     * @returns {Promise<T | null>} The user associated with the token, or null if the token is not valid.
      */
-    decode(token: string): Promise<UserDb | null>;
+    decode(token: string): Promise<T | null>;
 }
 
 /**
  * Represents a UUID session token provider
  */
-export class UuidTokenProvider implements TokenProvider {
+export class UuidTokenProvider implements TokenProvider<UserDb> {
     /**
      * Create a new session token, pushing to redis.
      * @param {UserDb} user - The user to create a new token for
@@ -85,7 +85,7 @@ export class UuidTokenProvider implements TokenProvider {
 /**
  * Represents a JWT session token provider
  */
-export class JwtTokenProvider implements TokenProvider {
+export class JwtTokenProvider<T extends SignerPayload> implements TokenProvider<T> {
     private verifier = createVerifier({ key: configuration.secretKey, algorithms: ["HS256"] });
     private signer = createSigner({
         expiresIn: configuration.tokenLifetime * 1000,
@@ -93,7 +93,7 @@ export class JwtTokenProvider implements TokenProvider {
         algorithm: "HS256",
     });
 
-    new(user: UserDb): Promise<string> {
+    new(user: T): Promise<string> {
         return Promise.resolve(this.signer(user));
     }
 
@@ -106,17 +106,16 @@ export class JwtTokenProvider implements TokenProvider {
         }
     }
 
-    decode(token: string): Promise<UserDb | null> {
+    decode(token: string): Promise<T | null> {
         try {
-            const decoded = this.verifier(token) as UserDb;
-            return Promise.resolve({
-                username: decoded.username,
-                id: decoded.id,
-            });
+            const decoded = this.verifier(token) as T;
+            return Promise.resolve(decoded);
         } catch {
             return Promise.resolve(null);
         }
     }
 }
 
-export const TOKEN_PROVIDER: TokenProvider = new JwtTokenProvider(); // new UuidTokenProvider();
+export const TOKEN_PROVIDER: TokenProvider<UserDb | AuthCatAccessToken> = new JwtTokenProvider<
+    UserDb | AuthCatAccessToken
+>(); // new UuidTokenProvider();

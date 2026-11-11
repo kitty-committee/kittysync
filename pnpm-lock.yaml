@@ -260,6 +260,9 @@ importers:
       pg:
         specifier: ^8.23.1
         version: 8.23.1
+      uuid:
+        specifier: ^14.0.3
+        version: 14.0.3
       y-protocols:
         specifier: ^1.0.7
         version: 1.0.7(yjs@13.6.33)

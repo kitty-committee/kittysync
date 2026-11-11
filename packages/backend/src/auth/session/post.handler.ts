@@ -29,7 +29,12 @@ export async function postSessionHandler(request: FastifyRequest, reply: Fastify
     }
 
     const targetUser = result[0];
-    if (!(await bcrypt.compare(body.password, targetUser.password))) {
+
+    if (targetUser.password === null) {
+        reply.code(401).send();
+    }
+
+    if (!(await bcrypt.compare(body.password, targetUser.password!))) {
         reply.code(401).send();
     } else {
         try {

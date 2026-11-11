@@ -9,7 +9,7 @@
         "check:test": "pnpm run -r check:test",
         "check:lint": "eslint .",
         "format": "prettier --write .",
-        "dev": "pnpm run -r --parallel dev",
+        "dev": "export NODE_OPTIONS=\"--network-family-autoselection-attempt-timeout=500\" && pnpm run -r --parallel dev",
         "frontend": "pnpm --filter frontend",
         "backend": "pnpm --filter backend",
         "common": "pnpm --filter common",
