@@ -4,9 +4,14 @@ Coursework for our Advanced Software Engineering module.
 
 # Local Execution
 
-For running the Chaos Suite locally, please see the `chaos` package [README](https://github.com/kitty-committee/kittysync/tree/main/packages/chaos).
-
 To run the application locally you must install Git, Docker and Docker Compose and then run the `docker compose up` command. This will start the application stack and two sharded instances running at http://127.0.0.1:3000 and http://127.0.1.0:3001.
+
+> [!NOTE]
+> GitHub Desktop is not sufficient as Docker requires an actual Git executable for building the image.
+
+# Local Chaos Testing
+
+To run the chaos test suite locally, you must install Git and Docker. Then run `docker build -t kittysync-chaos -f chaos.Dockerfile . && docker run -it --rm kittysync-chaos`. This will install all required dependencies and run the suite in a Docker container. Alternatively, see the `chaos` package [README](https://github.com/kitty-committee/kittysync/blob/main/packages/chaos/README.md) for instructions if you already have a development environment.
 
 > [!NOTE]
 > GitHub Desktop is not sufficient as Docker requires an actual Git executable for building the image.
