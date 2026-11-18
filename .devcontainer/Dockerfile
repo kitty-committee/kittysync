@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/devcontainers/javascript-node:5-24-trixie
 USER root
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      postgresql postgresql-client redis-server unison \
+      postgresql postgresql-client redis-server \
  && rm -rf /var/lib/apt/lists/*
 
 # Create the role and database at build time, so there is nothing to do at startup

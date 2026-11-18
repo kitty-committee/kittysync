@@ -3,41 +3,34 @@
 set -u
 
 SRC="/workspaces/kittysync"
-DST="/home/node/kittysync"
-LOG=/tmp/sync.log
 
-needs_sync() {
+remote_fs() {
   case "$(stat -f -c %T "$SRC" 2>/dev/null)" in
-    v9fs|9p|virtiofs|fuse*|cifs|drvfs) return 0 ;;
+    v9fs|9p|virtiofs|fuse*|cifs|drvfs|nfs|nfs4) return 0 ;;
     *) return 1 ;;
   esac
 }
 
-UNISON_ARGS=(
-  "$SRC" "$DST" -batch -auto -silent -times -prefer newer -perms 0
-  -ignore 'Name node_modules' -ignore 'Name .svelte-kit'
-)
+if remote_fs; then
+  cat <<'EOF' >&2
+ 
+ 
+d88888b d8888b. d8888b.  .d88b.  d8888b.
+88'     88  `8D 88  `8D .8P  Y8. 88  `8D
+88ooooo 88oobY' 88oobY' 88    88 88oobY'
+88~~~~~ 88`8b   88`8b   88    88 88`8b  
+88.     88 `88. 88 `88. `8b  d8' 88 `88.
+Y88888P 88   YD 88   YD  `Y88P'  88   YD
 
-sync_start() {
-  if ! needs_sync; then
-    if [ -L "$DST" ]; then
-      ln -sfnT "$SRC" "$DST"
-      return
-    fi
-
-    if [ -d "$DST" ]; then
-      find "$DST" -mindepth 1 -maxdepth 1 -type l -delete
-      rmdir "$DST" 2>/dev/null || mv "$DST" "$DST.old-$(date +%s)"
-    fi
-
-    ln -sT "$SRC" "$DST"
-  else
-    unison "${UNISON_ARGS[@]}" >>"$LOG" 2>&1
-    setsid -f bash "/.devcontainer/daemon.sh" "${UNISON_ARGS[@]}" >>"$LOG" 2>&1 </dev/null
-  fi
-}
+KittySync cannot be run on a remote filesystem.
+If you are using Windows, please move the project
+inside your WSL2 filesystem and try again.
+ 
+ 
+EOF
+  exit 1
+fi
 
 ([ -f "$SRC/.env" ] || cp "$SRC/.env.example" "$SRC/.env")
 sudo service redis-server start
 sudo service postgresql start
-sync_start

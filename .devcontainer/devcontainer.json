@@ -4,7 +4,6 @@
     "name": "kittysync",
     "forwardPorts": [5173, 3000, 5432, 6379],
     "build": { "dockerfile": "Dockerfile" },
-    "workspaceFolder": "/home/node/kittysync",
     "onCreateCommand": "bash /.devcontainer/startup.sh",
     "postStartCommand": "bash /.devcontainer/startup.sh"
 }
