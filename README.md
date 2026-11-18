@@ -38,6 +38,10 @@ There are five types of checks that must pass before you can merge a pull reques
 > [!TIP]
 > Prettier can automatically update your code to conform to our code style conventions by running `pnpm format`.
 
+### Formal Specification & Verification
+
+The formal specification and verification of KittySync is done using [Alloy](https://alloytools.org/). This is automatically installed inside the devcontainer, but if you are using a manual setup, you will need to install it yourself. You can start Alloy by running the `alloy` command in the devcontainer, or using the Visual Studio Code [Alloy extension](https://marketplace.visualstudio.com/items?itemName=ArashSahebolamri.alloy).
+
 ### Installation
 
 There are three ways to set up a development environment for KittySync, two of which require Docker to be installed on your machine. Pick one of the options below to start coding!
@@ -65,6 +69,9 @@ There are three ways to set up a development environment for KittySync, two of w
 2. Install [Visual Studio Code](https://code.visualstudio.com/) on your local machine.
 
 3. Clone the repository (e.g. [GitHub Desktop](https://desktop.github.com/download/) or `git clone https://github.com/kitty-committee/kittysync`).
+
+> [!NOTE]
+> If you are using Windows, you will have to do this inside WSL. You can open the workspace in Visual Studio Code from WSL by running `code .` in the terminal.
 
 4. Open the workspace with Visual Studio Code and install the [Dev Containers Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers). This will allow you to reopen the workspace in a container which, after some waiting, will give you a preconfigured development environment.
 
