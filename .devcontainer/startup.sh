@@ -4,7 +4,7 @@ set -u
 
 remote_fs() {
   case "$(stat -f -c %T . 2>/dev/null)" in
-    v9fs|9p|virtiofs|fuse*|cifs|drvfs|nfs|nfs4) return 0 ;;
+    v9fs|9p|virtiofs|fuse*|cifs|drvfs|nfs|nfs4|smb2) return 0 ;;
     *) return 1 ;;
   esac
 }
