@@ -2,10 +2,8 @@
 
 set -u
 
-SRC="/workspaces/kittysync"
-
 remote_fs() {
-  case "$(stat -f -c %T "$SRC" 2>/dev/null)" in
+  case "$(stat -f -c %T . 2>/dev/null)" in
     v9fs|9p|virtiofs|fuse*|cifs|drvfs|nfs|nfs4) return 0 ;;
     *) return 1 ;;
   esac
@@ -31,6 +29,6 @@ EOF
   exit 1
 fi
 
-([ -f "$SRC/.env" ] || cp "$SRC/.env.example" "$SRC/.env")
+([ -f ".env" ] || cp ".env.example" ".env")
 sudo service redis-server start
 sudo service postgresql start
