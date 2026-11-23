@@ -1,0 +1,116 @@
+sig Client {}
+sig Document {}
+
+sig Update {
+    doc : one Document,
+    ver : one Int
+}
+
+sig Database {
+    var state : Document -> lone Int
+}
+
+sig Node {
+   clients : set Client,
+   db : one Database
+}
+
+one sig Redis {
+    nodes: set Node,
+    var queue : Node -> Update, // Links a set of nodes which need an update to said update
+    var issued : set Update
+}
+
+// Assert that all clients belong to exactly one node
+fact {
+    all c : Client | one n : Node | c in n.clients
+}
+
+// Assert that all databases belong to exactly one node
+fact {
+    all d : Database | one n : Node | d in n.db
+}
+
+// Assert that all nodes are connected to our redis instance
+fact {
+    all n : Node | one r : Redis | n in r.nodes
+}
+
+fact {
+    all u : Update | u.ver >= 0
+}
+
+fact init {
+  no state
+  no Redis.queue
+  no Redis.issued
+}
+
+pred newer [d : Database, u : Update] {
+  no d.state[u.doc] or u.ver > d.state[u.doc]
+}
+
+fun applied [d : Database, u : Update] : Database -> Document -> Int {
+  (state - d -> u.doc -> Int /* Removes the current state of the document */) + d -> u.doc -> u.ver /* ... and replace it with the new state */
+}
+
+pred edit [c : Client, u : Update] {
+  u not in Redis.issued
+  let n = clients.c {
+    newer[n.db, u]
+    state' = applied[n.db, u]
+    Redis.issued' = Redis.issued + u
+    Redis.queue' = Redis.queue + (Redis.nodes - n) -> u
+  }
+}
+
+pred deliver [n : Node, u : Update] {
+  u in n.(Redis.queue)
+  newer[n.db, u]
+  state' = applied[n.db, u]
+  Redis.queue' = Redis.queue - n -> u
+  Redis.issued' = Redis.issued
+}
+
+pred deliverDiscard [n : Node, u : Update] {
+    u in n.(Redis.queue)
+    not newer[n.db, u]
+    state' = state
+    Redis.queue' = Redis.queue - n -> u
+    Redis.issued' = Redis.issued
+  }
+
+pred stutter {
+    state' = state
+    Redis.queue' = Redis.queue
+    Redis.issued' = Redis.issued
+}
+
+fact transitions {
+  always (
+    (some c : Client, u : Update | edit [c, u]) or
+    (some n : Node, u : Update | deliver[n, u] or deliverDiscard[n, u]) or
+    stutter
+  )
+}
+
+// Ensure that updates are always resolved, preventing infinite stutters
+fact {
+  all n : Node, u : Update | always ( u in n.(Redis.queue) implies eventually (u not in n.(Redis.queue)) )
+}
+
+// Consistency: The state contained within all databases is the same
+pred consistent {
+    all disj a, b : Database | a.state = b.state
+}
+
+// The system should be eventually consistent
+assert eventuallyConsistent { eventually always consistent }
+check eventuallyConsistent for 2 Node, 2 Client, 2 Database, 2 Document, 4 Update, 4 Int
+
+// The system should be consistent when no updates are in-flight
+assert emptyConsistency { always ( no Redis.queue implies consistent ) }
+check emptyConsistency for 2 Node, 2 Client, 2 Database, 2 Document, 4 Update, 4 Int
+
+// Check if there is an instance in which nodes diverge
+run { eventually not consistent } for 2 Node, 2 Client, 2 Database, 2 Document, 4 Update, 4 Int
