@@ -1,3 +1,17 @@
+/**
+ * state.als
+ *
+ * An Alloy 6.2.0 model checking eventual consistency of a real-time collaboration
+ * document editing application with multiple, horizontally scalable nodes
+ * connected through a single Redis instance.
+ *
+ * In this model, updates originate from clients, and are applied to the origin node,
+ * and then passed to a queue managed by Redis. Further steps then involve
+ * other nodes pulling this update from the Redis instance and applying it to themselves.
+ *
+ * Through this model, eventual consistency of document state is achieved.
+ */
+
 sig Client {}
 sig Document {}
 
