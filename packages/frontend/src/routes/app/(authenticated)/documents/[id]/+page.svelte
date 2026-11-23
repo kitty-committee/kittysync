@@ -142,28 +142,41 @@
     });
 </script>
 
-<!-- navigation bar -->
-<nav>
-    <button
-        onclick={() => {
-            goto(resolve("/app/(authenticated)/documents"));
-        }}>Back</button>
-
-    <h1>Document Editor</h1>
-    <div>
-        {#if connected}
-            <span>Connected</span>
-        {:else}
-            <span>Disconnected</span>
-        {/if}
-    </div>
-    <div>
-        <span>{connectedUsers.length} connected user{connectedUsers.length === 1 ? "" : "s"}</span>
-        <ul>
-            {#each connectedUsers as user (user.clientId)}
-                <li>{user.name}</li>
-            {/each}
-        </ul>
+<!-- top bar -->
+<nav class="top-bar-background">
+    <div class="top-bar">
+        <div class="vertical-flex">
+            <h1>Document Editor</h1>
+            <button
+                style="width: fit-content;"
+                onclick={() => {
+                    goto(resolve("/app/(authenticated)/documents"));
+                }}>Back</button>
+        </div>
+        <!-- connection status box -->
+        <div class="connection-status">
+            <div>
+                {#if connected}
+                    <h3>Status: Connected</h3>
+                {:else}
+                    <h3>Status: Disconnected</h3>
+                {/if}
+            </div>
+            <div>
+                <span class="connected-users">
+                    {connectedUsers.length} connected user{connectedUsers.length === 1 ? "" : "s"}</span>
+                <ul class="connected-users">
+                    <div class="vertical-flex">
+                        {#if connectedUsers.length === 0}
+                            <li>No users connected</li>
+                        {/if}
+                        {#each connectedUsers as user (user.clientId)}
+                            <li>{user.name}</li>
+                        {/each}
+                    </div>
+                </ul>
+            </div>
+        </div>
     </div>
 </nav>
 
@@ -171,30 +184,106 @@
     <p role="alert">{connectionError}</p>
 {/if}
 
-<!-- button to toggle edit mode. text area contains file content, which can be edited. -->
-<button
-    onclick={() => {
-        inEditMode = !inEditMode;
-        editor?.setEditable(inEditMode);
-    }}
-    disabled={!connected || !documentLoaded}>Change View</button>
+<hr />
 
-<div style:display={inEditMode ? "block" : "none"}>
-    <div {@attach attachEditorElement} aria-hidden={!inEditMode} class="editorelement"></div>
+<!-- editor -->
+<div class="align-center">
+    <!-- button to toggle edit mode -->
+    <div class="horizontal-flex">
+        <button
+            onclick={() => {
+                inEditMode = !inEditMode;
+                editor?.setEditable(inEditMode);
+            }}
+            disabled={!connected || !documentLoaded}>Change View</button>
+        <div>
+            {#if !inEditMode}
+                <h3>View Mode</h3>
+            {:else}
+                <h3>Edit Mode</h3>
+            {/if}
+        </div>
+    </div>
+    <!-- editor container -->
+    <div class="editor-container">
+        <div style:display={inEditMode ? "block" : "none"}>
+            <div {@attach attachEditorElement} aria-hidden={!inEditMode} class="editor-element"></div>
+        </div>
+
+        {#if !inEditMode}
+            <div class="view-element"><SvelteMarkdown source={markdownContent} /></div>
+        {/if}
+    </div>
 </div>
 
-{#if !inEditMode}
-    <div><SvelteMarkdown source={markdownContent} /></div>
-{/if}
-
 <style>
-    .editorelement {
-        min-height: 300px;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    hr {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .editor-container {
+        margin: 10px;
+        width: 8.27in;
+    }
+
+    .editor-element {
+        min-height: 11.69in;
         border: 1px solid #0f0f0f;
         padding: 10px;
         color: white;
         border-radius: 5px;
         background-color: #343434;
+    }
+
+    .view-element {
+        min-height: 11.69in;
+        border: 1px solid #0f0f0f;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .connection-status {
+        margin: 10px;
+    }
+
+    .connected-users {
+        display: flex;
+        align-items: right;
+        justify-content: right;
+    }
+
+    .vertical-flex {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .horizontal-flex {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .align-center {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .top-bar-background {
+        padding: 10px;
+    }
+
+    .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
     /* Give a remote user a caret */
