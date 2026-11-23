@@ -1,5 +1,16 @@
 <script lang="ts">
     import {
+        faBold,
+        faItalic,
+        faUnderline,
+        faStrikethrough,
+        faListOl,
+        faListUl,
+        faHeading,
+        faEye,
+        faPen,
+    } from "@fortawesome/free-solid-svg-icons";
+    import {
         SOCKET_ERROR_UNBOUND_CONNECTION,
         SOCKET_ERROR_UNSUPPORTED_MESSAGE,
         awarenessStateSchema,
@@ -9,13 +20,13 @@
     import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
     import { Collaboration } from "@tiptap/extension-collaboration";
     import { HocuspocusProvider } from "@hocuspocus/provider";
-    import SvelteMarkdown from "@humanspeak/svelte-markdown";
     import StarterKit from "@tiptap/starter-kit";
     import { Markdown } from "@tiptap/markdown";
     import { goto } from "$app/navigation";
     import { Editor } from "@tiptap/core";
     import { resolve } from "$app/paths";
     import { onMount } from "svelte";
+    import Fa from "svelte-fa";
     import * as Y from "yjs";
 
     let connected = $state(false);
@@ -24,7 +35,6 @@
     let connectionError = $state("");
     let editorElement = $state<HTMLDivElement | undefined>(undefined);
     let editor: Editor | null = null;
-    let markdownContent = $state("");
 
     type ConnectedUser = {
         clientId: number;
@@ -85,12 +95,7 @@
                         }),
                     ],
                     editable: inEditMode,
-
-                    onUpdate: ({ editor }) => {
-                        markdownContent = editor.getMarkdown();
-                    },
                 });
-                markdownContent = editor.getMarkdown();
                 documentLoaded = true;
             },
         });
@@ -188,31 +193,93 @@
 
 <!-- editor -->
 <div class="align-center">
-    <!-- button to toggle edit mode -->
-    <div class="horizontal-flex">
-        <button
-            onclick={() => {
-                inEditMode = !inEditMode;
-                editor?.setEditable(inEditMode);
-            }}
-            disabled={!connected || !documentLoaded}>Change View</button>
-        <div>
-            {#if !inEditMode}
-                <h3>View Mode</h3>
-            {:else}
-                <h3>Edit Mode</h3>
-            {/if}
+    <div style="width: 8.27in;" class="align-left">
+        <!-- button to toggle edit mode -->
+        <div class="horizontal-flex">
+            <button
+                class="editor-button"
+                title="Bold"
+                onclick={() => {
+                    inEditMode = !inEditMode;
+                    editor?.setEditable(inEditMode);
+                }}
+                disabled={!connected || !documentLoaded}>
+                {#if inEditMode}
+                    <Fa icon={faPen} />
+                {:else}
+                    <Fa icon={faEye} />
+                {/if}
+            </button>
+            <div class="horizontal-flex" style:display={inEditMode ? "flex" : "none"}>
+                <button
+                    class="editor-button"
+                    title="Bold"
+                    onclick={() => {
+                        editor?.chain().focus().toggleBold().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faBold} /></button>
+                <button
+                    class="editor-button"
+                    title="Italic"
+                    onclick={() => {
+                        editor?.chain().focus().toggleItalic().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faItalic} /></button>
+                <button
+                    class="editor-button"
+                    title="Underline"
+                    onclick={() => {
+                        editor?.chain().focus().toggleUnderline().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faUnderline} /></button>
+                <button
+                    class="editor-button"
+                    title="Strikethrough"
+                    onclick={() => {
+                        editor?.chain().focus().toggleStrike().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faStrikethrough} /></button>
+                <button
+                    class="editor-button"
+                    title="Ordered List"
+                    onclick={() => {
+                        editor?.chain().focus().toggleOrderedList().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faListOl} /></button>
+                <button
+                    class="editor-button"
+                    title="Unordered List"
+                    onclick={() => {
+                        editor?.chain().focus().toggleBulletList().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faListUl} /></button>
+                <button
+                    class="editor-button"
+                    title="Heading 1"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 1 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />1</button>
+                <button
+                    class="editor-button"
+                    title="Heading 2"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 2 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />2</button>
+                <button
+                    class="editor-button"
+                    title="Heading 3"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 3 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />3</button>
+            </div>
         </div>
     </div>
     <!-- editor container -->
     <div class="editor-container">
-        <div style:display={inEditMode ? "block" : "none"}>
-            <div {@attach attachEditorElement} aria-hidden={!inEditMode} class="editor-element"></div>
-        </div>
-
-        {#if !inEditMode}
-            <div class="view-element"><SvelteMarkdown source={markdownContent} /></div>
-        {/if}
+        <div {@attach attachEditorElement} aria-hidden={!inEditMode} class="view-element"></div>
     </div>
 </div>
 
@@ -233,19 +300,15 @@
         width: 8.27in;
     }
 
-    .editor-element {
-        min-height: 11.69in;
-        border: 1px solid #0f0f0f;
-        padding: 10px;
-        color: white;
-        border-radius: 5px;
-        background-color: #343434;
+    .editor-button {
+        width: 30px;
+        height: 30px;
     }
 
     .view-element {
         min-height: 11.69in;
         border: 1px solid #0f0f0f;
-        padding: 10px;
+        padding: 30px;
         border-radius: 5px;
     }
 
