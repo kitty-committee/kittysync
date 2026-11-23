@@ -75,6 +75,6 @@ pred onMessageGood[c: Client, m: Message]{
 pred onMessageBad[c: Client, m: Message]{
     c in setup
     m in StringMessage
-    after disconnect 
+    after disconnect[c]
 }
 
