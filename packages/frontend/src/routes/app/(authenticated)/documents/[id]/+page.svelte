@@ -1,5 +1,16 @@
 <script lang="ts">
     import {
+        faBold,
+        faItalic,
+        faUnderline,
+        faStrikethrough,
+        faListOl,
+        faListUl,
+        faHeading,
+        faEye,
+        faPen,
+    } from "@fortawesome/free-solid-svg-icons";
+    import {
         SOCKET_ERROR_UNBOUND_CONNECTION,
         SOCKET_ERROR_UNSUPPORTED_MESSAGE,
         awarenessStateSchema,
@@ -7,15 +18,16 @@
         type UserDb,
     } from "@kittysync/common";
     import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
+    import { faFileLines } from "@fortawesome/free-regular-svg-icons";
     import { Collaboration } from "@tiptap/extension-collaboration";
     import { HocuspocusProvider } from "@hocuspocus/provider";
-    import SvelteMarkdown from "@humanspeak/svelte-markdown";
     import StarterKit from "@tiptap/starter-kit";
     import { Markdown } from "@tiptap/markdown";
     import { goto } from "$app/navigation";
     import { Editor } from "@tiptap/core";
     import { resolve } from "$app/paths";
     import { onMount } from "svelte";
+    import Fa from "svelte-fa";
     import * as Y from "yjs";
 
     let connected = $state(false);
@@ -24,7 +36,6 @@
     let connectionError = $state("");
     let editorElement = $state<HTMLDivElement | undefined>(undefined);
     let editor: Editor | null = null;
-    let markdownContent = $state("");
 
     type ConnectedUser = {
         clientId: number;
@@ -40,6 +51,16 @@
         return () => {
             editorElement = undefined;
         };
+    }
+
+    function toggleEditMode() {
+        if (!editor) {
+            throw new Error("Cannot toggle edit mode before the editor is initialized.");
+        }
+
+        const nextEditMode = !inEditMode;
+        editor.setEditable(nextEditMode);
+        inEditMode = nextEditMode;
     }
 
     onMount(() => {
@@ -85,12 +106,7 @@
                         }),
                     ],
                     editable: inEditMode,
-
-                    onUpdate: ({ editor }) => {
-                        markdownContent = editor.getMarkdown();
-                    },
                 });
-                markdownContent = editor.getMarkdown();
                 documentLoaded = true;
             },
         });
@@ -142,28 +158,43 @@
     });
 </script>
 
-<!-- navigation bar -->
-<nav>
-    <button
-        onclick={() => {
-            goto(resolve("/app/(authenticated)/documents"));
-        }}>Back</button>
-
-    <h1>Document Editor</h1>
-    <div>
-        {#if connected}
-            <span>Connected</span>
-        {:else}
-            <span>Disconnected</span>
-        {/if}
-    </div>
-    <div>
-        <span>{connectedUsers.length} connected user{connectedUsers.length === 1 ? "" : "s"}</span>
-        <ul>
-            {#each connectedUsers as user (user.clientId)}
-                <li>{user.name}</li>
-            {/each}
-        </ul>
+<!-- top bar -->
+<nav class="top-bar-background">
+    <div class="top-bar">
+        <div class="horizontal-flex">
+            <button
+                class="document-return-button"
+                title="Return to Documents"
+                aria-label="Return to Documents"
+                onclick={() => {
+                    goto(resolve("/app/(authenticated)/documents"));
+                }}><Fa class="fa-2x" icon={faFileLines} /></button>
+            <h1>Document Editor</h1>
+        </div>
+        <!-- connection status box -->
+        <div class="connection-status">
+            <div>
+                {#if connected}
+                    <h3>Status: Connected</h3>
+                {:else}
+                    <h3>Status: Disconnected</h3>
+                {/if}
+            </div>
+            <div>
+                <span class="connected-users">
+                    {connectedUsers.length} connected user{connectedUsers.length === 1 ? "" : "s"}</span>
+                <ul class="connected-users">
+                    <div class="vertical-flex">
+                        {#if connectedUsers.length === 0}
+                            <li>No users connected</li>
+                        {/if}
+                        {#each connectedUsers as user (user.clientId)}
+                            <li>{user.name}</li>
+                        {/each}
+                    </div>
+                </ul>
+            </div>
+        </div>
     </div>
 </nav>
 
@@ -171,30 +202,214 @@
     <p role="alert">{connectionError}</p>
 {/if}
 
-<!-- button to toggle edit mode. text area contains file content, which can be edited. -->
-<button
-    onclick={() => {
-        inEditMode = !inEditMode;
-        editor?.setEditable(inEditMode);
-    }}
-    disabled={!connected || !documentLoaded}>Change View</button>
+<hr />
 
-<div style:display={inEditMode ? "block" : "none"}>
-    <div {@attach attachEditorElement} aria-hidden={!inEditMode} class="editorelement"></div>
+<!-- editor -->
+<div class="align-center">
+    <div style="max-width: 8.27in;" class="align-left">
+        <!-- button to toggle edit mode -->
+        <div class="horizontal-flex">
+            <button
+                class="editor-button"
+                title="Change Between Edit and View Mode"
+                aria-label="Toggle Edit Mode"
+                aria-pressed={inEditMode}
+                onclick={() => {
+                    toggleEditMode();
+                }}
+                disabled={!connected || !documentLoaded}>
+                {#if inEditMode}
+                    <Fa icon={faEye} />
+                {:else}
+                    <Fa icon={faPen} />
+                {/if}
+            </button>
+            <div class="horizontal-flex" style:display={inEditMode ? "flex" : "none"}>
+                <button
+                    class="editor-button"
+                    title="Bold"
+                    aria-label="Toggle Bold"
+                    onclick={() => {
+                        editor?.chain().focus().toggleBold().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faBold} /></button>
+                <button
+                    class="editor-button"
+                    title="Italic"
+                    aria-label="Toggle Italic"
+                    onclick={() => {
+                        editor?.chain().focus().toggleItalic().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faItalic} /></button>
+                <button
+                    class="editor-button"
+                    title="Underline"
+                    aria-label="Toggle Underline"
+                    onclick={() => {
+                        editor?.chain().focus().toggleUnderline().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faUnderline} /></button>
+                <button
+                    class="editor-button"
+                    title="Strikethrough"
+                    aria-label="Toggle Strikethrough"
+                    onclick={() => {
+                        editor?.chain().focus().toggleStrike().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faStrikethrough} /></button>
+                <button
+                    class="editor-button"
+                    title="Ordered List"
+                    aria-label="Toggle Ordered List"
+                    onclick={() => {
+                        editor?.chain().focus().toggleOrderedList().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faListOl} /></button>
+                <button
+                    class="editor-button"
+                    title="Unordered List"
+                    aria-label="Toggle Unordered List"
+                    onclick={() => {
+                        editor?.chain().focus().toggleBulletList().run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faListUl} /></button>
+                <button
+                    class="editor-button"
+                    title="Heading 1"
+                    aria-label="Toggle Heading 1"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 1 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />1</button>
+                <button
+                    class="editor-button"
+                    title="Heading 2"
+                    aria-label="Toggle Heading 2"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 2 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />2</button>
+                <button
+                    class="editor-button"
+                    title="Heading 3"
+                    aria-label="Toggle Heading 3"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 3 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />3</button>
+                <button
+                    class="editor-button"
+                    title="Heading 4"
+                    aria-label="Toggle Heading 4"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 4 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />4</button>
+                <button
+                    class="editor-button"
+                    title="Heading 5"
+                    aria-label="Toggle Heading 5"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 5 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />5</button>
+            </div>
+        </div>
+    </div>
+    <!-- editor container -->
+    <div class="editor-container">
+        <div {@attach attachEditorElement} class="view-element"></div>
+    </div>
 </div>
 
-{#if !inEditMode}
-    <div><SvelteMarkdown source={markdownContent} /></div>
-{/if}
-
 <style>
-    .editorelement {
-        min-height: 300px;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    hr {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .editor-container {
+        margin: 10px;
+        max-width: 8.27in;
+        width: 100%;
+    }
+
+    .editor-button {
+        width: 35px;
+        height: 35px;
+        font-size: 1em;
+        border-radius: 100%;
+        border: none;
+        background-color: transparent;
+    }
+
+    .editor-button:hover {
+        background-color: #f2f2f2;
+    }
+
+    .document-return-button {
+        width: 50px;
+        height: 50px;
+        font-size: 2em;
+        border-radius: 100%;
+        padding-bottom: 5px;
+        border: none;
+        background-color: transparent;
+    }
+
+    .document-return-button:hover {
+        background-color: #f2f2f2;
+    }
+
+    .view-element {
+        min-height: 11.69in;
         border: 1px solid #0f0f0f;
-        padding: 10px;
-        color: white;
+        padding: 30px;
         border-radius: 5px;
-        background-color: #343434;
+    }
+
+    .connection-status {
+        margin: 10px;
+    }
+
+    .connected-users {
+        display: flex;
+        align-items: right;
+        justify-content: right;
+    }
+
+    .vertical-flex {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .horizontal-flex {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .align-center {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .top-bar-background {
+        padding: 10px;
+    }
+
+    .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
     /* Give a remote user a caret */
@@ -208,8 +423,9 @@
         word-break: normal;
     }
 
-    :global(.editorelement > .ProseMirror) {
-        min-height: 300px;
+    :global(.ProseMirror) {
+        min-height: 1200px;
+        outline: none !important;
     }
 
     /* Render the username above the caret */
