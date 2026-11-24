@@ -165,6 +165,7 @@
             <button
                 class="document-return-button"
                 title="Return to Documents"
+                aria-label="Return to Documents"
                 onclick={() => {
                     goto(resolve("/app/(authenticated)/documents"));
                 }}><Fa class="fa-2x" icon={faFileLines} /></button>
@@ -205,12 +206,13 @@
 
 <!-- editor -->
 <div class="align-center">
-    <div style="width: 8.27in;" class="align-left">
+    <div style="max-width: 8.27in;" class="align-left">
         <!-- button to toggle edit mode -->
         <div class="horizontal-flex">
             <button
                 class="editor-button"
                 title="Change Between Edit and View Mode"
+                aria-label="Toggle Edit Mode"
                 aria-pressed={inEditMode}
                 onclick={() => {
                     toggleEditMode();
@@ -226,6 +228,7 @@
                 <button
                     class="editor-button"
                     title="Bold"
+                    aria-label="Toggle Bold"
                     onclick={() => {
                         editor?.chain().focus().toggleBold().run();
                     }}
@@ -233,6 +236,7 @@
                 <button
                     class="editor-button"
                     title="Italic"
+                    aria-label="Toggle Italic"
                     onclick={() => {
                         editor?.chain().focus().toggleItalic().run();
                     }}
@@ -240,6 +244,7 @@
                 <button
                     class="editor-button"
                     title="Underline"
+                    aria-label="Toggle Underline"
                     onclick={() => {
                         editor?.chain().focus().toggleUnderline().run();
                     }}
@@ -247,6 +252,7 @@
                 <button
                     class="editor-button"
                     title="Strikethrough"
+                    aria-label="Toggle Strikethrough"
                     onclick={() => {
                         editor?.chain().focus().toggleStrike().run();
                     }}
@@ -254,6 +260,7 @@
                 <button
                     class="editor-button"
                     title="Ordered List"
+                    aria-label="Toggle Ordered List"
                     onclick={() => {
                         editor?.chain().focus().toggleOrderedList().run();
                     }}
@@ -261,6 +268,7 @@
                 <button
                     class="editor-button"
                     title="Unordered List"
+                    aria-label="Toggle Unordered List"
                     onclick={() => {
                         editor?.chain().focus().toggleBulletList().run();
                     }}
@@ -268,6 +276,7 @@
                 <button
                     class="editor-button"
                     title="Heading 1"
+                    aria-label="Toggle Heading 1"
                     onclick={() => {
                         editor?.chain().focus().toggleHeading({ level: 1 }).run();
                     }}
@@ -275,6 +284,7 @@
                 <button
                     class="editor-button"
                     title="Heading 2"
+                    aria-label="Toggle Heading 2"
                     onclick={() => {
                         editor?.chain().focus().toggleHeading({ level: 2 }).run();
                     }}
@@ -282,6 +292,7 @@
                 <button
                     class="editor-button"
                     title="Heading 3"
+                    aria-label="Toggle Heading 3"
                     onclick={() => {
                         editor?.chain().focus().toggleHeading({ level: 3 }).run();
                     }}
@@ -289,6 +300,7 @@
                 <button
                     class="editor-button"
                     title="Heading 4"
+                    aria-label="Toggle Heading 4"
                     onclick={() => {
                         editor?.chain().focus().toggleHeading({ level: 4 }).run();
                     }}
@@ -296,6 +308,7 @@
                 <button
                     class="editor-button"
                     title="Heading 5"
+                    aria-label="Toggle Heading 5"
                     onclick={() => {
                         editor?.chain().focus().toggleHeading({ level: 5 }).run();
                     }}
@@ -305,7 +318,7 @@
     </div>
     <!-- editor container -->
     <div class="editor-container">
-        <div {@attach attachEditorElement} aria-hidden={!inEditMode} class="view-element"></div>
+        <div {@attach attachEditorElement} class="view-element"></div>
     </div>
 </div>
 
@@ -323,7 +336,8 @@
 
     .editor-container {
         margin: 10px;
-        width: 8.27in;
+        max-width: 8.27in;
+        width: 100%;
     }
 
     .editor-button {
@@ -379,6 +393,7 @@
         display: flex;
         flex-direction: row;
         gap: 10px;
+        flex-wrap: wrap;
     }
 
     .align-center {
