@@ -7,8 +7,8 @@
         type UserDb,
     } from "@kittysync/common";
     import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
+    import { HocuspocusProvider, WebSocketStatus } from "@hocuspocus/provider";
     import { Collaboration } from "@tiptap/extension-collaboration";
-    import { HocuspocusProvider } from "@hocuspocus/provider";
     import SvelteMarkdown from "@humanspeak/svelte-markdown";
     import StarterKit from "@tiptap/starter-kit";
     import { Markdown } from "@tiptap/markdown";
@@ -42,10 +42,27 @@
         };
     }
 
+    function reconnect(provider: HocuspocusProvider) {
+        const socket = provider.configuration.websocketProvider;
+
+        const reconnectWhenDisconnected = ({ status }: { status: WebSocketStatus }) => {
+            if (status !== WebSocketStatus.Disconnected) return;
+
+            socket.off("status", reconnectWhenDisconnected);
+            void socket.connect();
+        };
+
+        socket.on("status", reconnectWhenDisconnected);
+        socket.disconnect();
+
+        if (socket.status === WebSocketStatus.Disconnected) {
+            socket.off("status", reconnectWhenDisconnected);
+            void socket.connect();
+        }
+    }
+
     onMount(() => {
         const ydoc = new Y.Doc();
-
-        let provider = initialiseProvider(ydoc);
 
         const updateConnectedUsers = () => {
             if (provider.awareness == null) {
@@ -55,6 +72,10 @@
 
             const users: ConnectedUser[] = [];
             for (const [clientId, s] of provider.awareness.getStates()) {
+                if (typeof s !== "object" || s === null || !("user" in s) || s["user"] == null) {
+                    continue;
+                }
+
                 let state: AwarenessState;
                 try {
                     state = awarenessStateSchema.parse(s);
@@ -69,22 +90,27 @@
             connectedUsers = users;
         };
 
+        let provider = initialiseProvider(ydoc);
+
+        const republishPresence = (provider: HocuspocusProvider) => {
+            const awareness = provider.awareness;
+            if (!awareness) return;
+
+            const state = awareness.getLocalState();
+            if (state !== null && awarenessStateSchema.safeParse(state).success) {
+                awareness.setLocalState(state);
+            } else {
+                awareness.setLocalState({ user: data.user });
+            }
+        };
+
         const pageshowListener = (event: PageTransitionEvent) => {
-            //if the page is restored from the cache, we need a new editor and provider.
             if (event.persisted === true) {
-                //delete old editor and provider
-                connected = false;
-                documentLoaded = false;
-                connectedUsers = [];
-                editor?.destroy();
-                editor = null;
-                provider.off("awarenessChange", updateConnectedUsers);
-                provider.destroy();
-                //create new provider and editor, add the listener needed.
-                provider = initialiseProvider(ydoc);
+                reconnect(provider);
             }
         };
         window.addEventListener("pageshow", pageshowListener);
+        provider.on("open", () => republishPresence(provider));
 
         function initialiseProvider(document: Y.Doc) {
             const provider = new HocuspocusProvider({
@@ -137,15 +163,6 @@
                 },
             });
 
-            provider.on("open", () => {
-                const awareness = provider.awareness;
-                if (awareness != null) {
-                    const localState = awareness.getLocalState();
-                    if (localState != null && awarenessStateSchema.safeParse(localState).success) {
-                        awareness.setLocalState(localState);
-                    }
-                }
-            });
             provider.on("awarenessChange", updateConnectedUsers);
 
             return provider;
