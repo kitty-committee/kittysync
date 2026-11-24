@@ -5,6 +5,7 @@
 \usepackage{varwidth}
 \usepackage{tikz}
 \usetikzlibrary{fit, calc, positioning}
+\usepackage{listings}
 
 \title{
   Kittysync --- Structural and Behavioural modelling
@@ -23,7 +24,7 @@ Tyler Gillet
 
 \newsavebox{\defbox}
 \newenvironment{corollary}[2]
-{\begin{lrbox}{\defbox}\begin{varwidth}{\linewidth}\textbf{#1} #2\newline}
+{\begin{lrbox}{\defbox}\begin{varwidth}{0.8\linewidth}\textbf{#1} #2\newline}
 			{\end{varwidth}\end{lrbox}\noindent\vspace{1cm}%
 	\begin{tikzpicture}
 		\node[inner sep=0pt] (content) {\usebox{\defbox}};
@@ -229,5 +230,15 @@ syntactic methods of posing increasingly close-ended questions to large language
 
 \begin{appendices}
 	\section{Model checker output logs}
+
+	\subsection{State synchronisation}
+	\begin{lstlisting}
+  00. check eventuallyConsistent     0       UNSAT
+  01. check emptyConsistency         0       UNSAT
+  02. run   run$3                    1/1     SAT
+  03. check monotonic                0       UNSAT
+  04. check convergence              0       UNSAT
+  \end{lstlisting}
+
 \end{appendices}
 \end{document}
