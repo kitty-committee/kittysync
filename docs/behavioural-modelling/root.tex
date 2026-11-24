@@ -124,10 +124,12 @@ The state synchronisation model describes the following system:
 	\draw[->] (redis) -- (node1) node [midway, fill=white] {nodes};
 
 	\node[circle, draw, right=2cm of redis] (update) {Update};
+	\node[above=of update] (update1) {$\ldots$};
 	\node[below right=0.5cm and 1cm of node1] (udoc) {Document};
 	\node[right=of udoc] (uver) {Version};
 
 	\draw[->] (redis) -- (update) node [midway, fill=white] {issued};
+	\draw[->] (redis) -- (update1) node [midway, fill=white] {issued};
 	\draw[->] (update) -- (udoc) node [midway, fill=white] {doc};
 	\draw[->] (update) -- (uver) node [midway, fill=white] {ver};
 
