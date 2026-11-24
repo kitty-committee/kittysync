@@ -398,8 +398,9 @@
         word-break: normal;
     }
 
-    :global(.editorelement > .ProseMirror) {
-        min-height: 300px;
+    :global(.ProseMirror) {
+        min-height: 1200px;
+        outline: none !important;
     }
 
     /* Render the username above the caret */

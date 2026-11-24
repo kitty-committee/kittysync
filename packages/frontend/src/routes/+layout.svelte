@@ -1,7 +1,7 @@
 <script lang="ts">
     import favicon from "#lib/assets/favicon.svg";
     import type { LayoutProps } from "./$types";
-    import "greset";
+    import "greset/greset.css";
 
     let { children }: LayoutProps = $props();
 </script>

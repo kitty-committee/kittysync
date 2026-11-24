@@ -191,9 +191,6 @@ importers:
       globals:
         specifier: ^17.13.0
         version: 17.13.0
-      greset:
-        specifier: ^2.0.0
-        version: 2.0.0
       prettier:
         specifier: ^3.9.9
         version: 3.9.10
