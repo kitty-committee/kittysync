@@ -128,7 +128,6 @@
         };
 
         provider.on("awarenessChange", updateConnectedUsers);
-        updateConnectedUsers();
 
         return () => {
             editor?.destroy();

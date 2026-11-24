@@ -50,7 +50,7 @@ vi.mock("@hocuspocus/provider", () => ({
     HocuspocusProvider: class {
         options: ProviderOptions;
         awareness: Awareness | null = {
-            states: new Map(),
+            states: new Map([[1, {}]]),
             getStates() {
                 return this.states;
             },
@@ -225,6 +225,7 @@ describe("document page", () => {
     it("displays users from provider awareness updates", async () => {
         const provider = renderDocumentPage();
 
+        provider.awareness?.states.clear();
         provider.awareness?.states.set(101, {
             user: { ...documentData.user, name: "alice" },
         });
@@ -236,6 +237,26 @@ describe("document page", () => {
         await expect.element(page.getByText("2 connected users")).toBeInTheDocument();
         await expect.element(page.getByRole("listitem").nth(0)).toHaveTextContent("alice");
         await expect.element(page.getByRole("listitem").nth(1)).toHaveTextContent("bobby");
+    });
+
+    it("waits for populated awareness before updating connected users", async () => {
+        const consoleError = vi.spyOn(console, "error");
+        const provider = renderDocumentPage();
+
+        await expect.element(page.getByText("0 connected users")).toBeInTheDocument();
+        expect(consoleError).not.toHaveBeenCalledWith(
+            "Failed to parse awareness state:",
+            expect.anything(),
+        );
+        consoleError.mockRestore();
+
+        provider.awareness?.states.set(1, {
+            user: { ...documentData.user, name: "alice" },
+        });
+        provider.emit("awarenessChange");
+
+        await expect.element(page.getByText("1 connected user")).toBeInTheDocument();
+        await expect.element(page.getByRole("listitem")).toHaveTextContent("alice");
     });
 
     it("toggles the synced editor between view and edit mode", async () => {
