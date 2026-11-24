@@ -304,10 +304,7 @@ describe("document page", () => {
         provider.emit("awarenessChange");
 
         await expect.element(page.getByText("0 connected users")).toBeInTheDocument();
-        expect(consoleError).not.toHaveBeenCalledWith(
-            "Failed to parse awareness state:",
-            expect.anything(),
-        );
+        expect(consoleError).not.toHaveBeenCalledWith("Failed to parse awareness state:", expect.anything());
         consoleError.mockRestore();
 
         provider.awareness?.states.set(1, {
