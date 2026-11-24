@@ -69,8 +69,6 @@
             connectedUsers = users;
         };
 
-        provider.on("awarenessChange", updateConnectedUsers);
-
         const pageshowListener = (event: PageTransitionEvent) => {
             //if the page is restored from the cache, we need a new editor and provider.
             if (event.persisted === true) {
@@ -84,7 +82,6 @@
                 provider.destroy();
                 //create new provider and editor, add the listener needed.
                 provider = initialiseProvider(ydoc);
-                provider.on("awarenessChange", updateConnectedUsers);
             }
         };
         window.addEventListener("pageshow", pageshowListener);
@@ -149,6 +146,7 @@
                     }
                 }
             });
+            provider.on("awarenessChange", updateConnectedUsers);
 
             return provider;
         }
