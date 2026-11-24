@@ -18,6 +18,7 @@
         type UserDb,
     } from "@kittysync/common";
     import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
+    import { faFileLines } from "@fortawesome/free-regular-svg-icons";
     import { Collaboration } from "@tiptap/extension-collaboration";
     import { HocuspocusProvider } from "@hocuspocus/provider";
     import StarterKit from "@tiptap/starter-kit";
@@ -150,13 +151,14 @@
 <!-- top bar -->
 <nav class="top-bar-background">
     <div class="top-bar">
-        <div class="vertical-flex">
-            <h1>Document Editor</h1>
+        <div class="horizontal-flex">
             <button
-                style="width: fit-content;"
+                class="document-return-button"
+                title="Return to Documents"
                 onclick={() => {
                     goto(resolve("/app/(authenticated)/documents"));
-                }}>Back</button>
+                }}><Fa class="fa-2x" icon={faFileLines} /></button>
+            <h1>Document Editor</h1>
         </div>
         <!-- connection status box -->
         <div class="connection-status">
@@ -205,9 +207,9 @@
                 }}
                 disabled={!connected || !documentLoaded}>
                 {#if inEditMode}
-                    <Fa icon={faPen} />
-                {:else}
                     <Fa icon={faEye} />
+                {:else}
+                    <Fa icon={faPen} />
                 {/if}
             </button>
             <div class="horizontal-flex" style:display={inEditMode ? "flex" : "none"}>
@@ -274,6 +276,20 @@
                         editor?.chain().focus().toggleHeading({ level: 3 }).run();
                     }}
                     disabled={!connected || !documentLoaded}><Fa icon={faHeading} />3</button>
+                <button
+                    class="editor-button"
+                    title="Heading 4"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 4 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />4</button>
+                <button
+                    class="editor-button"
+                    title="Heading 5"
+                    onclick={() => {
+                        editor?.chain().focus().toggleHeading({ level: 5 }).run();
+                    }}
+                    disabled={!connected || !documentLoaded}><Fa icon={faHeading} />5</button>
             </div>
         </div>
     </div>
@@ -301,8 +317,30 @@
     }
 
     .editor-button {
-        width: 30px;
-        height: 30px;
+        width: 35px;
+        height: 35px;
+        font-size: 1em;
+        border-radius: 100%;
+        border: none;
+        background-color: transparent;
+    }
+
+    .editor-button:hover {
+        background-color: #f2f2f2;
+    }
+
+    .document-return-button {
+        width: 50px;
+        height: 50px;
+        font-size: 2em;
+        border-radius: 100%;
+        padding-bottom: 5px;
+        border: none;
+        background-color: transparent;
+    }
+
+    .document-return-button:hover {
+        background-color: #f2f2f2;
     }
 
     .view-element {

@@ -165,6 +165,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@fortawesome/free-regular-svg-icons':
+        specifier: ^7.3.1
+        version: 7.3.1
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -892,6 +896,10 @@ packages:
 
   '@fortawesome/fontawesome-common-types@7.3.1':
     resolution: {integrity: sha512-k0C0sdHmZtAo6dRDtd1Z/qcpyHbL0CKsjV8seMY/21xGhY5Wsv0XRmiI/xEEH4y2c9b1+jvgNs/3EqhV27yUEA==}
+    engines: {node: '>=6'}
+
+  '@fortawesome/free-regular-svg-icons@7.3.1':
+    resolution: {integrity: sha512-q1EsmL7Q8DDnkRBUjSvrxbq7c9oVwwVjCn/xa5apKmdp65YSgzUg2y0Ltnd5aDbT6GdAQQdXql5Ha90ArqIReQ==}
     engines: {node: '>=6'}
 
   '@fortawesome/free-solid-svg-icons@7.3.1':
@@ -3682,6 +3690,10 @@ snapshots:
       - utf-8-validate
 
   '@fortawesome/fontawesome-common-types@7.3.1': {}
+
+  '@fortawesome/free-regular-svg-icons@7.3.1':
+    dependencies:
+      '@fortawesome/fontawesome-common-types': 7.3.1
 
   '@fortawesome/free-solid-svg-icons@7.3.1':
     dependencies:
