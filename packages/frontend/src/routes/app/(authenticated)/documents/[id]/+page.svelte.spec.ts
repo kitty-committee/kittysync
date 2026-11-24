@@ -259,6 +259,50 @@ describe("document page", () => {
         await expect.element(page.getByRole("listitem")).toHaveTextContent("alice");
     });
 
+    it("recreates the collaboration session after a BFCache restore", async () => {
+        const provider = renderDocumentPage();
+        const ydoc = provider.options.document;
+
+        provider.options.onStatus({ status: "connected" });
+        provider.options.onSynced();
+        provider.awareness?.states.clear();
+        provider.awareness?.states.set(101, {
+            user: { ...documentData.user, name: "alice" },
+        });
+        provider.emit("awarenessChange");
+
+        await expect.element(page.getByText("Connected", { exact: true })).toBeInTheDocument();
+        await expect.element(page.getByText("1 connected user")).toBeInTheDocument();
+        await expect.element(page.getByRole("button", { name: "Change View" })).toBeEnabled();
+
+        window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: false }));
+        expect(mocks.providers).toHaveLength(1);
+
+        window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+
+        const restoredProvider = mocks.providers[1];
+        expect(provider.destroy).toHaveBeenCalledOnce();
+        expect(getEditor().destroy).toHaveBeenCalledOnce();
+        expect(restoredProvider).toBeDefined();
+        expect(restoredProvider?.options.document).toBe(ydoc);
+        expect(restoredProvider?.listeners.get("awarenessChange")).toHaveLength(1);
+        await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
+        await expect.element(page.getByText("0 connected users")).toBeInTheDocument();
+        await expect.element(page.getByRole("button", { name: "Change View" })).toBeDisabled();
+
+        restoredProvider?.options.onStatus({ status: "connected" });
+        restoredProvider?.options.onSynced();
+        await expect.element(page.getByRole("button", { name: "Change View" })).toBeEnabled();
+        expect(mocks.editors).toHaveLength(2);
+
+        restoredProvider?.awareness?.states.clear();
+        restoredProvider?.awareness?.states.set(102, {
+            user: { ...documentData.user, name: "bobby" },
+        });
+        restoredProvider?.emit("awarenessChange");
+        await expect.element(page.getByRole("listitem")).toHaveTextContent("bobby");
+    });
+
     it("toggles the synced editor between view and edit mode", async () => {
         const provider = renderDocumentPage();
         provider.options.onStatus({ status: "connected" });

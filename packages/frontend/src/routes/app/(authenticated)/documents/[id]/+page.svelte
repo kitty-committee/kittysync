@@ -44,66 +44,8 @@
 
     onMount(() => {
         const ydoc = new Y.Doc();
-        //replace with actual username from auth context when frontend helper is made.
-        const provider = new HocuspocusProvider({
-            url: "/api/collaboration",
-            name: data.documentId,
-            document: ydoc,
-            onStatus: ({ status }) => {
-                connected = status === "connected";
-                if (connected) {
-                    connectionError = "";
-                }
-            },
-            onAuthenticationFailed: ({ reason }) => {
-                connectionError = reason;
-            },
-            onDisconnect: ({ event }) => {
-                if (event.code === SOCKET_ERROR_UNBOUND_CONNECTION) {
-                    connectionError = "Unable to connect to the document. Please try again.";
-                } else if (event.code === SOCKET_ERROR_UNSUPPORTED_MESSAGE) {
-                    connectionError = "Unable to sync the document. Please try again.";
-                }
-            },
-            onSynced: () => {
-                if (editor) return;
-                if (!editorElement) {
-                    console.error("Tiptap editor element is not available.");
-                    return;
-                }
 
-                editor = new Editor({
-                    element: editorElement,
-                    extensions: [
-                        StarterKit.configure({ undoRedo: false }),
-                        Collaboration.configure({ document: ydoc, field: "content" }),
-                        Markdown,
-                        CollaborationCaret.configure({
-                            provider,
-                            // collaboration caret requires the name and color of the user to display the caret correctly
-                            user: data.user satisfies UserDb & { name: string; color: string },
-                        }),
-                    ],
-                    editable: inEditMode,
-
-                    onUpdate: ({ editor }) => {
-                        markdownContent = editor.getMarkdown();
-                    },
-                });
-                markdownContent = editor.getMarkdown();
-                documentLoaded = true;
-            },
-        });
-
-        provider.on("open", () => {
-            const awareness = provider.awareness;
-            if (awareness != null) {
-                const localState = awareness.getLocalState();
-                if (localState != null && awarenessStateSchema.safeParse(localState).success) {
-                    awareness.setLocalState(localState);
-                }
-            }
-        });
+        let provider = initialiseProvider(ydoc);
 
         const updateConnectedUsers = () => {
             if (provider.awareness == null) {
@@ -129,6 +71,88 @@
 
         provider.on("awarenessChange", updateConnectedUsers);
 
+        const pageshowListener = (event: PageTransitionEvent) => {
+            //if the page is restored from the cache, we need a new editor and provider.
+            if (event.persisted === true) {
+                //delete old editor and provider
+                connected = false;
+                documentLoaded = false;
+                connectedUsers = [];
+                editor?.destroy();
+                editor = null;
+                provider.off("awarenessChange", updateConnectedUsers);
+                provider.destroy();
+                //create new provider and editor, add the listener needed.
+                provider = initialiseProvider(ydoc);
+                provider.on("awarenessChange", updateConnectedUsers);
+            }
+        };
+        window.addEventListener("pageshow", pageshowListener);
+
+        function initialiseProvider(document: Y.Doc) {
+            const provider = new HocuspocusProvider({
+                url: "/api/collaboration",
+                name: data.documentId,
+                document: document,
+                onStatus: ({ status }) => {
+                    connected = status === "connected";
+                    if (connected) {
+                        connectionError = "";
+                    }
+                },
+                onAuthenticationFailed: ({ reason }) => {
+                    connectionError = reason;
+                },
+                onDisconnect: ({ event }) => {
+                    if (event.code === SOCKET_ERROR_UNBOUND_CONNECTION) {
+                        connectionError = "Unable to connect to the document. Please try again.";
+                    } else if (event.code === SOCKET_ERROR_UNSUPPORTED_MESSAGE) {
+                        connectionError = "Unable to sync the document. Please try again.";
+                    }
+                },
+                onSynced: () => {
+                    if (editor) return;
+                    if (!editorElement) {
+                        console.error("Tiptap editor element is not available.");
+                        return;
+                    }
+
+                    editor = new Editor({
+                        element: editorElement,
+                        extensions: [
+                            StarterKit.configure({ undoRedo: false }),
+                            Collaboration.configure({ document: ydoc, field: "content" }),
+                            Markdown,
+                            CollaborationCaret.configure({
+                                provider,
+                                // collaboration caret requires the name and color of the user to display the caret correctly
+                                user: data.user satisfies UserDb & { name: string; color: string },
+                            }),
+                        ],
+                        editable: inEditMode,
+
+                        onUpdate: ({ editor }) => {
+                            markdownContent = editor.getMarkdown();
+                        },
+                    });
+                    markdownContent = editor.getMarkdown();
+                    documentLoaded = true;
+                },
+            });
+
+            provider.on("open", () => {
+                const awareness = provider.awareness;
+                if (awareness != null) {
+                    const localState = awareness.getLocalState();
+                    if (localState != null && awarenessStateSchema.safeParse(localState).success) {
+                        awareness.setLocalState(localState);
+                    }
+                }
+            });
+
+            return provider;
+        }
+
         return () => {
             editor?.destroy();
             editor = null;
@@ -137,6 +161,7 @@
             ydoc.destroy();
             connected = false;
             documentLoaded = false;
+            window.removeEventListener("pageshow", pageshowListener);
         };
     });
 </script>
