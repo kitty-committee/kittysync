@@ -53,6 +53,16 @@
         };
     }
 
+    function toggleEditMode() {
+        if (!editor) {
+            throw new Error("Cannot toggle edit mode before the editor is initialized.");
+        }
+
+        const nextEditMode = !inEditMode;
+        editor.setEditable(nextEditMode);
+        inEditMode = nextEditMode;
+    }
+
     onMount(() => {
         const ydoc = new Y.Doc();
         //replace with actual username from auth context when frontend helper is made.
@@ -200,10 +210,10 @@
         <div class="horizontal-flex">
             <button
                 class="editor-button"
-                title="Bold"
+                title="Change Between Edit and View Mode"
+                aria-pressed={inEditMode}
                 onclick={() => {
-                    inEditMode = !inEditMode;
-                    editor?.setEditable(inEditMode);
+                    toggleEditMode();
                 }}
                 disabled={!connected || !documentLoaded}>
                 {#if inEditMode}

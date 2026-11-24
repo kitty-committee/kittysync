@@ -37,7 +37,13 @@ export default defineConfig({
                     browser: {
                         enabled: true,
                         provider: playwright(),
-                        instances: [{ browser: "chromium", headless: true }],
+                        instances: [
+                            {
+                                browser: "chromium",
+                                headless: true,
+                                viewport: { width: 1280, height: 800 },
+                            },
+                        ],
                     },
                     include: ["src/**/*.svelte.{test,spec}.{js,ts}"],
                 },

@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-svelte";
 import DocumentPage from "./+page.svelte";
-import { page } from "vitest/browser";
 
 type ProviderOptions = {
     url: string;
@@ -33,8 +32,7 @@ type EditorHarness = {
         element: HTMLElement;
         editable: boolean;
     };
-    editable: boolean;
-    setEditable: (editable: boolean) => void;
+    setEditable: ReturnType<typeof vi.fn>;
     getMarkdown: () => string;
     destroy: ReturnType<typeof vi.fn>;
 };
@@ -82,18 +80,16 @@ vi.mock("@hocuspocus/provider", () => ({
 vi.mock("@tiptap/core", () => ({
     Editor: class {
         options: EditorHarness["options"];
-        editable: boolean;
         destroy = vi.fn();
 
         constructor(options: EditorHarness["options"]) {
             this.options = options;
-            this.editable = options.editable;
             mocks.editors.push(this);
         }
 
-        setEditable(editable: boolean) {
-            this.editable = editable;
-        }
+        setEditable = vi.fn((editable: boolean) => {
+            this.options.editable = editable;
+        });
 
         getMarkdown() {
             return "";
@@ -134,15 +130,15 @@ const documentData = {
     },
 };
 
-function renderDocumentPage() {
-    render(DocumentPage, { data: documentData });
+async function renderDocumentPage() {
+    const screen = await render(DocumentPage, { data: documentData });
 
     const provider = mocks.providers[0];
     if (!provider) {
         throw new Error("The document page did not create a Hocuspocus provider.");
     }
 
-    return provider;
+    return { provider, screen };
 }
 
 function getEditor() {
@@ -167,63 +163,63 @@ describe("document page", () => {
     });
 
     it("enables editing only after the collaboration provider connects and syncs", async () => {
-        const provider = renderDocumentPage();
-        const changeViewButton = page.getByRole("button", { name: "Change View" });
+        const { provider, screen } = await renderDocumentPage();
+        const changeViewButton = screen.getByRole("button", { name: "Change Between Edit and View Mode" });
 
         expect(provider.options.url).toBe("/api/collaboration");
         expect(provider.options.name).toBe("notes.md");
-        await expect.element(page.getByText("Disconnected")).toBeInTheDocument();
-        await expect.element(page.getByText("0 connected users")).toBeInTheDocument();
+        await expect.element(screen.getByText("Status: Disconnected", { exact: true })).toBeInTheDocument();
+        await expect.element(screen.getByText("0 connected users")).toBeInTheDocument();
         await expect.element(changeViewButton).toBeDisabled();
 
         provider.options.onStatus({ status: "connected" });
-        await expect.element(page.getByText("Connected", { exact: true })).toBeInTheDocument();
+        await expect.element(screen.getByText("Status: Connected", { exact: true })).toBeInTheDocument();
         await expect.element(changeViewButton).toBeDisabled();
 
         provider.options.onSynced();
         await expect.element(changeViewButton).toBeEnabled();
         expect(mocks.editors).toHaveLength(1);
-        expect(getEditor().editable).toBe(false);
+        expect(getEditor().options.editable).toBe(false);
     });
 
     it("shows a specific alert when authentication fails because the document was not found", async () => {
-        const provider = renderDocumentPage();
+        const { provider, screen } = await renderDocumentPage();
 
         provider.options.onAuthenticationFailed({ reason: "document-not-found" });
 
-        await expect.element(page.getByRole("alert")).toHaveTextContent("document-not-found");
+        await expect.element(screen.getByRole("alert")).toHaveTextContent("document-not-found");
     });
 
     it("shows a generic safe alert for other authentication failures", async () => {
-        const provider = renderDocumentPage();
+        const { provider, screen } = await renderDocumentPage();
 
         provider.options.onAuthenticationFailed({ reason: "permission-denied" });
 
-        await expect.element(page.getByRole("alert")).toHaveTextContent("permission-denied");
+        await expect.element(screen.getByRole("alert")).toHaveTextContent("permission-denied");
     });
 
     it("shows a reconnect alert when the provider closes an unbound connection", async () => {
-        const provider = renderDocumentPage();
+        const { provider, screen } = await renderDocumentPage();
 
         provider.options.onDisconnect({ event: new CloseEvent("close", { code: 4001 }) });
 
         await expect
-            .element(page.getByRole("alert"))
+            .element(screen.getByRole("alert"))
             .toHaveTextContent("Unable to connect to the document. Please try again.");
     });
 
     it("shows a sync alert when the provider closes for an unsupported message", async () => {
-        const provider = renderDocumentPage();
+        const { provider, screen } = await renderDocumentPage();
 
         provider.options.onDisconnect({ event: new CloseEvent("close", { code: 4002 }) });
 
         await expect
-            .element(page.getByRole("alert"))
+            .element(screen.getByRole("alert"))
             .toHaveTextContent("Unable to sync the document. Please try again.");
     });
 
     it("displays users from provider awareness updates", async () => {
-        const provider = renderDocumentPage();
+        const { provider, screen } = await renderDocumentPage();
 
         provider.awareness?.states.set(101, {
             user: { ...documentData.user, name: "alice" },
@@ -233,30 +229,39 @@ describe("document page", () => {
         });
         provider.emit("awarenessChange");
 
-        await expect.element(page.getByText("2 connected users")).toBeInTheDocument();
-        await expect.element(page.getByRole("listitem").nth(0)).toHaveTextContent("alice");
-        await expect.element(page.getByRole("listitem").nth(1)).toHaveTextContent("bobby");
+        await expect.element(screen.getByText("2 connected users")).toBeInTheDocument();
+        await expect.element(screen.getByRole("listitem").nth(0)).toHaveTextContent("alice");
+        await expect.element(screen.getByRole("listitem").nth(1)).toHaveTextContent("bobby");
     });
 
     it("toggles the synced editor between view and edit mode", async () => {
-        const provider = renderDocumentPage();
+        const { provider, screen } = await renderDocumentPage();
         provider.options.onStatus({ status: "connected" });
         provider.options.onSynced();
 
-        const changeViewButton = page.getByRole("button", { name: "Change View" });
+        const changeViewButton = screen.getByRole("button", { name: "Change Between Edit and View Mode" });
         const editor = getEditor();
 
-        await changeViewButton.click();
-        expect(editor.editable).toBe(true);
+        await expect.element(changeViewButton).toBeEnabled();
+
+        expect(editor).toBeDefined();
 
         await changeViewButton.click();
-        expect(editor.editable).toBe(false);
+        await expect.element(changeViewButton).toHaveAttribute("aria-pressed", "true");
+        expect(editor).toBe(mocks.editors[0]);
+        expect(editor.setEditable).toHaveBeenCalledWith(true);
+        expect(editor.options.editable).toBe(true);
+
+        await changeViewButton.click();
+        await expect.element(changeViewButton).toHaveAttribute("aria-pressed", "false");
+        expect(editor.setEditable).toHaveBeenCalledWith(false);
+        expect(editor.options.editable).toBe(false);
     });
 
     it("navigates back to the documents list", async () => {
-        renderDocumentPage();
+        const { screen } = await renderDocumentPage();
 
-        await page.getByRole("button", { name: "Back" }).click();
+        await screen.getByTitle("Return to Documents").click();
 
         expect(mocks.resolve).toHaveBeenCalledWith("/app/(authenticated)/documents");
         expect(mocks.goto).toHaveBeenCalledWith("/app/(authenticated)/documents");

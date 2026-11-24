@@ -27,11 +27,11 @@ async function openEditor(page: Page, documentId: string): Promise<void> {
     }
 
     await page.goto(`/app/documents/${documentId}`);
-    const editButton = page.getByRole("button", { name: "Change View" });
+    const editButton = page.getByTitle("Change Between Edit and View Mode");
     await expect(editButton).toBeEnabled();
     await expect(page.locator("nav")).toContainText("Connected");
     await editButton.click();
-    await expect(page.locator(".editorelement [contenteditable='true']")).toBeVisible();
+    await expect(page.locator(".view-element [contenteditable='true']")).toBeVisible();
 }
 
 async function readEditorText(editor: Locator): Promise<string> {
@@ -110,7 +110,7 @@ test("two browser clients converge through latency and offline edits", async ({ 
         }
 
         await Promise.all(pages.map((page) => openEditor(page, documentId)));
-        const editors = pages.map((page) => page.locator(".editorelement [contenteditable='true']"));
+        const editors = pages.map((page) => page.locator(".view-element [contenteditable='true']"));
         const [firstEditor, secondEditor] = editors;
         if (firstEditor === undefined || secondEditor === undefined) {
             throw new Error("Expected two browser editors");
