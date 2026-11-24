@@ -113,6 +113,60 @@ The state synchronisation model describes the following system:
 	\item The synchronisation of said updates and new documents across all nodes.
 \end{itemize}
 
+\subsection{Structural model}
+
+\begin{tikzpicture}
+	\node[circle, draw] (redis) {redis};
+	\node[circle, draw, below left=of redis] (node0) {Node};
+	\node[below right=of redis] (node1) {$\ldots$};
+
+	\draw[->] (redis) -- (node0) node [midway, fill=white] {nodes};
+	\draw[->] (redis) -- (node1) node [midway, fill=white] {nodes};
+
+	\node[circle, draw, right=2cm of redis] (update) {Update};
+	\node[below right=0.5cm and 1cm of node1] (udoc) {Document};
+	\node[right=of udoc] (uver) {Version};
+
+	\draw[->] (redis) -- (update) node [midway, fill=white] {issued};
+	\draw[->] (update) -- (udoc) node [midway, fill=white] {doc};
+	\draw[->] (update) -- (uver) node [midway, fill=white] {ver};
+
+	\node[left=2cm of redis] (queue) {(Node, Update)};
+	\draw[->] (redis) -- (queue) node [midway, fill=white] {queue};
+
+	\node[circle, draw, below left=of node0] (client0) {Client};
+	\node[below right=of node0] (client1) {$\ldots$};
+	\node[circle, draw, right=of client1] (db) {Database};
+
+	\draw[->] (node0) -- (client0) node [midway, fill=white] {clients};
+	\draw[->] (node0) -- (client1) node [midway, fill=white] {clients};
+	\draw[->] (node0) -- (db) node [midway, fill=white] {db};
+
+	\node[below left=of db] (doc0) {(Document, Version)};
+	\node[below right=of db] (doc1) {$\ldots$};
+
+	\draw[->] (db) -- (doc0) node [midway, fill=white] {state};
+	\draw[->] (db) -- (doc1) node [midway, fill=white] {state};
+\end{tikzpicture}
+
+\subsection{Actions}
+
+\begin{definition}{Edit}
+	A new document update is created and applied to a single node. This update is then added to the
+	queue relation on redis, paired with every node to which this update still needs to be delivered.
+\end{definition}
+
+\begin{definition}{Deliver}
+	A node pulls an update from the redis queue, and applies it to itself, if the document state
+	it contains is newer than the state it already has. The node then removes itself from the redis
+	queue.
+\end{definition}
+
+\begin{definition}{Deliver discard}
+	A node pulls an update from the redis queue, if the document state the node contains is newer than
+	the state in the update, the node removes itself from the redis queue and discards the update.
+\end{definition}
+
 \section{Awareness synchronisation model}
 \label{sec:awareness}
 
