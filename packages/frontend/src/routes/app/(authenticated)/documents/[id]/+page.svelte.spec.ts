@@ -164,7 +164,7 @@ describe("document page", () => {
 
     it("enables editing only after the collaboration provider connects and syncs", async () => {
         const { provider, screen } = await renderDocumentPage();
-        const changeViewButton = screen.getByRole("button", { name: "Change Between Edit and View Mode" });
+        const changeViewButton = screen.getByTitle("Change Between Edit and View Mode");
 
         expect(provider.options.url).toBe("/api/collaboration");
         expect(provider.options.name).toBe("notes.md");
@@ -239,7 +239,7 @@ describe("document page", () => {
         provider.options.onStatus({ status: "connected" });
         provider.options.onSynced();
 
-        const changeViewButton = screen.getByRole("button", { name: "Change Between Edit and View Mode" });
+        const changeViewButton = screen.getByTitle("Change Between Edit and View Mode");
         const editor = getEditor();
 
         await expect.element(changeViewButton).toBeEnabled();
