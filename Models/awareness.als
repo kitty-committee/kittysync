@@ -8,23 +8,26 @@ sig awarenessState {
 
 sig Update{
     map :  Client -> one awarenessState,
-    var from : lone object,
-    var to : lone object 
+    var from : lone updateCarrying,
+    var to : lone updateCarrying 
 }
 
-abstract sig object{
+abstract sig updateCarrying{
+
+}
+abstract sig mapStoring extends updateCarrying{
     var map: Client-> one awarenessState
 }
 
-sig Client extends object{
+sig Client extends mapStoring{
     user : one User
 }
 
-sig Node extends object{
+sig Node extends mapStoring{
     clients: set Client,
 }
 
-one sig Redis {
+one sig Redis extends updateCarrying{
     nodes : set Node,
     var queue: Node -> Update,
     var issued: set Update
@@ -52,15 +55,15 @@ fact all_updates_are_different{
 }
 
 fact all_client_in_map_are_correct{
-    all c:Client | c.(object.map).user = c.user && c.(Update.map).user = c.user
+    all c:Client | c.(mapStoring.map).user = c.user && c.(Update.map).user = c.user
 }
 
-fact init_all_objects_share_the_same_map{
-    all x,y: object | x.map = y.map
+fact init_all_mapStorings_share_the_same_map{
+    all x,y: mapStoring | x.map = y.map
 }
 
 fact init_all_updates_have_a_different_map{
-    all u: Update, o:object | u.map!=o.map
+    all u: Update, o:mapStoring | u.map!=o.map
 }
 
 fact init_all_updates_originate_from_a_client {
@@ -79,7 +82,7 @@ fact init {
 
 fact transisitons {
     always(
-        (some u: Update | userUpdatesMap[u]) or 
+        (some u: Update | userUpdatesMap[u] or nodeUpdatesRedis[u]) or 
         stutter
     )
 }
@@ -87,7 +90,7 @@ fact transisitons {
 pred stutter {
     Update.from' = Update.from
     Update.to' = Update.to
-    object.map' = object.map
+    mapStoring.map' = mapStoring.map
     Redis.queue' = Redis.queue
     Redis.issued' = Redis.issued
 }
@@ -105,15 +108,19 @@ pred userUpdatesMap[u:Update]{
     }
 }
 
-// pred nodeUpdatesRedis[u:Update]{
-//     u.from in Client
-//     u.to in Node
-//     // validate schema
-//     u.(Update.map).user in User
-//     u.(Update.map).cusor in CusorPlacement
-//     //
-//     u.
-// }
+pred nodeUpdatesRedis[u:Update]{
+    u.from in Client
+    u.to in Node
+    // validate schema
+    Client.(u.map).user in User
+    Client.(u.map).cusor in CusorPlacement
+    // need to deal with rest of validation
+    u.from' = u.to
+    u.to' = Redis
+    Redis.issued' = Redis.issued + u
+    Redis.queue' = Redis.queue + (Redis.nodes -> u)
+    mapStoring.map' = mapStoring.map
+}
 
 
 run default {} for 3 
