@@ -6,7 +6,7 @@ import { resolve } from "$app/paths";
 import { fetchApi } from "#lib";
 
 // replace with code for redirecting to the login page if the user is not authenticated
-export const load: LayoutLoad = async ({ url }) => {
+export const load: LayoutLoad = async ({ url, fetch }) => {
     // If statement to redirect loggedout users
     if (window.cookieStore?.get && (await window.cookieStore.get("session")) === null) {
         await loginRedirect(url.pathname);
@@ -14,7 +14,7 @@ export const load: LayoutLoad = async ({ url }) => {
     }
 
     // userData defined
-    const api = await fetchApi("auth/session?session");
+    const api = await fetchApi(fetch, "auth/session?session");
 
     // If statement to redirect loggedout users
     if (!api.ok) {
