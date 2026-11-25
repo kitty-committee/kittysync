@@ -4,7 +4,7 @@
 \usepackage{hyperref}
 \usepackage{varwidth}
 \usepackage{tikz}
-\usetikzlibrary{fit, calc, positioning}
+\usetikzlibrary{fit, calc, positioning, shapes.geometric}
 \usepackage{listings}
 
 \title{
@@ -93,7 +93,46 @@ If the client disconnects from the server for any reason, a re-connection should
 
 \subsection{Structural model}
 
+\begin{tikzpicture}
+	\node[circle, draw] (node) {Node};
+	\node[circle, draw, right=5cm of node] (client) {Client};
+
+	\draw[->] (node) -- (client) node [midway, fill=white] {clients};
+	\draw[bend left, ->] (node) to node [auto] {connecting} (client);
+	\draw[bend right, ->] (node) to node [auto] {refused} (client);
+
+	\node[circle, draw, below=5cm of client] (message) {Message};
+
+	\draw[->] (node) -- (message) node [midway, fill=white] {handledMessages};
+	\draw[->] (client) -- (message) node [midway, fill=white] {messages};
+
+	\node[circle, draw, right=2cm of client] (jwt) {JWT};
+	\draw[->] (client) -- (jwt) node [midway, fill=white] {token};
+
+	\node[circle, draw, above=2cm of client] (int) {Int};
+	\draw[->] (client) -- (int) node [midway, fill=white] {connectionAttempts};
+\end{tikzpicture}
+
 \subsection{Actions}
+
+\begin{definition}{Start connecting}
+	Start attempting to connect a client to a node.
+\end{definition}
+
+\begin{definition}{Connection attempt}
+	Make an attempt to connect a client to a node, if
+	the number of attempts reaches five, stop
+	attempting to connect this client to this node.
+\end{definition}
+
+\begin{definition}{Disconnect}
+	Disconnect a client from a node.
+\end{definition}
+
+\begin{definition}{Send message}
+	Send a message to a node. If this message is a string message,
+	the connection between the client and node is closed.
+\end{definition}
 
 \section{State synchronisation model}
 \label{sec:state}
@@ -249,6 +288,7 @@ syntactic methods of posing increasingly close-ended questions to large language
   00. check validTokensWillEventuallyConnect     0       UNSAT
   01. check invalidTokensAreEventuallyRefused     0       UNSAT
   02. check connectionsAreReattempted     0       UNSAT
+  03. check stringMessagesCauseDisconnect     0       UNSAT
   \end{lstlisting}
 
 \end{appendices}
