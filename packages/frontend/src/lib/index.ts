@@ -17,8 +17,13 @@ export async function fetchApi(
     const api = await fetch(`/api/${url}`, { credentials: "include", ...options });
     if (api.status === 401) {
         if (typeof fetchOrUrl === "function") redirect(302, resolve("/app/login"));
-        else goto(resolve("/app/login"));
+        else loginRedirect(window.location.pathname);
     }
 
     return api;
+}
+
+export async function loginRedirect(url: string) {
+    if (sessionStorage.getItem("return-page") === null) sessionStorage.setItem("return-page", url);
+    await goto(resolve("/app/login"));
 }

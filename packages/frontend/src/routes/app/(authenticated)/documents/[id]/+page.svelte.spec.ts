@@ -15,11 +15,24 @@ type ProviderOptions = {
 type Awareness = {
     states: Map<number, unknown>;
     getStates: () => Map<number, unknown>;
+    getLocalState: () => unknown | null;
+    setLocalState: (state: unknown | null) => void;
+};
+
+type WebsocketProviderHarness = {
+    status: string;
+    listeners: Map<string, Set<(event: { status: string }) => void>>;
+    on: (event: string, handler: (event: { status: string }) => void) => void;
+    off: (event: string, handler: (event: { status: string }) => void) => void;
+    emit: (event: string, payload: { status: string }) => void;
+    connect: ReturnType<typeof vi.fn>;
+    disconnect: ReturnType<typeof vi.fn>;
 };
 
 type ProviderHarness = {
     options: ProviderOptions;
     awareness: Awareness | null;
+    configuration: { websocketProvider: WebsocketProviderHarness };
     listeners: Map<string, Set<() => void>>;
     on: (event: string, handler: () => void) => void;
     off: (event: string, handler: () => void) => void;
@@ -45,19 +58,64 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@hocuspocus/provider", () => ({
+    WebSocketStatus: {
+        Connecting: "connecting",
+        Connected: "connected",
+        Disconnected: "disconnected",
+    },
     HocuspocusProvider: class {
         options: ProviderOptions;
         awareness: Awareness | null = {
-            states: new Map(),
+            states: new Map([[1, {}]]),
             getStates() {
                 return this.states;
             },
+            getLocalState() {
+                return this.states.get(1) ?? null;
+            },
+            setLocalState(state) {
+                if (state === null) {
+                    this.states.delete(1);
+                } else {
+                    this.states.set(1, state);
+                }
+            },
         };
+        configuration: ProviderHarness["configuration"];
         listeners = new Map<string, Set<() => void>>();
         destroy = vi.fn();
 
         constructor(options: ProviderOptions) {
             this.options = options;
+            const socket: WebsocketProviderHarness = {
+                status: "connected",
+                listeners: new Map(),
+                on(event, handler) {
+                    const handlers = this.listeners.get(event) ?? new Set();
+                    handlers.add(handler);
+                    this.listeners.set(event, handlers);
+                },
+                off(event, handler) {
+                    this.listeners.get(event)?.delete(handler);
+                },
+                emit(event, payload) {
+                    this.listeners.get(event)?.forEach((handler) => handler(payload));
+                },
+                connect: vi.fn(),
+                disconnect: vi.fn(),
+            };
+            socket.connect.mockImplementation(() => {
+                socket.status = "connected";
+                socket.emit("status", { status: socket.status });
+                this.options.onStatus({ status: socket.status });
+                this.emit("open");
+            });
+            socket.disconnect.mockImplementation(() => {
+                socket.status = "disconnected";
+                socket.emit("status", { status: socket.status });
+                this.options.onStatus({ status: socket.status });
+            });
+            this.configuration = { websocketProvider: socket };
             mocks.providers.push(this);
         }
 
@@ -221,6 +279,7 @@ describe("document page", () => {
     it("displays users from provider awareness updates", async () => {
         const { provider, screen } = await renderDocumentPage();
 
+        provider.awareness?.states.clear();
         provider.awareness?.states.set(101, {
             user: { ...documentData.user, name: "alice" },
         });
@@ -232,6 +291,59 @@ describe("document page", () => {
         await expect.element(screen.getByText("2 connected users")).toBeInTheDocument();
         await expect.element(screen.getByRole("listitem").nth(0)).toHaveTextContent("alice");
         await expect.element(screen.getByRole("listitem").nth(1)).toHaveTextContent("bobby");
+    });
+
+    it("waits for populated awareness before updating connected users", async () => {
+        const consoleError = vi.spyOn(console, "error");
+        const { provider, screen } = await renderDocumentPage();
+
+        provider.emit("awarenessChange");
+
+        await expect.element(screen.getByText("0 connected users")).toBeInTheDocument();
+        expect(consoleError).not.toHaveBeenCalledWith("Failed to parse awareness state:", expect.anything());
+        consoleError.mockRestore();
+
+        provider.awareness?.states.set(1, {
+            user: { ...documentData.user, name: "alice" },
+        });
+        provider.emit("awarenessChange");
+
+        await expect.element(screen.getByText("1 connected user")).toBeInTheDocument();
+        await expect.element(screen.getByRole("listitem")).toHaveTextContent("alice");
+    });
+
+    it("reconnects the existing collaboration session after a BFCache restore", async () => {
+        const { provider, screen } = await renderDocumentPage();
+        const socket = provider.configuration.websocketProvider;
+
+        provider.options.onStatus({ status: "connected" });
+        provider.options.onSynced();
+
+        const changeViewButton = screen.getByTitle("Change Between Edit and View Mode");
+        await expect.element(screen.getByText("Status: Connected", { exact: true })).toBeInTheDocument();
+        await expect.element(changeViewButton).toBeEnabled();
+        await changeViewButton.click();
+        expect(getEditor().options.editable).toBe(true);
+
+        window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: false }));
+        expect(mocks.providers).toHaveLength(1);
+        expect(socket.disconnect).not.toHaveBeenCalled();
+
+        window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+
+        expect(mocks.providers).toHaveLength(1);
+        expect(provider.destroy).not.toHaveBeenCalled();
+        expect(socket.disconnect).toHaveBeenCalledOnce();
+        expect(socket.connect).toHaveBeenCalledOnce();
+        expect(provider.awareness?.getLocalState()).toEqual({ user: documentData.user });
+        expect(getEditor().destroy).not.toHaveBeenCalled();
+        expect(getEditor().options.editable).toBe(true);
+        await expect.element(screen.getByText("Status: Connected", { exact: true })).toBeInTheDocument();
+        await expect.element(changeViewButton).toBeEnabled();
+
+        provider.emit("awarenessChange");
+        await expect.element(screen.getByText("1 connected user")).toBeInTheDocument();
+        await expect.element(screen.getByRole("listitem")).toHaveTextContent("test-user");
     });
 
     it("toggles the synced editor between view and edit mode", async () => {

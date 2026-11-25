@@ -18,9 +18,9 @@
         type UserDb,
     } from "@kittysync/common";
     import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
+    import { HocuspocusProvider, WebSocketStatus } from "@hocuspocus/provider";
     import { faFileLines } from "@fortawesome/free-regular-svg-icons";
     import { Collaboration } from "@tiptap/extension-collaboration";
-    import { HocuspocusProvider } from "@hocuspocus/provider";
     import StarterKit from "@tiptap/starter-kit";
     import { Markdown } from "@tiptap/markdown";
     import { goto } from "$app/navigation";
@@ -53,6 +53,25 @@
         };
     }
 
+    function reconnect(provider: HocuspocusProvider) {
+        const socket = provider.configuration.websocketProvider;
+
+        const reconnectWhenDisconnected = ({ status }: { status: WebSocketStatus }) => {
+            if (status !== WebSocketStatus.Disconnected) return;
+
+            socket.off("status", reconnectWhenDisconnected);
+            void socket.connect();
+        };
+
+        socket.on("status", reconnectWhenDisconnected);
+        socket.disconnect();
+
+        if (socket.status === WebSocketStatus.Disconnected) {
+            socket.off("status", reconnectWhenDisconnected);
+            void socket.connect();
+        }
+    }
+
     function toggleEditMode() {
         if (!editor) {
             throw new Error("Cannot toggle edit mode before the editor is initialized.");
@@ -65,61 +84,6 @@
 
     onMount(() => {
         const ydoc = new Y.Doc();
-        //replace with actual username from auth context when frontend helper is made.
-        const provider = new HocuspocusProvider({
-            url: "/api/collaboration",
-            name: data.documentId,
-            document: ydoc,
-            onStatus: ({ status }) => {
-                connected = status === "connected";
-                if (connected) {
-                    connectionError = "";
-                }
-            },
-            onAuthenticationFailed: ({ reason }) => {
-                connectionError = reason;
-            },
-            onDisconnect: ({ event }) => {
-                if (event.code === SOCKET_ERROR_UNBOUND_CONNECTION) {
-                    connectionError = "Unable to connect to the document. Please try again.";
-                } else if (event.code === SOCKET_ERROR_UNSUPPORTED_MESSAGE) {
-                    connectionError = "Unable to sync the document. Please try again.";
-                }
-            },
-            onSynced: () => {
-                if (editor) return;
-                if (!editorElement) {
-                    console.error("Tiptap editor element is not available.");
-                    return;
-                }
-
-                editor = new Editor({
-                    element: editorElement,
-                    extensions: [
-                        StarterKit.configure({ undoRedo: false }),
-                        Collaboration.configure({ document: ydoc, field: "content" }),
-                        Markdown,
-                        CollaborationCaret.configure({
-                            provider,
-                            // collaboration caret requires the name and color of the user to display the caret correctly
-                            user: data.user satisfies UserDb & { name: string; color: string },
-                        }),
-                    ],
-                    editable: inEditMode,
-                });
-                documentLoaded = true;
-            },
-        });
-
-        provider.on("open", () => {
-            const awareness = provider.awareness;
-            if (awareness != null) {
-                const localState = awareness.getLocalState();
-                if (localState != null && awarenessStateSchema.safeParse(localState).success) {
-                    awareness.setLocalState(localState);
-                }
-            }
-        });
 
         const updateConnectedUsers = () => {
             if (provider.awareness == null) {
@@ -129,6 +93,10 @@
 
             const users: ConnectedUser[] = [];
             for (const [clientId, s] of provider.awareness.getStates()) {
+                if (typeof s !== "object" || s === null || !("user" in s) || s["user"] == null) {
+                    continue;
+                }
+
                 let state: AwarenessState;
                 try {
                     state = awarenessStateSchema.parse(s);
@@ -143,8 +111,79 @@
             connectedUsers = users;
         };
 
-        provider.on("awarenessChange", updateConnectedUsers);
-        updateConnectedUsers();
+        let provider = initialiseProvider(ydoc);
+
+        const republishPresence = (provider: HocuspocusProvider) => {
+            const awareness = provider.awareness;
+            if (!awareness) return;
+
+            const state = awareness.getLocalState();
+            if (state !== null && awarenessStateSchema.safeParse(state).success) {
+                awareness.setLocalState(state);
+            } else {
+                awareness.setLocalState({ user: data.user });
+            }
+        };
+
+        const pageshowListener = (event: PageTransitionEvent) => {
+            if (event.persisted === true) {
+                reconnect(provider);
+            }
+        };
+        window.addEventListener("pageshow", pageshowListener);
+        provider.on("open", () => republishPresence(provider));
+
+        function initialiseProvider(document: Y.Doc) {
+            const provider = new HocuspocusProvider({
+                url: "/api/collaboration",
+                name: data.documentId,
+                document: document,
+                onStatus: ({ status }) => {
+                    connected = status === "connected";
+                    if (connected) {
+                        connectionError = "";
+                    }
+                },
+                onAuthenticationFailed: ({ reason }) => {
+                    connectionError = reason;
+                },
+                onDisconnect: ({ event }) => {
+                    if (event.code === SOCKET_ERROR_UNBOUND_CONNECTION) {
+                        connectionError = "Unable to connect to the document. Please try again.";
+                    } else if (event.code === SOCKET_ERROR_UNSUPPORTED_MESSAGE) {
+                        connectionError = "Unable to sync the document. Please try again.";
+                    }
+                },
+                onSynced: () => {
+                    if (editor) return;
+                    if (!editorElement) {
+                        console.error("Tiptap editor element is not available.");
+                        return;
+                    }
+
+                    editor = new Editor({
+                        element: editorElement,
+                        extensions: [
+                            StarterKit.configure({ undoRedo: false }),
+                            Collaboration.configure({ document: ydoc, field: "content" }),
+                            Markdown,
+                            CollaborationCaret.configure({
+                                provider,
+                                // collaboration caret requires the name and color of the user to display the caret correctly
+                                user: data.user satisfies UserDb & { name: string; color: string },
+                            }),
+                        ],
+                        editable: inEditMode,
+                    });
+
+                    documentLoaded = true;
+                },
+            });
+
+            provider.on("awarenessChange", updateConnectedUsers);
+
+            return provider;
+        }
 
         return () => {
             editor?.destroy();
@@ -154,6 +193,7 @@
             ydoc.destroy();
             connected = false;
             documentLoaded = false;
+            window.removeEventListener("pageshow", pageshowListener);
         };
     });
 </script>
@@ -214,9 +254,7 @@
                 title="Change Between Edit and View Mode"
                 aria-label="Toggle Edit Mode"
                 aria-pressed={inEditMode}
-                onclick={() => {
-                    toggleEditMode();
-                }}
+                onclick={toggleEditMode}
                 disabled={!connected || !documentLoaded}>
                 {#if inEditMode}
                     <Fa icon={faEye} />
