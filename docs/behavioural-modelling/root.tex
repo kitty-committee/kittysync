@@ -91,6 +91,10 @@ is also closed.
 If the client disconnects from the server for any reason, a re-connection should be attempted
 \textit{up to five times}, after which the system will give up.
 
+\subsection{Structural model}
+
+\subsection{Actions}
+
 \section{State synchronisation model}
 \label{sec:state}
 
@@ -238,6 +242,13 @@ syntactic methods of posing increasingly close-ended questions to large language
   02. run   run$3                    1/1     SAT
   03. check monotonic                0       UNSAT
   04. check convergence              0       UNSAT
+  \end{lstlisting}
+
+	\subsection{Connection}
+	\begin{lstlisting}
+  00. check validTokensWillEventuallyConnect     0       UNSAT
+  01. check invalidTokensAreEventuallyRefused     0       UNSAT
+  02. check connectionsAreReattempted     0       UNSAT
   \end{lstlisting}
 
 \end{appendices}
