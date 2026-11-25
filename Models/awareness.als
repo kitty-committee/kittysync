@@ -1,37 +1,80 @@
-abstract sig object {
-    var states: set awarenessMap
+sig User {}
+sig CusorPlacement {}
+
+sig awarenessState {
+    user: one User,
+    var cusor: one CusorPlacement
 }
 
-sig Client extends object{}
-
-sig Node extends object {
-    connected : set object
+sig Update{
+    map : Client -> one awarenessState,
+    var from : one object
 }
 
-sig awarenessMap{
-    user: one Client
-    here: lone Client
-    removed: lone Client
+abstract sig object{
+    var map: Client-> one awarenessState
+}
+
+sig Client extends object{
+    cUser : one User
+}
+
+sig Node extends object{
+    clients: set Client,
+}
+
+one sig Redis {
+    nodes : set Node,
+    var queue: Node -> Update,
+    var issued: set Update
+}
+
+fact all_clients_belong_to_one_node{
+    always(all c :Client | one clients.c)
+}
+
+fact all_nodes_belong_to_one_redis{
+    always(all n : Node | one nodes.n)
+}
+
+fact all_users_belong_to_one_client{
+    always(all u:User | one c: Client | u in c.cUser)
+}
+fact all_states_are_different{
+    always(all disj a,b:awarenessState | (a.user!=b.user) or (a.cusor!=b.cusor) )
+}
+
+fact all_updates_are_different{
+    always{
+        all disj x,y :Update | x.map != y.map
+    }
+}
+
+fact init_all_objects_share_the_same_map{
+    all x,y: object | x.map = y.map
+}
+
+fact init_all_updates_have_a_different_map{
+    all u: Update, o:object | u.map!=o.map
+}
+
+fact init_all_updates_originate_from_a_client {
+    Update.from in Client
 }
 
 fact init {
-    some Node
+    no queue
+    no issued
     some Client
+    some Update
 }
 
-fact transitions{
-    always(
-        (some from: Client, to: Node, state:awarenessMap | updateFromClientToNode[from,to,state]) or
-        (some from: Node, state:awarenessMap, set to: Object | updateFromNodeToX[from,to,state]) or
-        or stutter
-    )
-}
+run default {} for 3 but exactly 2 Client
 
-pred updateFromClientToNode[from: Client, to: Node, state:awarenessMap]{
-    from in to.connected
-    (state.here and not state.removed) or (state.removed and not state.here)
-    (awarenessMap.user = to.states.user) or (awarenessMap not in to.states)
-    (awarenessMap.removed = from) or no awarenessMap.removed
-    after updateFromNodeToX[to, awarenessMap,to.connected]
-}
+// need to make all clients in a map map to different states  
 
+// fact transisitons {
+//     always(
+//         (some)
+//     )
+// }

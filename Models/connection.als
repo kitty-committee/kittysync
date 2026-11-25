@@ -35,7 +35,7 @@ fact {
     always(
         (some c : Client, fn : FileName, u: URL | connect[c,fn,u]) or
         (some c : Client | disconnect[c] or setup[c]) or
-        (some c : Client, m : Message | onMessageGood[c,m] or onMessageBad[c,m])  
+        (some c : Client, m : Message | onMessageGood[c,m] or onMessageBad[c,m]) or
         stutter
     )
 }
@@ -53,8 +53,8 @@ pred connect[c : Client, fn: FileName, u: URL]{
 }
 
 pred disconnect [c : Client]{
-    c in connected
-    connected = connected - c
+    Server->c in connected
+    connected = connected - Server->c
     setup' = setup - c
 }
 
