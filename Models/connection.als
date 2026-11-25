@@ -1,80 +1,178 @@
-// define structure
-sig JWT {}
-sig Client { 
-    token : one JWT 
+
+/**
+ * JWT and Client signatures.
+ *
+ * These represent JWT tokens, and clients which might
+ * connect to a server.
+ */
+abstract sig JWT {}
+sig InvalidJWT extends JWT {}
+sig ValidJWT extends JWT {}
+
+sig Client {
+    token : one JWT,
+    messages : set Message,
+    var connectionAttempts: one Int
 }
 
-var sig setup in Client {} 
-
-sig Server {
-    files : set File,
-    var connected: set Client,
-    authenticated : some JWT
-}
-sig URL {
-    server: one Server
+// Ensure that all tokens belong to some client.
+// Notably we do not enforce that a token belongs to only one client,
+// because in reality multiple clients could have the same token.
+// (they shouldn't, but they *could*)
+fact allTokensBelongToSomeClient {
+  all t : JWT | some c : Client | t in c.token
 }
 
-sig FileName { file: one File}
-sig File{}
+/**
+ * A real-time backend server node.
+ */
+sig Node {
+    var clients: set Client,
+    var connecting: set Client,
+    var refused: set Client
+}
 
+/**
+ * Represents the kind of messages that a client could send to a
+ * real-time backend server.
+ */
 abstract sig Message {}
 sig StringMessage extends Message {}
 sig ObjectMessage extends Message {}
 
-// inital state
+fact init {
+  no clients
+  no connecting
+  no refused
+  all c : Client | c.connectionAttempts = 0
+}
+
+fact transitions {
+  always (
+    (one c : Client, n : Node | startConnecting[c, n] or connectionAttempt[c, n] or disconnect[c, n]) or
+    stutter
+  )
+}
+
+pred stutter {
+  connectionAttempts' = connectionAttempts
+  clients' = clients
+  connecting' = connecting
+  refused' = refused
+}
+
+/**
+ * Set a client to start connecting to a node
+ */
+pred startConnecting [c : Client, n : Node] {
+  c not in n.connecting
+  c not in n.refused
+  connectionAttempts' = connectionAttempts ++ c -> 0
+  connecting' = connecting + n -> c
+  clients' = clients
+  refused' = refused
+}
+
+/**
+ * Attempt to connect a client to a node
+ */
+pred connectionAttempt [c : Client, n : Node] {
+  c in n.connecting
+  c not in n.refused
+  c.connectionAttempts >= 5 implies {
+    stopConnecting[c, n]
+  } else {
+    c.token in ValidJWT implies {
+      connectionSuccess[c, n]
+    }
+    else {
+      connectionFailed[c, n]
+    }
+  }
+}
+
+/**
+ * Handle the case where the client's attempt to connect
+ * to a node is successful.
+ */
+pred connectionSuccess [c : Client, n : Node] {
+  c in n.connecting
+  c not in n.refused
+  c.connectionAttempts < 5
+  clients' = clients + n -> c
+  connecting' = connecting - n -> c
+  connectionAttempts' = connectionAttempts
+  refused' = refused
+}
+
+/**
+ * Handle the case where the client's attempt to connect
+ * to a node is unsuccessful.
+ */
+pred connectionFailed [c : Client, n : Node] {
+    c in n.connecting
+    c not in n.refused
+    c.connectionAttempts < 5
+    connectionAttempts' = connectionAttempts ++ c -> plus[c.connectionAttempts, 1]
+    clients' = clients
+    connecting' = connecting
+    refused' = refused
+}
+
+/**
+ * Stop a client connecting to a node.
+ */
+pred stopConnecting [c : Client, n : Node] {
+  c in n.connecting
+  c not in n.refused
+  connecting' = connecting - n -> c
+  clients' = clients
+  connectionAttempts' = connectionAttempts
+  refused' = refused + n -> c
+}
+
+/**
+ * Disconnect a client from a node
+ */
+pred disconnect [c : Client, n : Node] {
+    c in n.clients
+    clients' = clients - n -> c
+    connecting' = connecting
+    connectionAttempts' = connectionAttempts
+    refused' = refused
+}
+
+
+/**
+ * Predicates and checks
+ *
+ * The following section will specify predicates which should hold true in our system,
+ * and will be tested on execution.
+ */
+
+// Ensure that infinite stutters in the connection process cannot happen,
+// i.e. the system will always attempt to resolve connections in some way
 fact {
-    one URL // probably unconstrain later?
-    no connected
-    some files
-    one Client // probably unconstrain this later?
+  all n : Node, c : Client | always ( c in n.connecting  implies eventually (c not in n.connecting) )
 }
-
-// state transisitions
 fact {
-    always(
-        (some c : Client, fn : FileName, u: URL | connect[c,fn,u]) or
-        (some c : Client | disconnect[c] or setup[c]) or
-        (some c : Client, m : Message | onMessageGood[c,m] or onMessageBad[c,m]) or
-        stutter
-    )
+  all n : Node, c : Client | always ( c not in n.connecting  implies eventually ((c in n.connecting) or (c in n.refused)) )
 }
 
-pred stutter{
-    connected' = connected
-    setup' = setup
+assert validTokensWillEventuallyConnect {
+  all c : Client, n : Node | c.token in ValidJWT implies
+    eventually c in n.clients
 }
+check validTokensWillEventuallyConnect
 
-pred connect[c : Client, fn: FileName, u: URL]{
-    c->JWT in authenticated //guard
-    fn->File in files
-    u.server.connected' = u.server.connected + c
-    setup' = setup
+assert invalidTokensAreEventuallyRefused {
+    all c : Client, n : Node | c.token in InvalidJWT implies
+      eventually c in n.refused
 }
+check invalidTokensAreEventuallyRefused
 
-pred disconnect [c : Client]{
-    Server->c in connected
-    connected = connected - Server->c
-    setup' = setup - c
+assert connectionsAreReattempted {
+    all c : Client | c.connectionAttempts = 1 implies
+      eventually c.connectionAttempts > 1
 }
-
-pred setup [c : Client] {
-    c not in setup
-    c in connected
-    setup' = setup + c
-    connected' = connected
-}
-
-pred onMessageGood[c: Client, m: Message]{
-    c in setup
-    m in ObjectMessage
-    connected' = connected
-    setup' = setup
-    // send message to hocupocus
-}
-pred onMessageBad[c: Client, m: Message]{
-    c in setup
-    m in StringMessage
-    after disconnect[c]
-}
-
+check connectionsAreReattempted
