@@ -1,6 +1,11 @@
 \documentclass[a4paper, final]{report}
 
 \usepackage[toc, page, title, titletoc]{appendix}
+\usepackage{hyperref}
+\usepackage{varwidth}
+\usepackage{tikz}
+\usetikzlibrary{fit, calc, positioning}
+\usepackage{listings}
 
 \title{
   Kittysync --- Structural and Behavioural modelling
@@ -17,6 +22,20 @@ Tyler Gillet
 
 \begin{document}
 
+\newsavebox{\defbox}
+\newenvironment{corollary}[2]
+{\begin{lrbox}{\defbox}\begin{varwidth}{0.8\linewidth}\textbf{#1} #2\newline}
+			{\end{varwidth}\end{lrbox}\noindent\vspace{1cm}%
+	\begin{tikzpicture}
+		\node[inner sep=0pt] (content) {\usebox{\defbox}};
+		\node[inner sep=8pt, fit=(content)] (box) {};
+		\draw[thick] (box.north west) -- (box.south west);
+	\end{tikzpicture}%
+}
+
+\newenvironment{definition}[1]{\begin{corollary}{Definition}{#1}}{\end{corollary}}
+
+
 \maketitle
 
 \tableofcontents
@@ -25,15 +44,201 @@ Tyler Gillet
 
 \section{Overview of abstraction}
 
+We separated our application into three seperate models, each aiming to model specific parts
+of our real-time communication architecture:
+
+\begin{itemize}
+	\item Connections
+	\item State synchronisation
+	\item Awareness state synchronisation
+\end{itemize}
+
+In the following sections, we will explain the purposes of each of these models,
+and the exact systems they model in our application.
+
 \section{Connection model}
+\label{sec:connection}
+
+Here, we model the process of creating, maintaining, and closing a connection to the real-time
+back-end server.
+
+\begin{enumerate}
+	\item The client opens a web-socket connection to the real-time server
+	\item An authentication hook runs on their request, verifying and extracting the user data from
+	      the JWT token which should be provided in their request.
+	\item \textit{onmessage}, \textit{onclose}, and \textit{pong} event handlers are set up
+	      on the newly created web-socket.
+\end{enumerate}
+
+\subsection{On web-socket message}
+
+When a web-socket message is received by the back-end, if must first check whether or not it is a string
+message. \textit{Hocuspocus} only accepts binary form messages, so string messages should be rejected, followed
+by the closure of the socket.
+
+If the message is otherwise valid, it is passed on to be handled by the internal \textit{Hocuspocus} handler,
+which determines further actions. The behaviour of such actions are to be modelled in our
+State synchronisation (\autoref{sec:state})
+and Awareness synchronisation models (\autoref{sec:awareness}).
+
+\subsection{On web-socket close}
+
+When a closing message is received, the web-socket is closed, and the internal Hocuspocus contextual connection
+is also closed.
+
+\subsection{Re-connection behaviour}
+
+If the client disconnects from the server for any reason, a re-connection should be attempted
+\textit{up to five times}, after which the system will give up.
 
 \section{State synchronisation model}
+\label{sec:state}
+
+\begin{definition}{Node}
+	A single instance of the back-end. A client connects to a single node, and a node
+	connects to other nodes to synchronise awareness and state. Such is the form
+	of our horizontally scalable architecture. A node is independent from all other nodes,
+	but every node is eventually consistent with every other node.
+\end{definition}
+
+\begin{definition}{Client}
+	A single user-agent / device which connects to a single node. A client should be
+	completely blind to the horizontal architecture of the back-end.
+\end{definition}
+
+The state synchronisation model describes the following system:
+
+\begin{itemize}
+	\item The creation of new documents
+	\item Updates to said documents
+	\item The synchronisation of said updates and new documents across all nodes.
+\end{itemize}
+
+\subsection{Structural model}
+
+\begin{tikzpicture}
+	\node[circle, draw] (redis) {redis};
+	\node[circle, draw, below left=of redis] (node0) {Node};
+	\node[below right=of redis] (node1) {$\ldots$};
+
+	\draw[->] (redis) -- (node0) node [midway, fill=white] {nodes};
+	\draw[->] (redis) -- (node1) node [midway, fill=white] {nodes};
+
+	\node[circle, draw, right=2cm of redis] (update) {Update};
+	\node[above=of update] (update1) {$\ldots$};
+	\node[below right=0.5cm and 1cm of node1] (udoc) {Document};
+	\node[right=of udoc] (uver) {Version};
+
+	\draw[->] (redis) -- (update) node [midway, fill=white] {issued};
+	\draw[->] (redis) -- (update1) node [midway, fill=white] {issued};
+	\draw[->] (update) -- (udoc) node [midway, fill=white] {doc};
+	\draw[->] (update) -- (uver) node [midway, fill=white] {ver};
+
+	\node[left=2cm of redis] (queue) {(Node, Update)};
+	\draw[->] (redis) -- (queue) node [midway, fill=white] {queue};
+
+	\node[circle, draw, below left=of node0] (client0) {Client};
+	\node[below right=of node0] (client1) {$\ldots$};
+	\node[circle, draw, right=of client1] (db) {Database};
+
+	\draw[->] (node0) -- (client0) node [midway, fill=white] {clients};
+	\draw[->] (node0) -- (client1) node [midway, fill=white] {clients};
+	\draw[->] (node0) -- (db) node [midway, fill=white] {db};
+
+	\node[below left=of db] (doc0) {(Document, Version)};
+	\node[below right=of db] (doc1) {$\ldots$};
+
+	\draw[->] (db) -- (doc0) node [midway, fill=white] {state};
+	\draw[->] (db) -- (doc1) node [midway, fill=white] {state};
+\end{tikzpicture}
+
+\subsection{Actions}
+
+\begin{definition}{Edit}
+	A new document update is created and applied to a single node. This update is then added to the
+	queue relation on redis, paired with every node to which this update still needs to be delivered.
+\end{definition}
+
+\begin{definition}{Deliver}
+	A node pulls an update from the redis queue, and applies it to itself, if the document state
+	it contains is newer than the state it already has. The node then removes itself from the redis
+	queue.
+\end{definition}
+
+\begin{definition}{Deliver discard}
+	A node pulls an update from the redis queue, if the document state the node contains is newer than
+	the state in the update, the node removes itself from the redis queue and discards the update.
+\end{definition}
 
 \section{Awareness synchronisation model}
+\label{sec:awareness}
+
+An awareness state is a set of data provided by a single client to all other connected clients,
+which describes information about the client which might be of use to other clients.
+The awareness states used in \textit{Kittysync} for example, contain
+the user's data, and cursor position and colour. This information is used to display information
+about who is editing the document, and where their cursor is, on all other connected clients.
+
+Awareness state updates consist of a set of new state maps from clients updating their awareness,
+and a list of clients which are being removed. There are set of validation steps which we
+perform to ensure that such updates and removals are valid.
+
+This model describes the following system:
+\begin{enumerate}
+	\item A client updates their awareness map
+	\item This update is sent to the server
+	\item On the server-side, if the update is coming from another node, simply propagate this update
+	      to all connected clients, otherwise, continue through the following validation steps.
+	\item Check that all updated steps match the expected schema. If this check fails,
+	      any offending updates are dropped.
+	\item Stamp the context provided user data\footnote{This data is provided by the authentication
+		      hook mentioned in the State synchronisation model (\autoref{sec:connection})}
+	      into the updates.
+	\item If a previous state exists for the client, check that the user specified in the old state matches
+	      the user specified in the new state. If this check fails, drop any offending updates.
+	\item For each removed client in this update, check that the user of the client being removed matches
+	      the user in the current context, if this fails, the entire update is rejected.
+\end{enumerate}
+
+These validation steps ensure that an authenticated client cannot modify an awareness state which is not
+their own, and that a client can only remove themselves from the awareness state.
 
 \chapter{AI Translation Critique}
 
+This task was undertaken by Nathan and Jess of the \textit{Kittysync} team. As primarily theoretical
+Computer Scientists, we were very interested in this task, and this interest drew us to learn
+an abstract modelling system and create these models ourselves.
+
+AI was, however, used to help us learn the framework, and offered some guidance on syntax, structure,
+and debugging of our models.
+
+The AI seemed much more adept at producing and understanding code of this kind compared to the complex
+functional logic of previous tasks, potentially the rigid formal / mathematical structure of the
+problem leads to a much clearer task specification than producing a solution to a relatively open-ended
+problem such as creating a web application.
+
+If you were to ask a set of people to answer a closed question, you would obtain a set of clear,
+distinct answers, each easily quantifiable and quantitatively assessed. Asking the same set of people
+an open-ended question would likely lead you to a set of answers which cannot (easily) be quantitatively
+assessed. In same cases of course, such an outcome is desired, but in cases like this, I don't think
+it is.
+
+I would view the performance of the AI here in much the same way, and I think the efforts of the
+industry of late hint to such a view being justified, the development of formal prompt languages and
+the appearance of so-called `prompt engineering' suggest to me that the industry is trying to find
+syntactic methods of posing increasingly close-ended questions to large language models.
+
 \begin{appendices}
 	\section{Model checker output logs}
+
+	\subsection{State synchronisation}
+	\begin{lstlisting}
+  00. check eventuallyConsistent     0       UNSAT
+  01. check emptyConsistency         0       UNSAT
+  02. run   run$3                    1/1     SAT
+  03. check monotonic                0       UNSAT
+  04. check convergence              0       UNSAT
+  \end{lstlisting}
+
 \end{appendices}
 \end{document}
