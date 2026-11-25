@@ -25,5 +25,5 @@ export async function fetchApi(
 
 export async function loginRedirect(url: string) {
     if (sessionStorage.getItem("return-page") === null) sessionStorage.setItem("return-page", url);
-    await goto(resolve("/app/login"))
+    await goto(resolve("/app/login"));
 }
