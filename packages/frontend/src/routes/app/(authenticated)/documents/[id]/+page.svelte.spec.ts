@@ -295,11 +295,11 @@ describe("document page", () => {
 
     it("waits for populated awareness before updating connected users", async () => {
         const consoleError = vi.spyOn(console, "error");
-        const provider = renderDocumentPage();
+        const { provider, screen } = await renderDocumentPage();
 
         provider.emit("awarenessChange");
 
-        await expect.element(page.getByText("0 connected users")).toBeInTheDocument();
+        await expect.element(screen.getByText("0 connected users")).toBeInTheDocument();
         expect(consoleError).not.toHaveBeenCalledWith("Failed to parse awareness state:", expect.anything());
         consoleError.mockRestore();
 
@@ -308,21 +308,22 @@ describe("document page", () => {
         });
         provider.emit("awarenessChange");
 
-        await expect.element(page.getByText("1 connected user")).toBeInTheDocument();
-        await expect.element(page.getByRole("listitem")).toHaveTextContent("alice");
+        await expect.element(screen.getByText("1 connected user")).toBeInTheDocument();
+        await expect.element(screen.getByRole("listitem")).toHaveTextContent("alice");
     });
 
     it("reconnects the existing collaboration session after a BFCache restore", async () => {
-        const provider = renderDocumentPage();
+        const { provider, screen } = await renderDocumentPage();
         const socket = provider.configuration.websocketProvider;
 
         provider.options.onStatus({ status: "connected" });
         provider.options.onSynced();
 
-        await expect.element(page.getByText("Connected", { exact: true })).toBeInTheDocument();
-        await expect.element(page.getByRole("button", { name: "Change View" })).toBeEnabled();
-        await page.getByRole("button", { name: "Change View" }).click();
-        expect(getEditor().editable).toBe(true);
+        const changeViewButton = screen.getByTitle("Change Between Edit and View Mode");
+        await expect.element(screen.getByText("Status: Connected", { exact: true })).toBeInTheDocument();
+        await expect.element(changeViewButton).toBeEnabled();
+        await changeViewButton.click();
+        expect(getEditor().options.editable).toBe(true);
 
         window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: false }));
         expect(mocks.providers).toHaveLength(1);
@@ -336,13 +337,13 @@ describe("document page", () => {
         expect(socket.connect).toHaveBeenCalledOnce();
         expect(provider.awareness?.getLocalState()).toEqual({ user: documentData.user });
         expect(getEditor().destroy).not.toHaveBeenCalled();
-        expect(getEditor().editable).toBe(true);
-        await expect.element(page.getByText("Connected", { exact: true })).toBeInTheDocument();
-        await expect.element(page.getByRole("button", { name: "Change View" })).toBeEnabled();
+        expect(getEditor().options.editable).toBe(true);
+        await expect.element(screen.getByText("Status: Connected", { exact: true })).toBeInTheDocument();
+        await expect.element(changeViewButton).toBeEnabled();
 
         provider.emit("awarenessChange");
-        await expect.element(page.getByText("1 connected user")).toBeInTheDocument();
-        await expect.element(page.getByRole("listitem")).toHaveTextContent("test-user");
+        await expect.element(screen.getByText("1 connected user")).toBeInTheDocument();
+        await expect.element(screen.getByRole("listitem")).toHaveTextContent("test-user");
     });
 
     it("toggles the synced editor between view and edit mode", async () => {
