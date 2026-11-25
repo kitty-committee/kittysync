@@ -1,9 +1,7 @@
 import { userDbSchema } from "@kittysync/common";
+import { fetchApi, loginRedirect } from "#lib";
 import type { LayoutLoad } from "./$types";
-import { goto } from "$app/navigation";
 import { error } from "@sveltejs/kit";
-import { resolve } from "$app/paths";
-import { fetchApi } from "#lib";
 
 // replace with code for redirecting to the login page if the user is not authenticated
 export const load: LayoutLoad = async ({ url, fetch }) => {
@@ -26,8 +24,3 @@ export const load: LayoutLoad = async ({ url, fetch }) => {
 
     return { user };
 };
-
-async function loginRedirect(url: string) {
-    sessionStorage.setItem("return-page", url);
-    await goto(resolve("/app/login"));
-}
