@@ -8,8 +8,7 @@ sig awarenessState {
 
 sig Update{
     map :  Client -> one awarenessState,
-    var from : lone updateCarrying,
-    var to : lone updateCarrying 
+    originate : one Client
 }
 
 abstract sig updateCarrying{
@@ -25,6 +24,8 @@ sig Client extends mapStoring{
 
 sig Node extends mapStoring{
     clients: set Client,
+    var queue: (Client + Redis)-> Update,
+    var issued: set Update
 }
 
 one sig Redis extends updateCarrying{
@@ -66,61 +67,115 @@ fact init_all_updates_have_a_different_map{
     all u: Update, o:mapStoring | u.map!=o.map
 }
 
-fact init_all_updates_originate_from_a_client {
-    Update.from in Client
-    all u:Update | u.from = u.to
-    all u: Update | one u.from
-}
-
 
 fact init {
-    no queue
-    no issued
+    no Redis.queue
+    no Redis.issued
+    no Node.issued
+    no Node.queue
     some Client
     some Update
 }
 
 fact transisitons {
     always(
-        (some u: Update | userUpdatesMap[u] or nodeUpdatesRedis[u]) or 
+        (some u: Update, c:Client,n:Node | userUpdatesMap[u,c,n] or nodeDeliver[u,c,n]) or 
+        (some u: Update, n:Node | nodeUpdatesRedis[u,n] or redisDeliver[u,n]) or
         stutter
     )
 }
 
 pred stutter {
-    Update.from' = Update.from
-    Update.to' = Update.to
     mapStoring.map' = mapStoring.map
     Redis.queue' = Redis.queue
     Redis.issued' = Redis.issued
+    Node.queue' = Node.queue
+    Node.issued' = Node.issued
 }
 
-pred userUpdatesMap[u:Update]{
-    u.from = u.to
-    u.from in Client
-    u.map != u.from.map
-    let node = clients.(u.from){
-        u.from.map' = u.map
-        u.to' = node
-        u.from' = u.from
-        Redis.queue' = Redis.queue
-        Redis.issued' = Redis.issued
-    }
-}
+pred userUpdatesMap[u:Update, c: Client , n: Node]{
+    u.originate = c
+    u.map != c.map
+    c in n.clients
 
-pred nodeUpdatesRedis[u:Update]{
-    u.from in Client
-    u.to in Node
     // validate schema
     Client.(u.map).user in User
     Client.(u.map).cusor in CusorPlacement
     // need to deal with rest of validation
-    u.from' = u.to
-    u.to' = Redis
+
+    c.map' = u.map
+    n.map' = u.map
+    mapStoring.map' = mapStoring.map
+    Redis.queue' = Redis.queue
+    Redis.issued' = Redis.issued
+    n.queue' = n.queue +(n.clients + Redis)-> u
+    n.issued' = n.issued + u
+    Node.queue' = Node.queue'
+    Node.issued' = Node.issued'
+}
+
+pred nodeUpdatesRedis[u:Update, n:Node]{
+    Redis->u in n.queue
+
     Redis.issued' = Redis.issued + u
-    Redis.queue' = Redis.queue + (Redis.nodes -> u)
+    Redis.queue' = Redis.queue + (Redis.nodes - n)-> u
+    mapStoring.map' = mapStoring.map
+    n.queue' = n.queue - (Redis->u)
+    Node.issued' = Node.issued
+    Node.queue' = Node.queue'
+}
+
+pred redisDeliver[u:Update, n: Node]{
+    n->u in Redis.queue
+
+    n.queue' = n.queue + n.clients -> u
+    n.issued' = n.issued+ u
+    n.map' = u.map
+    Redis.queue' = Redis.queue-(n->u)
+    Redis.issued' = Redis.issued
+
+    Node.queue' = Node.queue
+    Node.issued' = Node.issued
+    mapStoring.map' = mapStoring.map
+}
+
+pred nodeDeliver[u:Update, c: Client, n:Node]{
+    c->u in n.queue
+
+    n.queue' = n.queue - c->u
+    c.map' = u.map
+    n.issued' = n.issued'
+    Redis.queue' = Redis.queue'
+    Redis.issued' = Redis.issued'
+
+    Node.queue' = Node.queue
+    Node.issued' = Node.issued
     mapStoring.map' = mapStoring.map
 }
 
 
-run default {} for 3 
+fact ensure_all_updates_happen{
+  all n : Node, u : Update | always ( u in n.(Redis.queue) implies eventually (u not in n.(Redis.queue)) )
+  all n: Node, u:Update, c:Client | always(c->u in n.queue implies eventually c->u not in n.queue)
+}
+
+// check for eventual consistency 
+pred consistent{
+    all disj x,y: mapStoring | x.map=y.map
+}
+
+assert eventuallyConsistent{
+    eventually always consistent
+}
+// check empty queues implies consistency
+check eventuallyConsistent for 3 Node, 3 Client, 2 Update, 3 User, 5 CusorPlacement, 5 awarenessState, 1..6 steps
+
+assert emptyQueueConsistency{
+    always((no Redis.queue and no Node.queue) implies consistent)
+}
+check emptyQueueConsistency for 3 Node, 3 Client, 2 Update, 3 User, 5 CusorPlacement, 5 awarenessState, 1..6 steps
+
+// check there is no possible non eventually conistent setup
+run {eventually not consistent} for 3 Node, 3 Client, 2 Update, 3 User, 5 CusorPlacement, 5 awarenessState, 1..6 steps
+
+run default{}  for 6 but exactly 2 Node, exactly 4 Client
