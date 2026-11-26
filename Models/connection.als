@@ -11,7 +11,7 @@ sig ValidJWT extends JWT {}
 
 sig Client {
     token : one JWT,
-    messages : set Message,
+    var messages : set Message,
     var connectionAttempts: one Int
 }
 
@@ -29,7 +29,8 @@ fact allTokensBelongToSomeClient {
 sig Node {
     var clients: set Client,
     var connecting: set Client,
-    var refused: set Client
+    var refused: set Client,
+    var handledMessages: set Message
 }
 
 /**
@@ -50,6 +51,7 @@ fact init {
 fact transitions {
   always (
     (one c : Client, n : Node | startConnecting[c, n] or connectionAttempt[c, n] or disconnect[c, n]) or
+    (one c : Client, n : Node, m : Message | sendMessage[c, n, m]) or
     stutter
   )
 }
@@ -59,6 +61,8 @@ pred stutter {
   clients' = clients
   connecting' = connecting
   refused' = refused
+  messages' = messages
+  handledMessages' = handledMessages
 }
 
 /**
@@ -71,6 +75,8 @@ pred startConnecting [c : Client, n : Node] {
   connecting' = connecting + n -> c
   clients' = clients
   refused' = refused
+  handledMessages' = handledMessages
+  messages' = messages
 }
 
 /**
@@ -103,6 +109,8 @@ pred connectionSuccess [c : Client, n : Node] {
   connecting' = connecting - n -> c
   connectionAttempts' = connectionAttempts
   refused' = refused
+  handledMessages' = handledMessages
+  messages' = messages
 }
 
 /**
@@ -117,6 +125,8 @@ pred connectionFailed [c : Client, n : Node] {
     clients' = clients
     connecting' = connecting
     refused' = refused
+    handledMessages' = handledMessages
+    messages' = messages
 }
 
 /**
@@ -129,6 +139,8 @@ pred stopConnecting [c : Client, n : Node] {
   clients' = clients
   connectionAttempts' = connectionAttempts
   refused' = refused + n -> c
+  handledMessages' = handledMessages
+  messages' = messages
 }
 
 /**
@@ -140,6 +152,22 @@ pred disconnect [c : Client, n : Node] {
     connecting' = connecting
     connectionAttempts' = connectionAttempts
     refused' = refused
+    handledMessages' = handledMessages
+    messages' = messages
+}
+
+/**
+ * Send a message from a connected client to its connected node
+ */
+pred sendMessage [c : Client, n : Node, m : Message] {
+    c in n.clients
+    m in c.messages
+    connecting' = connecting
+    connectionAttempts' = connectionAttempts
+    refused' = refused
+    handledMessages' = handledMessages + n -> m
+    messages' = messages - c -> m
+    m in StringMessage implies { disconnect[c, n] } else { clients' = clients }
 }
 
 
@@ -176,3 +204,14 @@ assert connectionsAreReattempted {
       eventually c.connectionAttempts > 1
 }
 check connectionsAreReattempted
+
+// Now check message delivery
+// This fact ensures that where a message exists, it will always be delivered to a node
+fact {
+  all m : Message, n : Node | m not in n.handledMessages implies eventually always ( m in n.handledMessages )
+}
+
+assert stringMessagesCauseDisconnect {
+  all c : Client, n : Node, m : Message | c in n.clients and m in StringMessage implies eventually (c not in n.clients)
+}
+check stringMessagesCauseDisconnect
