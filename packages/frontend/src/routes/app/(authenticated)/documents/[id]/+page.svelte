@@ -12,6 +12,7 @@
     } from "@fortawesome/free-solid-svg-icons";
     import { faFileLines } from "@fortawesome/free-regular-svg-icons";
     import { KittySyncEditor } from "./editor.svelte.js";
+    import ChatBox from "./ChatBox.svelte";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
     import Fa from "svelte-fa";
@@ -27,7 +28,7 @@
     <div class="top-bar">
         <div class="horizontal-flex">
             <button
-                class="document-return-button"
+                class="large-editor-button"
                 title="Return to Documents"
                 aria-label="Return to Documents"
                 onclick={() => {
@@ -68,120 +69,130 @@
 <hr />
 
 <!-- editor -->
-<div class="align-center">
-    <div style="max-width: 8.27in;" class="align-left">
-        <!-- button to toggle edit mode -->
-        <div class="horizontal-flex">
-            <button
-                class="editor-button"
-                title="Change Between Edit and View Mode"
-                aria-label="Toggle Edit Mode"
-                aria-pressed={editor.editable}
-                onclick={() => (editor.editable = !editor.editable)}
-                disabled={!editor.ready}>
-                {#if editor.editable}
-                    <Fa icon={faEye} />
-                {:else}
-                    <Fa icon={faPen} />
-                {/if}
-            </button>
-            <div class="horizontal-flex" style:display={editor.editable ? "flex" : "none"}>
-                <button
-                    class="editor-button"
-                    title="Bold"
-                    aria-label="Toggle Bold"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleBold().run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faBold} /></button>
-                <button
-                    class="editor-button"
-                    title="Italic"
-                    aria-label="Toggle Italic"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleItalic().run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faItalic} /></button>
-                <button
-                    class="editor-button"
-                    title="Underline"
-                    aria-label="Toggle Underline"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleUnderline().run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faUnderline} /></button>
-                <button
-                    class="editor-button"
-                    title="Strikethrough"
-                    aria-label="Toggle Strikethrough"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleStrike().run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faStrikethrough} /></button>
-                <button
-                    class="editor-button"
-                    title="Ordered List"
-                    aria-label="Toggle Ordered List"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleOrderedList().run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faListOl} /></button>
-                <button
-                    class="editor-button"
-                    title="Unordered List"
-                    aria-label="Toggle Unordered List"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleBulletList().run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faListUl} /></button>
-                <button
-                    class="editor-button"
-                    title="Heading 1"
-                    aria-label="Toggle Heading 1"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleHeading({ level: 1 }).run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faHeading} />1</button>
-                <button
-                    class="editor-button"
-                    title="Heading 2"
-                    aria-label="Toggle Heading 2"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleHeading({ level: 2 }).run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faHeading} />2</button>
-                <button
-                    class="editor-button"
-                    title="Heading 3"
-                    aria-label="Toggle Heading 3"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleHeading({ level: 3 }).run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faHeading} />3</button>
-                <button
-                    class="editor-button"
-                    title="Heading 4"
-                    aria-label="Toggle Heading 4"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleHeading({ level: 4 }).run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faHeading} />4</button>
-                <button
-                    class="editor-button"
-                    title="Heading 5"
-                    aria-label="Toggle Heading 5"
-                    onclick={() => {
-                        editor.editor.chain().focus().toggleHeading({ level: 5 }).run();
-                    }}
-                    disabled={!editor.ready}><Fa icon={faHeading} />5</button>
+<div class="align-vertical-center-row">
+    <!-- document editor container -->
+    <div class="align-vertical-center-col" style="width: 50vw; margin: auto auto auto 25vw;">
+        <div
+            class="align-vertical-center-col"
+            style="max-width: 8.27in; 
+                width: 100%; ">
+            <div class="align-vertical-center-col">
+                <div>
+                    <!-- horizontal bar of buttons -->
+                    <div class="horizontal-flex">
+                        <button
+                            class="editor-button"
+                            title="Change Between Edit and View Mode"
+                            aria-label="Toggle Edit Mode"
+                            aria-pressed={editor.editable}
+                            onclick={() => (editor.editable = !editor.editable)}
+                            disabled={!editor.ready}>
+                            {#if editor.editable}
+                                <Fa icon={faEye} />
+                            {:else}
+                                <Fa icon={faPen} />
+                            {/if}
+                        </button>
+                        <div class="horizontal-flex" style:display={editor.editable ? "flex" : "none"}>
+                            <button
+                                class="editor-button"
+                                title="Bold"
+                                aria-label="Toggle Bold"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleBold().run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faBold} /></button>
+                            <button
+                                class="editor-button"
+                                title="Italic"
+                                aria-label="Toggle Italic"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleItalic().run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faItalic} /></button>
+                            <button
+                                class="editor-button"
+                                title="Underline"
+                                aria-label="Toggle Underline"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleUnderline().run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faUnderline} /></button>
+                            <button
+                                class="editor-button"
+                                title="Strikethrough"
+                                aria-label="Toggle Strikethrough"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleStrike().run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faStrikethrough} /></button>
+                            <button
+                                class="editor-button"
+                                title="Ordered List"
+                                aria-label="Toggle Ordered List"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleOrderedList().run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faListOl} /></button>
+                            <button
+                                class="editor-button"
+                                title="Unordered List"
+                                aria-label="Toggle Unordered List"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleBulletList().run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faListUl} /></button>
+                            <button
+                                class="editor-button"
+                                title="Heading 1"
+                                aria-label="Toggle Heading 1"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleHeading({ level: 1 }).run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faHeading} />1</button>
+                            <button
+                                class="editor-button"
+                                title="Heading 2"
+                                aria-label="Toggle Heading 2"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleHeading({ level: 2 }).run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faHeading} />2</button>
+                            <button
+                                class="editor-button"
+                                title="Heading 3"
+                                aria-label="Toggle Heading 3"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleHeading({ level: 3 }).run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faHeading} />3</button>
+                            <button
+                                class="editor-button"
+                                title="Heading 4"
+                                aria-label="Toggle Heading 4"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleHeading({ level: 4 }).run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faHeading} />4</button>
+                            <button
+                                class="editor-button"
+                                title="Heading 5"
+                                aria-label="Toggle Heading 5"
+                                onclick={() => {
+                                    editor.editor.chain().focus().toggleHeading({ level: 5 }).run();
+                                }}
+                                disabled={!editor.ready}><Fa icon={faHeading} />5</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- editor container -->
+            <div class="editor-container">
+                <div {@attach editor.attach(data.documentId)} class="view-element"></div>
             </div>
         </div>
     </div>
-
-    <!-- editor container -->
-    <div class="editor-container">
-        <div {@attach editor.attach(data.documentId)} class="view-element"></div>
-    </div>
+    <ChatBox />
 </div>
 
 <style>
@@ -215,7 +226,7 @@
         background-color: #f2f2f2;
     }
 
-    .document-return-button {
+    .large-editor-button {
         width: 50px;
         height: 50px;
         font-size: 2em;
@@ -225,7 +236,7 @@
         background-color: transparent;
     }
 
-    .document-return-button:hover {
+    .large-editor-button:hover {
         background-color: #f2f2f2;
     }
 
@@ -258,10 +269,16 @@
         flex-wrap: wrap;
     }
 
-    .align-center {
+    .align-vertical-center-col {
         display: flex;
         align-items: center;
         flex-direction: column;
+    }
+
+    .align-vertical-center-row {
+        display: flex;
+        justify-content: center;
+        flex-direction: row;
     }
 
     .top-bar-background {
