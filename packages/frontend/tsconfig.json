@@ -1,8 +1,16 @@
 {
-    "extends": ["$app/tsconfig", "../../tsconfig.json"],
+    "extends": [
+        "$app/tsconfig",
+        "../../tsconfig.json"
+    ],
     "compilerOptions": {
         "strict": true,
-        "types": ["$app/types"]
+        "types": [
+            "$app/types"
+        ]
     },
-    "include": ["src", "vite.config.ts"]
+    "include": [
+        "src",
+        "vite.config.ts"
+    ]
 }

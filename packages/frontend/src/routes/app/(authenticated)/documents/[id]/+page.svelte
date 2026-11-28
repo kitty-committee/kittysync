@@ -17,9 +17,113 @@
     import Fa from "svelte-fa";
 
     let { data } = $props();
+    let pollFormError = $state<string | null>(null);
 
     // svelte-ignore state_referenced_locally
     const editor = new KittySyncEditor({ user: data.user, editing: false });
+
+    type PollOptionDraft = {
+        key: number;
+        label: string;
+    };
+
+    let pollDialog: HTMLDialogElement;
+    let pollQuestion = $state("");
+    let pollOptionRows = $state<PollOptionDraft[]>([
+        { key: 0, label: "" },
+        { key: 1, label: "" },
+    ]);
+    let nextPollOptionKey = 2;
+
+    function openPollDialog() {
+        pollQuestion = "";
+        pollOptionRows = [
+            { key: 0, label: "" },
+            { key: 1, label: "" },
+        ];
+        nextPollOptionKey = 2;
+        pollFormError = null;
+        pollDialog.showModal();
+    }
+
+    function addPollOption() {
+        pollOptionRows.push({ key: nextPollOptionKey++, label: "" });
+    }
+
+    function removePollOption(key: number) {
+        if (pollOptionRows.length <= 2) return;
+        pollOptionRows = pollOptionRows.filter((option) => option.key !== key);
+    }
+
+    function submitPoll(event: SubmitEvent) {
+        event.preventDefault();
+
+        if (
+            insertPoll(
+                pollQuestion,
+                pollOptionRows.map((option) => option.label),
+            )
+        ) {
+            pollDialog.close();
+        }
+    }
+
+    function insertPoll(questionInput: string, optionLabels: string[]): boolean {
+        pollFormError = null;
+
+        if (!editor.ready || !editor.editable) {
+            pollFormError = "Wait for the document to load and turn on edit mode.";
+            return false;
+        }
+
+        const question = questionInput.trim();
+        const labels = optionLabels.map((label) => label.trim()).filter(Boolean);
+
+        if (!question) {
+            pollFormError = "Enter a question.";
+            return false;
+        }
+
+        if (labels.length < 2) {
+            pollFormError = "Enter at least two non-empty options.";
+            return false;
+        }
+
+        if (typeof globalThis.crypto?.randomUUID !== "function") {
+            pollFormError = "This browser cannot generate poll IDs.";
+            return false;
+        }
+
+        const pollId = globalThis.crypto.randomUUID();
+        const options = labels.map((label) => ({
+            id: globalThis.crypto.randomUUID(),
+            label,
+        }));
+
+        let inserted: boolean;
+
+        try {
+            inserted = editor.editor
+                .chain()
+                .focus()
+                .insertContent({
+                    type: "poll",
+                    attrs: { pollId, question, options },
+                })
+                .run();
+        } catch (error) {
+            console.error("Poll insertion failed:", error);
+            pollFormError = "An unexpected error prevented the poll from being inserted.";
+            return false;
+        }
+
+        if (!inserted) {
+            pollFormError = "The poll couldn't be inserted at the current cursor position.";
+            return false;
+        }
+
+        return true;
+    }
 </script>
 
 <!-- top bar -->
@@ -174,9 +278,50 @@
                         editor.editor.chain().focus().toggleHeading({ level: 5 }).run();
                     }}
                     disabled={!editor.ready}><Fa icon={faHeading} />5</button>
+                <button
+                    class="editor-button"
+                    title="Create Poll"
+                    aria-label="Create Poll"
+                    onclick={() => {
+                        openPollDialog();
+                    }}
+                    disabled={!editor.ready}>Create Poll</button>
             </div>
         </div>
     </div>
+
+    <dialog class="poll-dialog" bind:this={pollDialog} aria-labelledby="poll-dialog-title">
+        <form onsubmit={submitPoll}>
+            <h2 id="poll-dialog-title">Create poll</h2>
+
+            <label>
+                Question
+                <input bind:value={pollQuestion} required />
+            </label>
+
+            {#each pollOptionRows as option, i (option.key)}
+                <div>
+                    <label for={`poll-option-${option.key}`}>Option {i + 1}</label>
+                    <input id={`poll-option-${option.key}`} bind:value={option.label} required />
+                    <button
+                        type="button"
+                        onclick={() => removePollOption(option.key)}
+                        disabled={pollOptionRows.length <= 2}>Remove</button>
+                </div>
+            {/each}
+
+            <button type="button" onclick={addPollOption}>Add option</button>
+
+            {#if pollFormError}
+                <p role="alert">{pollFormError}</p>
+            {/if}
+
+            <div>
+                <button type="button" onclick={() => pollDialog.close()}>Cancel</button>
+                <button type="submit" disabled={!editor.ready || !editor.editable}> Insert poll </button>
+            </div>
+        </form>
+    </dialog>
 
     <!-- editor container -->
     <div class="editor-container">

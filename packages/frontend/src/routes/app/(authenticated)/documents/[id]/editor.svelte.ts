@@ -21,6 +21,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
 import { Editor } from "@tiptap/core";
 import { untrack } from "svelte";
+import { pollNode } from "../../../../../lib/tiptap-extensions/poll-extension";
 
 export type EditorPeer = {
     clientId: number;
@@ -95,6 +96,7 @@ export class KittySyncEditor {
                 StarterKit.configure({ undoRedo: false }),
                 Collaboration.configure({ document: ydoc, field: "content" }),
                 Markdown,
+                pollNode,
                 CollaborationCaret.configure({
                     provider: this.provider,
                     // collaboration caret requires the name and color of the user to display the caret correctly
