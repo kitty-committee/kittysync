@@ -179,6 +179,10 @@ vi.mock("$app/paths", () => ({
     resolve: mocks.resolve,
 }));
 
+vi.mock("$app/forms", () => ({
+    enhance: vi.fn(),
+}));
+
 const documentData = {
     documentId: "notes.md",
     user: {
