@@ -7,9 +7,10 @@
 
 <!-- ai chatbox container -->
 <div
-    style="margin: 20px 10px auto 0px;"
-    style:width={getVisibility() ? "500px" : "50px"}
-    class="align-vertical-right-col">
+    class="align-vertical-right-col chatbox-container
+        "
+    class:chatbox-container-visible={getVisibility()}
+    class:chatbox-container-hidden={!getVisibility()}>
     <div class="align-vertical-right-row">
         <!-- ai chatbox button -->
         <button
@@ -22,9 +23,8 @@
         </button>
         <!-- ai chatbox -->
         <div
-            class="align-vertical-center-col vertical-scrolling"
-            style:display={getVisibility() ? "flex" : "none"}
-            style="width: 15vw; height: 60vh;">
+            class="align-vertical-center-col vertical-scrolling message-chatbox"
+            style:display={getVisibility() ? "flex" : "none"}>
             {#each getMessages() as message, i (i)}
                 <div class="message">{message}</div>
             {/each}
@@ -32,15 +32,18 @@
     </div>
 
     <form
-        class="align-vertical-center-row"
+        class="align-vertical-center-row form"
         style:display={getVisibility() ? "flex" : "none"}
-        style="margin: 0px 0px 0px auto; width: 15vw; align-items: end;"
         method="POST"
         use:enhance={async ({ formData, cancel }) => {
             sendMessage(formData.get("content")!.toString());
+            const messageBox = document.getElementById("message-box") as HTMLTextAreaElement | null;
+            if (messageBox) {
+                messageBox.value = "";
+            }
             cancel();
         }}>
-        <textarea class="user-input-message" name="content"></textarea>
+        <textarea class="user-input-message" name="content" id="message-box"></textarea>
         <button class="user-input-button" type="submit" onclick={() => {}}><Fa icon={faPaperPlane} /> </button>
     </form>
 </div>
@@ -103,6 +106,7 @@
     }
 
     .message {
+        overflow-wrap: anywhere;
         padding: 5px;
         width: 100%;
         margin-top: 5px;
@@ -137,7 +141,58 @@
         background-color: transparent;
     }
 
+    .message-chatbox {
+        width: 15vw;
+        height: 80vh;
+    }
+
     .large-editor-button:hover {
         background-color: #f2f2f2;
+    }
+
+    .form {
+        margin: 0px 0px 0px auto;
+        width: 15vw;
+        align-items: end;
+    }
+
+    .chatbox-container {
+        margin: 20px 10px auto 0px;
+    }
+
+    @media (max-width: 1440px) {
+        .chatbox-container {
+            margin: 20px 0 20px 0px;
+            width: 35%;
+        }
+        .message-chatbox {
+            width: 100%;
+            height: 80vh;
+        }
+
+        .form {
+            width: 83%;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .message-chatbox {
+            width: 100%;
+            height: 80vh;
+        }
+        .chatbox-container {
+            margin: 20px 0 20px 0px;
+            width: auto;
+        }
+        .chatbox-container-visible {
+            width: 90vw;
+        }
+        .chatbox-container-hidden {
+            width: 35%;
+        }
+
+        .form {
+            width: 90%;
+        }
     }
 </style>

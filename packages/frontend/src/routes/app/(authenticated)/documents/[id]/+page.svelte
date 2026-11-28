@@ -12,6 +12,7 @@
     } from "@fortawesome/free-solid-svg-icons";
     import { faFileLines } from "@fortawesome/free-regular-svg-icons";
     import { KittySyncEditor } from "./editor.svelte.js";
+    import { getVisibility } from "./ai-chatbox.svelte";
     import ChatBox from "./ChatBox.svelte";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
@@ -71,7 +72,10 @@
 <!-- editor -->
 <div class="align-vertical-center-row">
     <!-- document editor container -->
-    <div class="align-vertical-center-col" style="width: 50vw; margin: auto auto auto 25vw;">
+    <div
+        class="align-vertical-center-col document"
+        class:visible-flex={!getVisibility()}
+        class:hidden={getVisibility()}>
         <div
             class="align-vertical-center-col"
             style="max-width: 8.27in; 
@@ -241,7 +245,8 @@
     }
 
     .view-element {
-        min-height: 11.69in;
+        height: fit-content;
+        min-height: 80vh;
         border: 1px solid #0f0f0f;
         padding: 30px;
         border-radius: 5px;
@@ -291,6 +296,31 @@
         justify-content: space-between;
     }
 
+    .document {
+        width: 50vw;
+        margin: auto auto auto 25vw;
+    }
+
+    @media (max-width: 1440px) {
+        .document {
+            width: 50vw;
+            margin: auto 5vw auto 5vw;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .document {
+            width: 80vw;
+            margin: auto auto auto 5vw;
+        }
+        .visible-flex {
+            display: flex;
+        }
+        .hidden {
+            display: none;
+        }
+    }
+
     /* Give a remote user a caret */
     :global(.collaboration-carets__caret) {
         border-left: 1px solid #0d0d0d;
@@ -303,7 +333,6 @@
     }
 
     :global(.ProseMirror) {
-        min-height: 1200px;
         outline: none !important;
     }
 
